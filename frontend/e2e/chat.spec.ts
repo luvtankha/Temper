@@ -19,6 +19,7 @@ test('participant view, pause, simulated typing and empty/sample states',async (
   const menu=page.getByRole('button',{name:'Conversation options'});
   await menu.click(); await page.getByLabel('Viewing as').selectOption('nova'); await menu.click();
   await expect(page.getByRole('textbox',{name:'Message Alex'})).toBeEnabled();
+  await expect(page.getByLabel('Current participant: Nova')).toBeVisible();
   await menu.click(); await page.getByRole('button',{name:'Preview remote typing'}).click();
   await expect(page.getByText('Alex is typing · simulated')).toBeVisible();
   await menu.click(); await page.getByRole('button',{name:'Pause local demo'}).click();

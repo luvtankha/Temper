@@ -8,10 +8,13 @@
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "check:rigs": "node scripts/check-rigs.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "@rive-app/react-canvas": "^4.36.0",
     "@tailwindcss/vite": "^4.1.0",
+    "framer-motion": "^13.4.6",
     "lucide-react": "^0.468.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

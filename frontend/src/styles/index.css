@@ -214,7 +214,7 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   .emoji-picker button { padding: 6px; }
 }
 @media (max-height:580px) { .chat-header { padding-block:12px; } .conversation-banner { display:none; } .composer-topline,.composer-footnote { display:none; } .composer-wrapper { padding-block:10px; } .composer textarea { height:30px; min-height:30px; } .message-list { padding-top:14px; } .conversation-intro { margin-block:20px; } }
-.remote-avatar-layer { position: relative; display: flex; align-items: flex-end; justify-content: space-between; height: 132px; min-width: 0; overflow: hidden; margin-top: -10px; margin-bottom: -2px; pointer-events: none; }
+.remote-avatar-layer { position: relative; display: flex; align-items: flex-end; justify-content: space-between; height: 156px; min-width: 0; overflow: hidden; margin-top: -10px; margin-bottom: -2px; pointer-events: none; }
 .avatar-art { width: 160px; height: 160px; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); }
 .avatar-art img { width: 100%; height: 100%; display: block; position: relative; z-index: 1; filter: drop-shadow(0 5px 14px #0005); }
 .avatar-halo { position: absolute; inset: 25px 7px -20px; background: radial-gradient(ellipse,#e466ae13,transparent 65%); border-radius: 50%; }
@@ -225,6 +225,19 @@ button:disabled { cursor: not-allowed; opacity: .45; }
 .avatar-preview-label { padding-bottom: 26px; color: #947c9c; font-size: 7px; }
 .composer { z-index: 2; }
 .composer-topline { position: relative; z-index: 3; }
-@media(max-width:1200px) and (min-width:1024px) { .avatar-presence small { display:none; } .avatar-presence { max-width:28%; } .avatar-presence strong { font-size:8px; } .avatar-presence-mark { display:none; } .avatar-art { width:140px;height:140px; } .remote-avatar-layer { height:120px; } }
-@media(max-width:767px) { .remote-avatar-layer { height:104px; } .avatar-art { width:130px;height:130px; } .avatar-presence { max-width:28%; padding-bottom:18px; } .avatar-presence strong { font-size:8px; } .avatar-presence small,.avatar-presence-mark { display:none; } .avatar-preview-label { padding-bottom:18px;font-size:6px; } }
-@media(max-height:580px) { .remote-avatar-layer { height:62px; margin-top:0; } .avatar-art { width:80px;height:80px; } .avatar-presence { padding-bottom:14px; } .avatar-presence small { display:none; } .avatar-preview-label { padding-bottom:14px; } }
+@media(max-width:1200px) and (min-width:1024px) { .avatar-presence small { display:none; } .avatar-presence { max-width:28%; } .avatar-presence strong { font-size:8px; } .avatar-presence-mark { display:none; } .avatar-art { width:140px;height:140px; } .remote-avatar-layer { height:136px; } }
+@media(max-width:767px) { .remote-avatar-layer { height:126px; } .avatar-art { width:130px;height:130px; } .avatar-presence { max-width:28%; padding-bottom:18px; } .avatar-presence strong { font-size:8px; } .avatar-presence small,.avatar-presence-mark { display:none; } .avatar-preview-label { padding-bottom:18px;font-size:6px; } }
+@media(max-height:580px) { .remote-avatar-layer { height:78px; margin-top:0; } .avatar-art { width:80px;height:80px; } .avatar-presence { padding-bottom:14px; } .avatar-presence small { display:none; } .avatar-preview-label { padding-bottom:14px; } }
+.rive-character { width:100%;height:100%;position:relative; }
+.rig-load-error,.rig-loading-label { display:flex; align-items:center; justify-content:center; height:100%; font-size:10px; line-height:1.5; text-align:center; color:#d6abc9; padding:10px; }
+.rig-load-error { background:#33182b; border:1px solid #784064; border-radius:12px; }
+.rive-character .rig-loading-label { position:absolute; inset:0; }
+.avatar-lab { padding:clamp(20px,4vw,48px); max-width:700px;margin:auto; }
+.avatar-lab h1 { font-size:26px;font-weight:500;letter-spacing:-.04em;margin-block:12px; }
+.avatar-lab > p { font-size:12px;line-height:1.8;color:#b19fba; }
+.lab-preview { border:1px solid #48304f; border-radius:12px; padding:24px; margin-block:24px; background:#1c1422; }
+.lab-warning { padding:12px;background:#4c263b44;border:1px solid #6f3e64;border-radius:8px; }
+.avatar-lab label { display:flex;justify-content:space-between;gap:16px;align-items:center;padding-block:12px;font-size:12px;color:#ceb4d6; }
+.avatar-lab select { padding:7px 12px;background:#26192e;border:1px solid #5d3965;border-radius:6px; }
+.avatar-lab input { accent-color:#ff2daa;max-width:50%; }
+.avatar-lab pre { font-size:11px;padding:16px;background:#151019;border:1px solid #302037;border-radius:10px;overflow:auto; }

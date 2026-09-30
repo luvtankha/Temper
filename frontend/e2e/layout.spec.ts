@@ -27,3 +27,12 @@ test('all routes and fallback', async ({page}) => {
   }
   await expect(page).toHaveURL(/\/chat$/);
 });
+test('an open desktop panel becomes an accessible dialog when resized to tablet',async ({page})=> {
+  await page.setViewportSize({width:1440,height:900}); await page.goto('/chat');
+  await expect(page.getByRole('dialog',{name:'Conversation insights'})).toHaveCount(0);
+  await page.setViewportSize({width:820,height:1180});
+  await expect(page.getByRole('dialog',{name:'Conversation insights'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Close insights'})).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button',{name:'Insights',exact:true})).toBeFocused();
+});

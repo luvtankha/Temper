@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Activity, ArrowUpRight, ChartNoAxesCombined, ChevronDown, History, Menu, MessageCircle, PanelRightClose, PanelRightOpen, Settings2, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { getHealth } from '../api/client';
+import { useChat } from '../features/chat/ChatProvider';
+import { participants, remoteParticipant } from '../models/chat';
 
 const navigation = [
   {to:'/chat', title:'Conversation', Icon:MessageCircle},
@@ -11,6 +13,9 @@ const navigation = [
 ];
 
 export function Shell({children}: {children: ReactNode}) {
+  const {localId}=useChat();
+  const local=participants.find(p=>p.id===localId)!;
+  const remote=remoteParticipant(localId);
   const [analyticsOpen, setAnalyticsOpen] = useState(() => window.innerWidth >= 1024);
   const [navOpen, setNavOpen] = useState(false);
   const [backend, setBackend] = useState('Checking backend…');
@@ -20,7 +25,13 @@ export function Shell({children}: {children: ReactNode}) {
   const navClose = useRef<HTMLButtonElement>(null);
   const analyticsRef = useRef<HTMLElement>(null);
   const navRef = useRef<HTMLElement>(null);
-  const mobile = typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 1023px)').matches;
+  const [mobile,setMobile]=useState(()=>window.matchMedia('(max-width: 1023px)').matches);
+  useEffect(()=> {
+    const query=window.matchMedia('(max-width: 1023px)');
+    const update=()=>setMobile(query.matches);
+    query.addEventListener('change',update);
+    return ()=>query.removeEventListener('change',update);
+  },[]);
   useEffect(() => { let active = true; getHealth().then(h => active && setBackend(`Backend ${h.status}`)).catch(() => active && setBackend('Backend offline')); return () => {active = false;}; }, []);
   useEffect(() => {
     if (navOpen) navClose.current?.focus();
@@ -51,8 +62,8 @@ export function Shell({children}: {children: ReactNode}) {
       <div className="workspace-label">WORKSPACE <span className="workspace-dot" /></div>
       <nav>{navigation.map(({to,title,Icon}) => <NavLink key={to} to={to} onClick={() => setNavOpen(false)} className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}><Icon size={18} /><span>{title}</span>{to === '/chat' && <span className="nav-count">1</span>}</NavLink>)}</nav>
       <div className="sidebar-divider" /><div className="workspace-label">CURRENT CONVERSATION</div>
-      <NavLink to="/chat" className="conversation-link" onClick={() => setNavOpen(false)}><span className="initial-avatar">N</span><span><strong>The launch plan</strong><small>You & Nova · demo</small></span><span className="little-dot" /></NavLink>
-      <div className="sidebar-bottom"><div className="privacy-note"><ShieldCheck size={19} /><div><strong>A space to be human</strong><p>Signals invite understanding.<br />They don’t define a person.</p></div></div><div className="profile"><span className="profile-avatar">A</span><div><strong>Alex</strong><small>Demo workspace</small></div><ChevronDown size={15} /></div></div>
+      <NavLink to="/chat" className="conversation-link" onClick={() => setNavOpen(false)}><span className="initial-avatar">{remote.name[0]}</span><span><strong>The launch plan</strong><small>You & {remote.name} · demo</small></span><span className="little-dot" /></NavLink>
+      <div className="sidebar-bottom"><div className="privacy-note"><ShieldCheck size={19} /><div><strong>A space to be human</strong><p>Signals invite understanding.<br />They don’t define a person.</p></div></div><div className="profile" aria-label={`Current participant: ${local.name}`}><span className="profile-avatar">{local.name[0]}</span><div><strong>{local.name}</strong><small>Demo workspace</small></div><ChevronDown size={15} /></div></div>
     </aside>
     <div className="workspace">
       <header className="topbar"><div className="breadcrumb"><button ref={navToggle} className="icon-button nav-toggle" onClick={() => setNavOpen(true)} aria-label="Open navigation"><Menu size={20} /></button><span>Workspace</span><span className="breadcrumb-slash">/</span><strong>The launch plan</strong></div><div className="topbar-actions"><span className="pill demo-pill"><span />Local demo</span><button ref={analyticsToggle} className={`analytics-toggle ${analyticsOpen ? 'selected' : ''}`} aria-expanded={analyticsOpen} aria-controls="analytics-panel" onClick={() => setAnalyticsOpen(!analyticsOpen)}>{analyticsOpen ? <PanelRightClose size={17} /> : <PanelRightOpen size={17} />}<span>Insights</span></button></div></header>
