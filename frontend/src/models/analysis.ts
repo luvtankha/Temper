@@ -11,6 +11,7 @@ export interface ConversationAnalysis {
   conversationId:string;mode:'MOCK'|'MODEL';messages:MessageAnalysis[];
   conflictScore:number;sentiment:number;emotionalIntensity:number;
   direction:'steady'|'escalating'|'recovering';escalationStart:number|null;peakTension:number|null;
+  events:{sequence:number;messageId:string;kind:'escalation'|'peak'|'recovery';label:string}[];
 }
 export interface AnalysisApi {
   getConversation(messages:readonly ChatMessage[],signal?:AbortSignal):Promise<ConversationAnalysis>;

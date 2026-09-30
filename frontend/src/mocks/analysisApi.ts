@@ -23,10 +23,12 @@ export function mockSnapshot(messages:readonly ChatMessage[]):ConversationAnalys
   });
   const last=analyzed.at(-1),previous=analyzed.at(-2);
   const peak=analyzed.reduce<typeof last>((highest,row)=>!highest||row.conflict>highest.conflict?row:highest,undefined);
+  const escalation=analyzed.find(row=>row.conflict>=.35),recovery=analyzed.find(row=>row.sequence===7);
   return {conversationId:'local-demo',mode:'MOCK',messages:analyzed,conflictScore:last?.conflict??0,sentiment:last?.sentiment??0,
     emotionalIntensity:last?Math.max(...Object.values(last.emotions)):0,
     direction:!last||!previous||Math.abs(last.conflict-previous.conflict)<.08?'steady':last.conflict>previous.conflict?'escalating':'recovering',
-    escalationStart:analyzed.find(row=>row.conflict>=.35)?.sequence??null,peakTension:peak?.sequence??null};
+    escalationStart:escalation?.sequence??null,peakTension:peak?.sequence??null,
+    events:[...(escalation?[{sequence:escalation.sequence,messageId:escalation.messageId,kind:'escalation' as const,label:'Escalation / major shift'}]:[]),...(peak?[{sequence:peak.sequence,messageId:peak.messageId,kind:'peak' as const,label:'Peak tension'}]:[]),...(recovery?[{sequence:recovery.sequence,messageId:recovery.messageId,kind:'recovery' as const,label:'Recovery'}]:[])]};
 }
 export const mockAnalysisApi:AnalysisApi={
   async getConversation(messages,signal) {

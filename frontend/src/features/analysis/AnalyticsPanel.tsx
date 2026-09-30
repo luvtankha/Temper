@@ -1,8 +1,10 @@
 import {motion,useReducedMotion} from 'framer-motion';
 import {Activity,ArrowDownRight,ArrowUpRight,Minus} from 'lucide-react';
 import {NavLink} from 'react-router-dom';
+import {lazy,Suspense} from 'react';
 import {emotionLabels,signalLabels,percent} from '../../models/analysis';
 import {useAnalysis} from './AnalysisProvider';
+const ConflictTimeline=lazy(()=>import('./ConflictTimeline').then(m=>({default:m.ConflictTimeline})));
 
 export function SignalMeter({label,value,color='violet'}:{label:string;value:number;color?:'violet'|'magenta'}) {
   const reduced=useReducedMotion();const amount=percent(value);
@@ -20,6 +22,7 @@ export function AnalyticsPanel({onNavigate}:{onNavigate?:()=>void}={}) {
     <section className="conflict-card"><div><span className="metric-caption">CONFLICT SIGNAL</span><strong>{percent(snapshot.conflictScore)}<small>/100</small></strong><p>Illustrative score</p></div><div className="score-ring" style={{background:`conic-gradient(#ff2daa ${percent(snapshot.conflictScore)}%, #2b2333 0)`}}><span><Activity size={23}/></span></div></section>
     <div className="insight-stat-grid"><div><span>Current sentiment</span><strong>{snapshot.sentiment>.15?'Positive':snapshot.sentiment<-.15?'Negative':'Neutral'}</strong><small>{snapshot.sentiment.toFixed(2)} · signed scale</small></div><div><span>Emotional intensity</span><strong>{percent(snapshot.emotionalIntensity)}<small>%</small></strong><small>Estimated signal</small></div></div>
     <div className={`conversation-direction ${snapshot.direction}`}><Direction size={18}/><div><span>Conversation direction</span><strong>{snapshot.direction[0].toUpperCase()+snapshot.direction.slice(1)}</strong></div></div>
+    <Suspense fallback={<p className="chart-caption">Loading timeline…</p>}><ConflictTimeline compact onNavigate={onNavigate}/></Suspense>
     <section className="signal-section"><h3>Emotion signals <span>ESTIMATED</span></h3>{Object.entries(emotionLabels).map(([key,label])=><SignalMeter key={key} label={label} value={last.emotions[key as keyof typeof emotionLabels]} />)}</section>
     <section className="signal-section"><h3>Conversation signals</h3>{Object.entries(signalLabels).map(([key,label])=><SignalMeter key={key} label={label} value={last.signals[key as keyof typeof signalLabels]} color="magenta" />)}</section>
     <section className="conversation-moments"><h3>Turning points</h3><div><span>Escalation start</span><strong>{snapshot.escalationStart?`Message ${snapshot.escalationStart}`:'None in preview'}</strong></div><div><span>Peak tension</span><strong>{snapshot.peakTension?`Message ${snapshot.peakTension}`:'No turns yet'}</strong></div></section>

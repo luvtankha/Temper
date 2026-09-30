@@ -5,22 +5,27 @@ import { useChat } from './ChatProvider';
 import { RemoteAvatar } from '../avatar/RemoteAvatar';
 
 export function ChatPage() {
-  const {messages,localId,setLocalId,loading,paused,setPaused,remoteTyping,send,reset,previewTyping} = useChat();
+  const {messages,localId,setLocalId,loading,paused,setPaused,remoteTyping,send,reset,previewTyping,selectedMessageId:selectedId,setSelectedMessageId:setSelectedId,focusedMessageId,focusRequest} = useChat();
   const remote = remoteParticipant(localId);
   const [draft,setDraft] = useState('');
   const [sending,setSending] = useState(false);
   const [error,setError] = useState('');
-  const [selectedId,setSelectedId] = useState<string|null>(null);
   const [optionsOpen,setOptionsOpen] = useState(false);
   const [emojiOpen,setEmojiOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [awayFromBottom,setAwayFromBottom] = useState(false);
+  const messageRefs=useRef(new Map<string,HTMLButtonElement>());
   const selected = messages.find(m => m.id === selectedId);
   useEffect(() => {endRef.current?.scrollIntoView({behavior:'instant',block:'end'});},[loading]);
   useEffect(() => {if (!awayFromBottom) endRef.current?.scrollIntoView({behavior:'smooth',block:'end'});},[messages,remoteTyping,awayFromBottom]);
-  useEffect(() => {setDraft(''); setError(''); setSelectedId(null);},[localId]);
+  useEffect(() => {setDraft(''); setError('');},[localId]);
+  useEffect(()=> {
+    if(!focusedMessageId||loading)return;
+    setAwayFromBottom(true);const target=messageRefs.current.get(focusedMessageId);
+    target?.scrollIntoView({behavior:'instant',block:'center'});target?.focus({preventScroll:true});
+  },[focusedMessageId,focusRequest,loading]);
   async function submit(event?:FormEvent) {
     event?.preventDefault(); if (!draft.trim() || sending || paused || loading) return;
     setSending(true); setError('');
@@ -43,7 +48,7 @@ export function ChatPage() {
         const showName = index===0 || messages[index-1].speakerId !== message.speakerId;
         return <div className={`message-row ${own ? 'own' : 'remote'}`} key={message.id}>
           {!own && <span className={`message-avatar ${showName ? '' : 'hidden-avatar'}`}>{speaker.name[0]}</span>}
-          <div className="message-content">{showName && <span className="message-sender">{own ? 'You' : speaker.name}</span>}<button className={`message-bubble ${selectedId===message.id ? 'message-selected' : ''}`} aria-label={`Message ${index+1} from ${speaker.name}: ${message.text}`} aria-pressed={selectedId===message.id} onClick={() => setSelectedId(selectedId===message.id ? null : message.id)}>{message.text}</button><div className="message-meta"><time dateTime={message.sentAt}>{new Intl.DateTimeFormat('en-IN',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Calcutta'}).format(new Date(message.sentAt))}</time>{own && <CheckCheck size={12} />}<span>demo</span></div></div>
+          <div className="message-content">{showName && <span className="message-sender">{own ? 'You' : speaker.name}</span>}<button ref={node=>{if(node)messageRefs.current.set(message.id,node);else messageRefs.current.delete(message.id);}} className={`message-bubble ${selectedId===message.id ? 'message-selected' : ''}`} aria-label={`Message ${index+1} from ${speaker.name}: ${message.text}`} aria-pressed={selectedId===message.id} onClick={() => setSelectedId(selectedId===message.id ? null : message.id)}>{message.text}</button><div className="message-meta"><time dateTime={message.sentAt}>{new Intl.DateTimeFormat('en-IN',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Calcutta'}).format(new Date(message.sentAt))}</time>{own && <CheckCheck size={12} />}<span>demo</span></div></div>
         </div>;
       })}</>}
       {remoteTyping && <div className="typing-indicator"><span className="message-avatar">{remote.name[0]}</span><span className="typing-dots"><i /><i /><i /></span><small>{remote.name} is typing · simulated</small></div>}
@@ -63,3 +68,4 @@ export function ChatPage() {
   </section>;
 }
 function ActivityMark() {return <><i /><i /><i /><i /></>;}
+

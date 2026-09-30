@@ -1,5 +1,5 @@
 # TEMPER
-Conversation intelligence for CEREBRO. Follow AGENT.md and sequential evidence in docs/phases. **Phases 00–06 verified; Phase 07 in progress.**
+Conversation intelligence for CEREBRO. Follow AGENT.md and sequential evidence in docs/phases. **Phases 00–07 verified; Phase 08 in progress.**
 
 ## Development
 Requires Node 22+ (tested 24), Java 21 JDK. Maven wrapper included. No PostgreSQL or AI models required yet.
@@ -12,7 +12,7 @@ Open http://127.0.0.1:5173. Vite proxies /api and /actuator to backend port 8080
 ## Verification
 In frontend: npm test; npm run build; npm run test:e2e -- --workers=2 (backend must run); npm run check:rigs.
 In backend with Java 21: .\\mvnw.cmd verify.
-Checkpoint: frontend build, 16 units, 37 browser checks defined (phase-specific results in handoffs) and Java build/2 tests pass. Actual Rive canvas tests exercise eight poses, intensity blends, reversal, overlapping signals and staged transitions for both characters. Dependency audit reports zero vulnerabilities.
+Checkpoint: frontend build, 16 units, 48 browser checks defined (phase-specific results in handoffs) and Java build/2 tests pass. Actual Rive canvas tests exercise eight poses, intensity blends, reversal, overlapping signals and staged transitions for both characters. Dependency audit reports zero vulnerabilities.
 
 ## Current behavior / limits
 Responsive dark UI, fictional local chat, multiline input, emoji, message selection, loading/empty/paused states and simulated typing. Rive presence includes breathing, blinking, gaze/head drift, typing attention, pause and reduced-motion support. Alex sees Nova's animated female character; Nova sees Alex's animated male character. Both use original Rive rigs above the composer. Insights show clearly labeled mock fixtures and refresh after local sends; no analysis is inferred from text.
@@ -22,6 +22,7 @@ No two-client real-time transport, database, inference, authentication or deploy
 See docs/architecture/rive-rig-spec.md and assets/avatars/temper. Original SVG vectors become editable RML paths; official CLI 1.2.0 builds unscripted .riv files locally without sign-in. Both public files contain two artboards, selected per participant.
 Development-only /avatar-lab drives manual targets, not analysis. Default files work without environment configuration. VITE_MALE_RIG_URL and VITE_FEMALE_RIG_URL optionally override them in frontend/.env.local.
 Rebuild source with node frontend/scripts/build-rig-source.mjs, then Rive CLI verify/inspect/--once and copy build/temper.riv to both public filenames. Check-rigs records SHA256; file headers alone do not prove animation.
+
 
 
 
