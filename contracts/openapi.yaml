@@ -1,0 +1,27 @@
+openapi: 3.0.3
+info:
+  title: TEMPER API
+  version: 0.0.1
+  description: Phase 00 health contract. Analysis schema reserved for later phases.
+servers:
+  - url: /api/v1
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        '200':
+          description: Backend is running; this does not imply inference is available.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+components:
+  schemas:
+    Health:
+      type: object
+      required: [status, application, analysisMode]
+      properties:
+        status: {type: string, enum: [UP]}
+        application: {type: string, enum: [TEMPER]}
+        analysisMode: {type: string, enum: [NONE]}
