@@ -6,6 +6,7 @@ import { ChatProvider } from '../features/chat/ChatProvider';
 import { ChatPage } from '../features/chat/ChatPage';
 import { AvatarLab } from '../features/avatar/AvatarLab';
 import {AnalysisProvider} from '../features/analysis/AnalysisProvider';
+import {MessageInspector} from '../features/analysis/MessageInspector';
 const TimelinePage=lazy(()=>import('../features/analysis/ConflictTimeline').then(m=>({default:m.TimelinePage})));
 
 export function App() {
@@ -17,7 +18,7 @@ export function App() {
     <Route path="/settings" element={<Placeholder icon={Settings2} title="Make this space yours" text="Participant and conversation preferences will appear here." />} />
     {import.meta.env.DEV && <Route path="/avatar-lab" element={<AvatarLab />} />}
     <Route path="*" element={<Navigate to="/chat" replace />} />
-  </Routes></Shell></AnalysisProvider></ChatProvider>;
+  </Routes></Shell><MessageInspector/></AnalysisProvider></ChatProvider>;
 }
 
 function Placeholder({icon: Icon, title, text}: {icon: typeof MessageCircle; title: string; text: string}) {

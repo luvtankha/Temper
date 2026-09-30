@@ -19,7 +19,10 @@ export function mockSnapshot(messages:readonly ChatMessage[]):ConversationAnalys
     return {messageId:message.id,sequence:index+1,speakerId:message.speakerId,sentAt:message.sentAt,
       emotions:Object.fromEntries(emotionKeys.map((key,i)=>[key,fixture.emotion[i]])) as EmotionSignals,
       signals:Object.fromEntries(signalKeys.map((key,i)=>[key,fixture.signal[i]])) as LinguisticSignals,
-      sentiment:fixture.sentiment,conflict:fixture.conflict};
+      sentiment:fixture.sentiment,conflict:fixture.conflict,
+      contextMessageIds:messages.slice(Math.max(0,index-5),index).map(m=>m.id),
+      explanation:'This hand-authored fixture illustrates how language signals can be inspected alongside prior turns. The scores are UI examples, not conclusions about the speaker’s internal feelings.',
+      evidence:[{source:'MOCK' as const,label:`Ordinal fixture ${index%fixtures.length+1}`,description:'Signal scores are assigned by turn position. Message text has not been processed by an AI model.'},{source:'MOCK' as const,label:'Context reference',description:'Up to five previous turns are shown for inspection. These references demonstrate context presentation; no contextual inference has run.'}]};
   });
   const last=analyzed.at(-1),previous=analyzed.at(-2);
   const peak=analyzed.reduce<typeof last>((highest,row)=>!highest||row.conflict>highest.conflict?row:highest,undefined);

@@ -6,6 +6,8 @@ export type LinguisticSignals=Record<keyof typeof signalLabels,number>;
 export interface MessageAnalysis {
   messageId:string;sequence:number;speakerId:ParticipantId;sentAt:string;
   emotions:EmotionSignals;signals:LinguisticSignals;sentiment:number;conflict:number;
+  explanation:string;contextMessageIds:string[];
+  evidence:{source:'MOCK'|'MODEL'|'HEURISTIC';label:string;description:string}[];
 }
 export interface ConversationAnalysis {
   conversationId:string;mode:'MOCK'|'MODEL';messages:MessageAnalysis[];

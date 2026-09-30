@@ -8,6 +8,8 @@ test('send, multiline, emoji, selection and route preservation',async ({page}) =
   const message=page.getByRole('button',{name:/Message 8 from Alex/});
   await expect(message).toContainText('A thoughtful first line\nx');
   await message.click(); await expect(page.getByLabel('Selected message', {exact:true})).toBeVisible();
+  await expect(page.getByRole('dialog',{name:'Message details',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Close message details'}).click();
   await page.getByRole('button',{name:'Close selected message'}).click();
   await page.getByRole('button',{name:'Add emoji'}).click(); await page.getByRole('button',{name:'Insert 💜'}).click();
   await expect(composer).toHaveValue('💜'); await composer.press('Enter');

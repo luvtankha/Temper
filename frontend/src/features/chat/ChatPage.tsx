@@ -5,7 +5,7 @@ import { useChat } from './ChatProvider';
 import { RemoteAvatar } from '../avatar/RemoteAvatar';
 
 export function ChatPage() {
-  const {messages,localId,setLocalId,loading,paused,setPaused,remoteTyping,send,reset,previewTyping,selectedMessageId:selectedId,setSelectedMessageId:setSelectedId,focusedMessageId,focusRequest} = useChat();
+  const {messages,localId,setLocalId,loading,paused,setPaused,remoteTyping,send,reset,previewTyping,selectedMessageId:selectedId,setSelectedMessageId:setSelectedId,focusedMessageId,focusRequest,inspectMessage} = useChat();
   const remote = remoteParticipant(localId);
   const [draft,setDraft] = useState('');
   const [sending,setSending] = useState(false);
@@ -48,14 +48,14 @@ export function ChatPage() {
         const showName = index===0 || messages[index-1].speakerId !== message.speakerId;
         return <div className={`message-row ${own ? 'own' : 'remote'}`} key={message.id}>
           {!own && <span className={`message-avatar ${showName ? '' : 'hidden-avatar'}`}>{speaker.name[0]}</span>}
-          <div className="message-content">{showName && <span className="message-sender">{own ? 'You' : speaker.name}</span>}<button ref={node=>{if(node)messageRefs.current.set(message.id,node);else messageRefs.current.delete(message.id);}} className={`message-bubble ${selectedId===message.id ? 'message-selected' : ''}`} aria-label={`Message ${index+1} from ${speaker.name}: ${message.text}`} aria-pressed={selectedId===message.id} onClick={() => setSelectedId(selectedId===message.id ? null : message.id)}>{message.text}</button><div className="message-meta"><time dateTime={message.sentAt}>{new Intl.DateTimeFormat('en-IN',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Calcutta'}).format(new Date(message.sentAt))}</time>{own && <CheckCheck size={12} />}<span>demo</span></div></div>
+          <div className="message-content">{showName && <span className="message-sender">{own ? 'You' : speaker.name}</span>}<button ref={node=>{if(node)messageRefs.current.set(message.id,node);else messageRefs.current.delete(message.id);}} className={`message-bubble ${selectedId===message.id ? 'message-selected' : ''}`} aria-label={`Message ${index+1} from ${speaker.name}: ${message.text}`} aria-pressed={selectedId===message.id} onClick={() => inspectMessage(message.id)}>{message.text}</button><div className="message-meta"><time dateTime={message.sentAt}>{new Intl.DateTimeFormat('en-IN',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Calcutta'}).format(new Date(message.sentAt))}</time>{own && <CheckCheck size={12} />}<span>demo</span></div></div>
         </div>;
       })}</>}
       {remoteTyping && <div className="typing-indicator"><span className="message-avatar">{remote.name[0]}</span><span className="typing-dots"><i /><i /><i /></span><small>{remote.name} is typing · simulated</small></div>}
       <div ref={endRef} />
     </div>
     {awayFromBottom && <button className="jump-bottom" aria-label="Scroll to latest message" onClick={() => {setAwayFromBottom(false); endRef.current?.scrollIntoView({behavior:'smooth'});}}><ArrowDown size={15} /> Latest messages</button>}
-    {selected && <div className="message-selection" role="region" aria-label="Selected message"><div><strong>Message {messages.findIndex(m=>m.id===selected.id)+1}</strong><span>{participants.find(p=>p.id===selected.speakerId)?.name} · Analysis is not available yet.</span></div><button className="icon-button" aria-label="Close selected message" onClick={() => setSelectedId(null)}><X size={15} /></button></div>}
+    {selected && <div className="message-selection" role="region" aria-label="Selected message"><div><strong>Message {messages.findIndex(m=>m.id===selected.id)+1}</strong><span>{participants.find(p=>p.id===selected.speakerId)?.name} · Signal details are available in the inspector.</span></div><button className="inspect-selected-button" onClick={()=>inspectMessage(selected.id)}>Inspect signals</button><button className="icon-button" aria-label="Close selected message" onClick={() => setSelectedId(null)}><X size={15} /></button></div>}
     <div className="composer-wrapper">
       <RemoteAvatar localId={localId} typing={remoteTyping} paused={paused} />
       <div className="composer-topline"><span><span className="small-spark">✦</span> A space to say what you mean.</span><span>CHATTING AS {participants.find(p=>p.id===localId)?.name.toUpperCase()}</span></div>
@@ -68,4 +68,5 @@ export function ChatPage() {
   </section>;
 }
 function ActivityMark() {return <><i /><i /><i /><i /></>;}
+
 
