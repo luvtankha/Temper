@@ -214,3 +214,17 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   .emoji-picker button { padding: 6px; }
 }
 @media (max-height:580px) { .chat-header { padding-block:12px; } .conversation-banner { display:none; } .composer-topline,.composer-footnote { display:none; } .composer-wrapper { padding-block:10px; } .composer textarea { height:30px; min-height:30px; } .message-list { padding-top:14px; } .conversation-intro { margin-block:20px; } }
+.remote-avatar-layer { position: relative; display: flex; align-items: flex-end; justify-content: space-between; height: 132px; min-width: 0; overflow: hidden; margin-top: -10px; margin-bottom: -2px; pointer-events: none; }
+.avatar-art { width: 160px; height: 160px; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); }
+.avatar-art img { width: 100%; height: 100%; display: block; position: relative; z-index: 1; filter: drop-shadow(0 5px 14px #0005); }
+.avatar-halo { position: absolute; inset: 25px 7px -20px; background: radial-gradient(ellipse,#e466ae13,transparent 65%); border-radius: 50%; }
+.avatar-presence { display: flex; align-items: center; gap: 8px; padding-bottom: 26px; max-width: 35%; }
+.avatar-presence-mark { color: #d394cc; font-size: 18px; }
+.avatar-presence strong { display: block; color: #b9a0c2; font-size: 10px; font-weight: 400; }
+.avatar-presence small { display: block; color: #9a7da5; font-size: 8px; margin-top: 5px; }
+.avatar-preview-label { padding-bottom: 26px; color: #947c9c; font-size: 7px; }
+.composer { z-index: 2; }
+.composer-topline { position: relative; z-index: 3; }
+@media(max-width:1200px) and (min-width:1024px) { .avatar-presence small { display:none; } .avatar-presence { max-width:28%; } .avatar-presence strong { font-size:8px; } .avatar-presence-mark { display:none; } .avatar-art { width:140px;height:140px; } .remote-avatar-layer { height:120px; } }
+@media(max-width:767px) { .remote-avatar-layer { height:104px; } .avatar-art { width:130px;height:130px; } .avatar-presence { max-width:28%; padding-bottom:18px; } .avatar-presence strong { font-size:8px; } .avatar-presence small,.avatar-presence-mark { display:none; } .avatar-preview-label { padding-bottom:18px;font-size:6px; } }
+@media(max-height:580px) { .remote-avatar-layer { height:62px; margin-top:0; } .avatar-art { width:80px;height:80px; } .avatar-presence { padding-bottom:14px; } .avatar-presence small { display:none; } .avatar-preview-label { padding-bottom:14px; } }
