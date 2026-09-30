@@ -29,7 +29,8 @@ test('every analyzed turn exposes details and context links return to the correc
 });
 test('new turn shows pending analysis rather than fabricated zero scores, then updates',async({page})=> {
   await page.goto('/chat');await expect(page.locator('[data-message-count]')).toHaveAttribute('data-message-count','7');
-  await page.clock.install();await page.clock.pauseAt(Date.now());
+  const testClock=new Date('2030-01-01T00:00:00Z');
+  await page.clock.install({time:testClock});await page.clock.pauseAt(new Date(testClock.getTime()+60_000));
   await page.getByRole('textbox').fill('A fresh turn awaiting its fixture');await page.getByRole('button',{name:'Send message',exact:true}).click();
   await page.getByRole('button',{name:/Message 8 from Alex:/}).click();
   const dialog=page.getByRole('dialog',{name:'Message details',exact:true});await expect(dialog.getByRole('status')).toContainText('Analysis pending');await expect(dialog.getByRole('progressbar')).toHaveCount(0);

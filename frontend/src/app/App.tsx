@@ -7,13 +7,13 @@ import { ChatPage } from '../features/chat/ChatPage';
 import { AvatarLab } from '../features/avatar/AvatarLab';
 import {AnalysisProvider} from '../features/analysis/AnalysisProvider';
 import {MessageInspector} from '../features/analysis/MessageInspector';
-const TimelinePage=lazy(()=>import('../features/analysis/ConflictTimeline').then(m=>({default:m.TimelinePage})));
+const AnalysisDashboard=lazy(()=>import('../features/analysis/AnalysisDashboard').then(m=>({default:m.AnalysisDashboard})));
 
 export function App() {
   return <ChatProvider><AnalysisProvider><Shell><Routes>
     <Route path="/" element={<Navigate to="/chat" replace />} />
     <Route path="/chat" element={<ChatPage />} />
-    <Route path="/analysis" element={<Suspense fallback={<p className="route-loading">Opening the timeline…</p>}><TimelinePage/></Suspense>} />
+    <Route path="/analysis" element={<Suspense fallback={<p className="route-loading">Opening the dashboard…</p>}><AnalysisDashboard/></Suspense>} />
     <Route path="/history" element={<Placeholder icon={History} title="Your conversations, revisited" text="Saved conversations and imported chats will appear here when history is connected." />} />
     <Route path="/settings" element={<Placeholder icon={Settings2} title="Make this space yours" text="Participant and conversation preferences will appear here." />} />
     {import.meta.env.DEV && <Route path="/avatar-lab" element={<AvatarLab />} />}

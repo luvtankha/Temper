@@ -1,7 +1,8 @@
-# Architecture through Phase 04
-React/Vite → typed fetch adapter → same-origin proxy → Java 21 Spring Boot modular monolith.
-Backend common module provides health only. No database/AI required at startup. Future domain/inference/persistence implementations sit behind stable contracts; message delivery remains independent from inference.
-Shell owns responsive navigation and collapsible insights. ChatProvider holds participant/messages across routes; ChatApi isolates in-memory storage. ChatPage renders chat, composer, simulated typing and selection; analytics/history/settings remain placeholders.
-RemoteAvatar resolves the other participant. Genuine original male/female Rive artboards sit above the composer. Ten normalized semantic controls convert to percentages for continuous blend states; face/head/body layers have independent transition timings. Local WASM and lazy-loaded runtime; wrong rigs show explicit errors.
-Development /avatar-lab inspects manual targets and actual playback, not NLP. Source RML is reproducible with the official Rive CLI; unscripted files require no editor account or signing. No inference or database schema exists.
+# Architecture through Phase 09
+React/Vite → typed adapters/provider state → same-origin dev proxy → Java 21 Spring Boot modular monolith.
+ChatApi currently uses local fictional messages; AnalysisApi uses explicitly marked ordinal fixtures, cancellation and loading/empty/error/retry states. No message text is classified.
+Shell owns responsive navigation/collapsible insights and overlay focus. ChatProvider holds participant, message selection, inspector-open and focus requests across routes. AnalysisProvider supplies per-turn scores, typed source/evidence/context IDs and conversation turning points.
+RemoteAvatar always resolves the other participant. Original Rive artboards use ten semantic controls plus attentive/motion inputs, native idle behavior, pause and reduced-motion handling. Local WASM/runtime and Recharts/dashboard are separately lazy-loaded.
+Full /analysis reuses accessible timeline and portal message inspector. Dashboard arithmetic aggregates fixture values by speaker; uncertainty/provenance remain visible. No real inference/conflict engine is claimed.
+Backend currently exposes health only. Phase 10 introduces domain/repository boundaries; transport, inference, persistence and security follow sequentially.
 
