@@ -1,5 +1,5 @@
 # TEMPER
-Conversation intelligence for CEREBRO. Follow AGENT.md and sequential evidence in docs/phases. **Phases 00–09 verified; Phase 10 in progress.**
+Conversation intelligence for CEREBRO. Follow AGENT.md and sequential evidence in docs/phases. **Phases 00–10 verified.**
 
 ## Development
 Requires Node 22+ (tested 24), Java 21 JDK. Maven wrapper included. No PostgreSQL or AI models required yet.
@@ -12,11 +12,12 @@ Open http://127.0.0.1:5173. Vite proxies /api and /actuator to backend port 8080
 ## Verification
 In frontend: npm test; npm run build; npm run test:e2e -- --workers=2 (backend must run); npm run check:rigs.
 In backend with Java 21: .\\mvnw.cmd verify.
-Checkpoint: frontend build, 18 units, 60 browser checks defined (phase-specific results in handoffs) and Java build/2 tests pass. Actual Rive canvas tests exercise eight poses, intensity blends, reversal, overlapping signals and staged transitions for both characters. Dependency audit reports zero vulnerabilities.
+Checkpoint: frontend build and 18 units pass; 62 browser checks defined (phase-specific results in handoffs); Java build and 11 tests pass. Phase 10 live domain/health/chat/dashboard regression: 11/11. Actual Rive canvas tests exercise eight poses, intensity blends, reversal, overlapping signals and staged transitions for both characters. Dependency audit reports zero vulnerabilities.
 
 ## Current behavior / limits
 Responsive dark UI, fictional local chat, multiline input, emoji, message selection, loading/empty/paused states and simulated typing. Rive presence includes breathing, blinking, gaze/head drift, typing attention, pause and reduced-motion support. Alex sees Nova's animated female character; Nova sees Alex's animated male character. Both use original Rive rigs above the composer. Insights show clearly labeled mock fixtures and refresh after local sends; no analysis is inferred from text.
 No two-client real-time transport, database, inference, authentication or deployment. Messages stay in memory; reload restores the fictional sample. Health reports analysisMode NONE.
+Backend domain records and repository ports have a thread-safe in-memory adapter. GET /api/v1/conversations and /api/v1/conversations/{id} expose fictional seed metadata. TEMPER_DEMO_ENABLED=false disables backend seed data. No backend analyses are fabricated. On Windows, run spring-boot:run or a JAR copied outside backend/target so packaging can replace its build output.
 
 ## Rive source
 See docs/architecture/rive-rig-spec.md and assets/avatars/temper. Original SVG vectors become editable RML paths; official CLI 1.2.0 builds unscripted .riv files locally without sign-in. Both public files contain two artboards, selected per participant.

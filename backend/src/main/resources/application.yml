@@ -1,6 +1,9 @@
 spring:
   application:
     name: temper
+temper:
+  demo:
+    enabled: ${TEMPER_DEMO_ENABLED:true}
 server:
   port: ${SERVER_PORT:8080}
 management:
