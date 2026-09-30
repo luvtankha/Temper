@@ -1,5 +1,5 @@
 # TEMPER
-Conversation intelligence for CEREBRO. Follow AGENT.md and sequential evidence in docs/phases. **Phases 00–13 verified.**
+Conversation intelligence for CEREBRO. Follow AGENT.md and sequential evidence in docs/phases. **Phases 00–14 verified.**
 
 ## Development
 Requires Node 22+ (tested 24), Java 21 JDK. Maven wrapper included. No PostgreSQL or AI models required yet.
@@ -16,7 +16,7 @@ Checkpoint: frontend build and 22 units pass; 66 browser behaviors defined (phas
 
 ## Current behavior / limits
 Responsive dark UI, fictional local chat, multiline input, emoji, message selection, loading/empty/paused states and simulated typing. Rive presence includes breathing, blinking, gaze/head drift, typing attention, pause and reduced-motion support. Alex sees Nova's animated female character; Nova sees Alex's animated male character. Both use original Rive rigs above the composer. Insights show clearly labeled mock fixtures and refresh after local sends; no analysis is inferred from text.
-No database, inference, authentication or deployment yet. Default local demo messages stay in tab memory. Health reports analysisMode NONE.
+No database, authentication or deployment yet. Optional foundation inference is available; conversation analysis remains MOCK. Default local demo messages stay in tab memory. Health reports analysisMode NONE.
 Backend domain records and repository ports have a thread-safe in-memory adapter. GET /api/v1/conversations and /api/v1/conversations/{id} expose fictional seed metadata. TEMPER_DEMO_ENABLED=false disables backend seed data. Seed creates no analyses; explicit analyze requests produce labeled MOCK fixtures. On Windows, run spring-boot:run or a JAR copied outside backend/target so packaging can replace its build output.
 Phase 11 REST supports conversation creation, ordered messages, explicit ordinal MOCK analysis, analytics, timeline and insights. Open /chat?transport=backend (optionally &conversation=UUID) or set VITE_CHAT_TRANSPORT=backend to use the Java adapter with the existing UI. Real delivery persists across browser reloads within the running backend; restarting Java clears in-memory data. New demo creates a fresh backend room without deleting others. Analysis request is separate from message delivery; no model inference. Default local adapter remains available.
 Phase 12 adds live Spring WebSocket/STOMP for transport=backend; transport=rest preserves REST-only delivery. Open the same conversation UUID in two browser sessions, select Alex in one and Nova in the other. Each sees the other avatar; typing/presence are real, send broadcasts immediately and reconnect restores missed messages. Status disables sending during disconnect. Contracts/websocket.md documents topics, errors, heartbeats and development identity limits. Vite proxies /ws; optional VITE_WS_URL must use ws:// or wss://. TEMPER_WS_ALLOWED_ORIGINS controls browser origins. No automatic resend after uncertain delivery.
@@ -31,4 +31,7 @@ Rebuild source with node frontend/scripts/build-rig-source.mjs, then Rive CLI ve
 
 
 
+
+
+Phase 14 adds optional local ONNX foundation inference at POST /api/v1/ai/foundation/classify. See docs/model-cards/foundation.md for the pinned licensed model, download script and TEMPER_FOUNDATION_MODEL_DIR. Default chat needs no model; unconfigured diagnostic returns503. Java ordinary verify:21 passed plus1 explicit model-dependent skip; genuine native test:1/1 separately with configured artifacts; packaged live API proves real inference. Previous browser regression7/7.
 

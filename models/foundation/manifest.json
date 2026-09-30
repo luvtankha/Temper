@@ -1,0 +1,15 @@
+{
+  "modelId": "distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+  "revision": "714eb0fa89d2f80546fda750413ed43d93601a13",
+  "license": "Apache-2.0",
+  "architecture": "DistilBertForSequenceClassification",
+  "labels": ["negative", "positive"],
+  "files": {
+    "model.onnx": "252cf7048af94a1599019fef35961b2bd3d6db13df0b0a4b032b92baeae31939",
+    "tokenizer.json": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66",
+    "config.json": "59025ec3116b09d2815c6b10b10dd6bb1caaab2a75d679cf6ebc36efd934f67d",
+    "tokenizer_config.json": "da2086ab4da2a7931ddd70653b999177663ea2dc39b37801af31322ccf3db645",
+    "special_tokens_map.json": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3",
+    "vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+  }
+}

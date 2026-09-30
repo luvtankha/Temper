@@ -2,6 +2,8 @@ spring:
   application:
     name: temper
 temper:
+  foundation:
+    model-dir: ${TEMPER_FOUNDATION_MODEL_DIR:}
   context:
     previous-turns: ${TEMPER_CONTEXT_PREVIOUS_TURNS:5}
   websocket:
