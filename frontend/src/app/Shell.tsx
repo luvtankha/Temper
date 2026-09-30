@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Activity, ArrowUpRight, ChartNoAxesCombined, ChevronDown, History, Menu, MessageCircle, PanelRightClose, PanelRightOpen, Settings2, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { Activity, ChartNoAxesCombined, ChevronDown, History, Menu, MessageCircle, PanelRightClose, PanelRightOpen, Settings2, ShieldCheck, X } from 'lucide-react';
 import { getHealth } from '../api/client';
 import { useChat } from '../features/chat/ChatProvider';
 import { participants, remoteParticipant } from '../models/chat';
+import {AnalyticsPanel} from '../features/analysis/AnalyticsPanel';
 
 const navigation = [
   {to:'/chat', title:'Conversation', Icon:MessageCircle},
@@ -68,8 +69,10 @@ export function Shell({children}: {children: ReactNode}) {
     <div className="workspace">
       <header className="topbar"><div className="breadcrumb"><button ref={navToggle} className="icon-button nav-toggle" onClick={() => setNavOpen(true)} aria-label="Open navigation"><Menu size={20} /></button><span>Workspace</span><span className="breadcrumb-slash">/</span><strong>The launch plan</strong></div><div className="topbar-actions"><span className="pill demo-pill"><span />Local demo</span><button ref={analyticsToggle} className={`analytics-toggle ${analyticsOpen ? 'selected' : ''}`} aria-expanded={analyticsOpen} aria-controls="analytics-panel" onClick={() => setAnalyticsOpen(!analyticsOpen)}>{analyticsOpen ? <PanelRightClose size={17} /> : <PanelRightOpen size={17} />}<span>Insights</span></button></div></header>
       <div className="workspace-body"><main id="main-content" className="main-content">{children}</main>
-        {analyticsOpen && <aside ref={analyticsRef} id="analytics-panel" aria-label="Conversation insights" role={mobile ? 'dialog' : undefined} aria-modal={mobile ? true : undefined} className="analytics-panel"><div className="panel-heading"><div><span className="eyebrow">A CLOSER LOOK</span><h2>Conversation insights</h2></div><button ref={analyticsClose} className="icon-button" aria-label="Close insights" onClick={closeAnalytics}><X size={18} /></button></div><div className="analysis-availability"><Sparkles size={16} /><span>Ready for a little context</span></div><div className="insights-empty"><div className="insight-icon"><ChartNoAxesCombined size={32} strokeWidth={1.2} /></div><h3>Between the lines.</h3><p>Estimated signals and emotional shifts will appear here as analysis becomes available.</p></div><div className="insight-note"><span className="eyebrow">UNDERSTANDING, NOT ASSUMPTIONS</span><p>Language offers clues. Emotional signals are estimates, never facts about someone’s feelings.</p><NavLink to="/analysis" onClick={mobile ? closeAnalytics : undefined}>Explore full analysis <ArrowUpRight size={14} /></NavLink></div></aside>}
+        {analyticsOpen && <aside ref={analyticsRef} id="analytics-panel" aria-label="Conversation insights" role={mobile ? 'dialog' : undefined} aria-modal={mobile ? true : undefined} className="analytics-panel"><div className="panel-heading"><div><span className="eyebrow">A CLOSER LOOK</span><h2>Conversation insights</h2></div><button ref={analyticsClose} className="icon-button" aria-label="Close insights" onClick={closeAnalytics}><X size={18} /></button></div><AnalyticsPanel onNavigate={mobile ? closeAnalytics : undefined} /></aside>}
       </div><footer className="system-footer"><span><span className="status-dot" /> <span role="status">{backend}</span></span><span>Conversation intelligence <span className="footer-star">✦</span> Made for human connection</span></footer>
     </div>
   </div>;
 }
+
+
