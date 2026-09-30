@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: TEMPER API
-  version: 0.2.0
+  version: 0.3.0
   description: Versioned REST. Explicit ordinal MOCK analysis only; no AI inference. Messages are delivered independently of analysis.
 servers:
   - url: /api/v1
@@ -91,6 +91,18 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/MessageAnalysis'}
         '404': {$ref: '#/components/responses/Missing'}
+  /messages/{id}/context:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      operationId: getMessageContext
+      responses:
+        '200':
+          description: Current message and up to five preceding turns with speaker identity; no future turns
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContextWindow'}
+        '404': {$ref: '#/components/responses/Missing'}
   /messages/{id}/analysis:
     parameters:
       - {$ref: '#/components/parameters/Id'}
@@ -173,6 +185,28 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/Error'}
   schemas:
+    ContextTurn:
+      type: object
+      required: [messageId, speaker, text, sequence, sentAt]
+      properties:
+        messageId: {type: string, format: uuid}
+        speaker:
+          type: object
+          required: [id, displayName, avatarVariant]
+          properties:
+            id: {type: string}
+            displayName: {type: string}
+            avatarVariant: {type: string, enum: [MALE, FEMALE]}
+        text: {type: string}
+        sequence: {type: integer, minimum: 1}
+        sentAt: {type: string, format: date-time}
+    ContextWindow:
+      type: object
+      required: [conversationId, current, previous]
+      properties:
+        conversationId: {type: string, format: uuid}
+        current: {$ref: '#/components/schemas/ContextTurn'}
+        previous: {type: array, maxItems: 5, items: {$ref: '#/components/schemas/ContextTurn'}}
     Error:
       type: object
       required: [code, message]

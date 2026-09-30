@@ -1,4 +1,4 @@
-# Architecture through Phase 12
+# Architecture through Phase 13
 React/Vite → typed adapters/provider state → same-origin dev proxy → Java 21 Spring Boot modular monolith.
 ChatApi currently uses local fictional messages; AnalysisApi uses explicitly marked ordinal fixtures, cancellation and loading/empty/error/retry states. No message text is classified.
 Shell owns responsive navigation/collapsible insights and overlay focus. ChatProvider holds participant, message selection, inspector-open and focus requests across routes. AnalysisProvider supplies per-turn scores, typed source/evidence/context IDs and conversation turning points.
@@ -7,4 +7,5 @@ Full /analysis reuses accessible timeline and portal message inspector. Dashboar
 Backend exposes health and versioned conversation metadata reads. Immutable domain records and repository ports cover users, participants, messages, analyses, snapshots and events. Synchronized in-memory adapter validates ownership and order; optional fictional seed creates no analysis. Full REST adapters, transport, inference, PostgreSQL and security follow sequentially.
 Versioned REST commands deliver messages independently of explicit analyze requests. Application services depend on ports; mock engine depends only on ordinal, never submitted text. Analytics/timeline/insights carry provenance and pending counts; missing analysis returns 409 rather than false zero scores. React composition selects local or backend adapters; backend errors remain visible. STOMP, context, inference and database follow in phase order.
 Backend live adapter now connects native STOMP /ws with a room/member claim. Saved message events broadcast independently of analysis; guarded destinations and configured origin allowlist limit the development transport. Real typing and session-counted presence feed ChatProvider; snapshots/events merge by UUID/server sequence on reconnect. REST-only adapter remains transport=rest. Context/inference/persistence/authentication follow sequentially.
+Analysis orchestration now builds immutable causal context (configured3–5 previous turns/current/speaker) through repository ports before invoking the engine. Stored context references become inspectable with no frontend rewrite. The current engine remains ordinal MOCK; genuine classifiers follow next.
 

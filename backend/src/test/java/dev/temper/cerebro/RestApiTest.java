@@ -43,4 +43,10 @@ class RestApiTest {
         try(var pool=Executors.newFixedThreadPool(8)){var futures=new ArrayList<Future<?>>();for(int i=0;i<80;i++)futures.add(pool.submit(()->service.send(id,"alex","Concurrent fictional turn")));for(var f:futures)f.get(10,TimeUnit.SECONDS);}
         var messages=service.messages(id);assertEquals(80,messages.size());for(int i=0;i<80;i++)assertEquals(i+1,messages.get(i).sequence());
     }
+    @Test void actualAnalysisReceivesPreviousTurnsWithSpeakerAndStoresOnlyCausalReferences() throws Exception {
+        UUID room=UUID.fromString(create());var turns=new ArrayList<dev.temper.cerebro.chat.domain.Message>();for(int i=0;i<8;i++)turns.add(service.send(room,i%2==0?"nova":"alex",i==6?"Fine.":"Fictional history "+i));
+        String base="/api/v1/messages/"+turns.get(6).id();
+        mvc.perform(get(base+"/context")).andExpect(status().isOk()).andExpect(jsonPath("$.current.text").value("Fine.")).andExpect(jsonPath("$.current.speaker.displayName").value("Nova")).andExpect(jsonPath("$.previous.length()").value(5)).andExpect(jsonPath("$.previous[0].sequence").value(2)).andExpect(jsonPath("$.previous[4].sequence").value(6));
+        mvc.perform(post(base+"/analyze")).andExpect(status().isOk()).andExpect(jsonPath("$.contextMessageIds.length()").value(5)).andExpect(jsonPath("$.contextMessageIds[0]").value(turns.get(1).id().toString())).andExpect(jsonPath("$.contextMessageIds[4]").value(turns.get(5).id().toString())).andExpect(jsonPath("$.mode").value("MOCK"));
+    }
 }
