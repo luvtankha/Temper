@@ -1,0 +1,41 @@
+import { test, expect } from '@playwright/test';
+test('send, multiline, emoji, selection and route preservation',async ({page}) => {
+  await page.goto('/chat');
+  const composer=page.getByRole('textbox',{name:'Message Nova'});
+  await expect(composer).toBeEnabled();
+  await expect(page.getByRole('button',{name:'Send message',exact:true})).toBeDisabled();
+  await composer.fill('A thoughtful first line'); await composer.press('Shift+Enter'); await composer.press('x'); await composer.press('Enter');
+  const message=page.getByRole('button',{name:/Message 8 from Alex/});
+  await expect(message).toContainText('A thoughtful first line\nx');
+  await message.click(); await expect(page.getByLabel('Selected message', {exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Close selected message'}).click();
+  await page.getByRole('button',{name:'Add emoji'}).click(); await page.getByRole('button',{name:'Insert 💜'}).click();
+  await expect(composer).toHaveValue('💜'); await composer.press('Enter');
+  await page.getByRole('link',{name:'History',exact:true}).click(); await page.getByRole('link',{name:'Conversation 1'}).click();
+  await expect(page.getByRole('button',{name:/Message 9 from Alex/})).toContainText('💜');
+});
+test('participant view, pause, simulated typing and empty/sample states',async ({page}) => {
+  await page.goto('/chat');
+  const menu=page.getByRole('button',{name:'Conversation options'});
+  await menu.click(); await page.getByLabel('Viewing as').selectOption('nova'); await menu.click();
+  await expect(page.getByRole('textbox',{name:'Message Alex'})).toBeEnabled();
+  await menu.click(); await page.getByRole('button',{name:'Preview remote typing'}).click();
+  await expect(page.getByText('Alex is typing · simulated')).toBeVisible();
+  await menu.click(); await page.getByRole('button',{name:'Pause local demo'}).click();
+  await expect(page.getByRole('textbox')).toBeDisabled(); await expect(page.getByText('Demo paused')).toBeVisible();
+  await menu.click(); await page.getByRole('button',{name:'Resume local demo'}).click();
+  await menu.click(); await page.getByRole('button',{name:'New demo conversation'}).click();
+  await expect(page.getByRole('heading',{name:'Every connection starts somewhere.'})).toBeVisible();
+  await page.getByRole('textbox').fill('Hello Alex'); await page.getByRole('button',{name:'Send message'}).click();
+  await expect(page.getByRole('button',{name:'Message 1 from Nova: Hello Alex'})).toBeVisible();
+  await menu.click(); await page.getByRole('button',{name:'Load sample conversation'}).click();
+  await expect(page.getByRole('button',{name:/Message 7 from Nova/})).toHaveCount(1);
+});
+test('long words stay within phone layout and sends scroll to bottom',async ({page}) => {
+  await page.setViewportSize({width:320,height:568}); await page.goto('/chat');
+  const composer=page.getByRole('textbox'); await expect(composer).toBeEnabled();
+  await composer.fill('x'.repeat(1900)); await composer.press('Enter');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await expect(composer).toHaveValue('');
+  await expect(page.getByRole('button',{name:/Message 8 from Alex/})).toBeVisible();
+});

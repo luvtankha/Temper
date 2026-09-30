@@ -4,7 +4,7 @@ for (const [width,height] of sizes) {
   test(`responsive shell ${width}x${height}`, async ({page}) => {
     await page.setViewportSize({width,height});
     await page.goto('/chat');
-    await expect(page.getByRole('heading', {name:'A space for better conversations'})).toBeVisible();
+    await expect(page.getByRole('heading', {name:/^Nova/})).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const toggle = page.getByRole('button',{name:'Insights',exact:true});
     if (await toggle.getAttribute('aria-expanded') === 'true') await toggle.click();
