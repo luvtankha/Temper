@@ -52,7 +52,7 @@ export function ChatPage() {
     {awayFromBottom && <button className="jump-bottom" aria-label="Scroll to latest message" onClick={() => {setAwayFromBottom(false); endRef.current?.scrollIntoView({behavior:'smooth'});}}><ArrowDown size={15} /> Latest messages</button>}
     {selected && <div className="message-selection" role="region" aria-label="Selected message"><div><strong>Message {messages.findIndex(m=>m.id===selected.id)+1}</strong><span>{participants.find(p=>p.id===selected.speakerId)?.name} · Analysis is not available yet.</span></div><button className="icon-button" aria-label="Close selected message" onClick={() => setSelectedId(null)}><X size={15} /></button></div>}
     <div className="composer-wrapper">
-      <RemoteAvatar localId={localId} />
+      <RemoteAvatar localId={localId} typing={remoteTyping} paused={paused} />
       <div className="composer-topline"><span><span className="small-spark">✦</span> A space to say what you mean.</span><span>CHATTING AS {participants.find(p=>p.id===localId)?.name.toUpperCase()}</span></div>
       <form className="composer" onSubmit={submit}>
         <textarea ref={composerRef} aria-label={`Message ${remote.name}`} placeholder={`Message ${remote.name}…`} value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={handleKey} maxLength={2000} rows={2} disabled={paused || loading} />

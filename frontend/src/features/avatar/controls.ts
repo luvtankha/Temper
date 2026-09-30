@@ -25,13 +25,16 @@ export function expressionTarget(state:EmotionState,intensity=.8): AvatarControl
 }
 
 export interface NumericRigInput { name:string; type:number; value:number|boolean; }
-/** Validate the entire rig before mutating any input. Wrong rigs must not half-update. */
-export function applyRigControls(inputs:NumericRigInput[]|undefined, controls:AvatarControls, numberType:number): void {
-  const required=controlNames.map(name => {
-    const matches=inputs?.filter(input=>input.name===name) ?? [];
-    if (matches.length!==1 || matches[0].type!==numberType) throw new Error(`Rig requires one numeric input: ${name}`);
+export function validateRigInputs(inputs:NumericRigInput[]|undefined, numberType:number, names:readonly string[]=controlNames): NumericRigInput[] {
+  return names.map(name=> {
+    const matches=inputs?.filter(input=>input.name===name)??[];
+    if(matches.length!==1||matches[0].type!==numberType)throw new Error(`Rig requires one numeric input: ${name}`);
     return matches[0];
   });
+}
+/** Validate the entire rig before mutating any input. Wrong rigs must not half-update. */
+export function applyRigControls(inputs:NumericRigInput[]|undefined, controls:AvatarControls, numberType:number): void {
+  const required=validateRigInputs(inputs,numberType);
   const safe=normalizeControls(controls);
   // Rive blend axes use percentages; API semantics remain normalized and signed.
   required.forEach(input=> {input.value=100*safe[input.name as ControlName];});

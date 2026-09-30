@@ -9,6 +9,7 @@ for (const local of ['alex','nova']) {
     await page.getByLabel('Viewing as').selectOption(local);
     const rig=page.locator('[data-rig-status]');
     await expect(rig).toHaveAttribute('data-rig-status','ready');
+    await page.getByLabel('Idle motion',{exact:true}).uncheck();await page.waitForTimeout(400);
     await expect(page.getByRole('alert')).toHaveCount(0);
     const canvas=rig.locator('canvas');
     const capture=async()=> {
