@@ -1,0 +1,10 @@
+# TEMPER STOMP contract — Phase 12
+Native WebSocket `/ws`, STOMP 1.2. Connect headers `conversationId` (UUID) and `speakerId` (registered room member). Development claims only until Phase 29 authentication. Origin allowlist defaults localhost/127.0.0.1 port 5173; configure TEMPER_WS_ALLOWED_ORIGINS.
+
+Subscribe to `/topic/conversations/{id}/messages`, `/typing`, `/presence`; `/analysis` is reserved for Phase 23 separate async results. `/user/queue/errors` delivers errors only to the sending session. Subscription and application destinations are restricted to the joined room. Heartbeats 10 seconds; client reconnects after 1.5 seconds. Incoming frames and outgoing publications preserve per-session order.
+
+Publish JSON to `/app/conversations/{id}/send`: `{requestId: UUID, text: string}`. Identity comes from the connected session, not the payload. Text must contain 1–2000 characters. Saves through the same application service as REST; broadcasts `{message: Message, requestId: UUID|null}` to all subscribers, including sender. REST deliveries have requestId null. Request confirmation is matched by ID; frontend deduplicates message UUIDs and sorts sequence. Invalid send returns `{code: INVALID_MESSAGE, message, requestId}` on private error queue; no submitted text echoed. No automatic resend after uncertain delivery.
+
+Publish `/typing`: `{typing: boolean}`; broadcasts `{speakerId, typing}`. Frontend throttles notifications and clears stale typing after five seconds; send/blur clears it. Publish `/presence` after subscribing to request/join online state; broadcasts `{conversationId, onlineParticipantIds: string[]}`. Counts sessions rather than assuming one tab per person; disconnect publishes remaining distinct online members.
+
+On connection/reconnection, subscribe first then fetch REST messages and merge with live events. Composer disables while disconnected; draft retained. Delivery is independent of explicit REST MOCK analysis. No inference in socket delivery. Room data is process-local; restarting backend clears it. One-process simple broker; scaling/authentication/persistence come in assigned phases.

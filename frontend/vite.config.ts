@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173, strictPort: true,
-    proxy: { '/api': 'http://127.0.0.1:8080', '/actuator': 'http://127.0.0.1:8080' },
+    proxy: { '/api': 'http://127.0.0.1:8080', '/actuator': 'http://127.0.0.1:8080', '/ws': {target:'ws://127.0.0.1:8080',ws:true} },
   },
   test: { environment: 'jsdom', setupFiles: ['./src/test-setup.ts'], exclude: ['e2e/**', '**/node_modules/**'] },
 });

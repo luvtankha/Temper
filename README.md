@@ -1,5 +1,5 @@
 # TEMPER
-Conversation intelligence for CEREBRO. Follow AGENT.md and sequential evidence in docs/phases. **Phases 00–11 verified.**
+Conversation intelligence for CEREBRO. Follow AGENT.md and sequential evidence in docs/phases. **Phases 00–12 verified.**
 
 ## Development
 Requires Node 22+ (tested 24), Java 21 JDK. Maven wrapper included. No PostgreSQL or AI models required yet.
@@ -12,13 +12,14 @@ Open http://127.0.0.1:5173. Vite proxies /api and /actuator to backend port 8080
 ## Verification
 In frontend: npm test; npm run build; npm run test:e2e -- --workers=2 (backend must run); npm run check:rigs.
 In backend with Java 21: .\\mvnw.cmd verify.
-Checkpoint: frontend build and 20 units pass; full 64 browser checks pass; Java build and 14 tests pass. OpenAPI validates. Actual Rive canvas tests exercise eight poses, intensity blends, reversal, overlapping signals and staged transitions for both characters. Dependency audit reports zero vulnerabilities.
+Checkpoint: frontend build and 22 units pass; 65 browser behaviors verified (64 broad + corrected domain check, details in handoff); Java build and 16 tests pass, including actual native STOMP clients. OpenAPI validates. Actual Rive canvas tests exercise eight poses, intensity blends, reversal, overlapping signals and staged transitions for both characters. Dependency audit reports zero vulnerabilities.
 
 ## Current behavior / limits
 Responsive dark UI, fictional local chat, multiline input, emoji, message selection, loading/empty/paused states and simulated typing. Rive presence includes breathing, blinking, gaze/head drift, typing attention, pause and reduced-motion support. Alex sees Nova's animated female character; Nova sees Alex's animated male character. Both use original Rive rigs above the composer. Insights show clearly labeled mock fixtures and refresh after local sends; no analysis is inferred from text.
-No two-client real-time transport, database, inference, authentication or deployment. Messages stay in memory; reload restores the fictional sample. Health reports analysisMode NONE.
-Backend domain records and repository ports have a thread-safe in-memory adapter. GET /api/v1/conversations and /api/v1/conversations/{id} expose fictional seed metadata. TEMPER_DEMO_ENABLED=false disables backend seed data. No backend analyses are fabricated. On Windows, run spring-boot:run or a JAR copied outside backend/target so packaging can replace its build output.
+No database, inference, authentication or deployment yet. Default local demo messages stay in tab memory. Health reports analysisMode NONE.
+Backend domain records and repository ports have a thread-safe in-memory adapter. GET /api/v1/conversations and /api/v1/conversations/{id} expose fictional seed metadata. TEMPER_DEMO_ENABLED=false disables backend seed data. Seed creates no analyses; explicit analyze requests produce labeled MOCK fixtures. On Windows, run spring-boot:run or a JAR copied outside backend/target so packaging can replace its build output.
 Phase 11 REST supports conversation creation, ordered messages, explicit ordinal MOCK analysis, analytics, timeline and insights. Open /chat?transport=backend (optionally &conversation=UUID) or set VITE_CHAT_TRANSPORT=backend to use the Java adapter with the existing UI. Real delivery persists across browser reloads within the running backend; restarting Java clears in-memory data. New demo creates a fresh backend room without deleting others. Analysis request is separate from message delivery; no model inference. Default local adapter remains available.
+Phase 12 adds live Spring WebSocket/STOMP for transport=backend; transport=rest preserves REST-only delivery. Open the same conversation UUID in two browser sessions, select Alex in one and Nova in the other. Each sees the other avatar; typing/presence are real, send broadcasts immediately and reconnect restores missed messages. Status disables sending during disconnect. Contracts/websocket.md documents topics, errors, heartbeats and development identity limits. Vite proxies /ws; optional VITE_WS_URL must use ws:// or wss://. TEMPER_WS_ALLOWED_ORIGINS controls browser origins. No automatic resend after uncertain delivery.
 
 ## Rive source
 See docs/architecture/rive-rig-spec.md and assets/avatars/temper. Original SVG vectors become editable RML paths; official CLI 1.2.0 builds unscripted .riv files locally without sign-in. Both public files contain two artboards, selected per participant.

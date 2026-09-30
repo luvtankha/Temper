@@ -1,4 +1,6 @@
 @import "tailwindcss";
+ .live-connection-status { margin:0; padding:6px 20px; font-size:11px; color:#b6aaca; background:#15131c; }
+ .live-connection-status[data-connection-state="connected"] { color:#7fe2b3; }
 :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #f8f8fa; background: #09090b; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { margin: 0; }

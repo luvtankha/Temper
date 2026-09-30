@@ -10,6 +10,8 @@ import dev.temper.cerebro.conversation.domain.*;
 import dev.temper.cerebro.conversation.port.*;
 import dev.temper.cerebro.chat.domain.Message;
 import dev.temper.cerebro.chat.port.MessageRepository;
+import org.springframework.context.ApplicationEventPublisher;
+import dev.temper.cerebro.websocket.MessageBroadcast.Delivered;
 
 @Service
 public class ConversationService {
@@ -18,8 +20,10 @@ public class ConversationService {
     private final UserRepository users;
     private final MessageRepository messages;
     private final Clock clock;
-    public ConversationService(ConversationRepository conversations, ParticipantRepository participants, UserRepository users, MessageRepository messages, Clock clock) {
+    private final ApplicationEventPublisher publisher;
+    public ConversationService(ConversationRepository conversations, ParticipantRepository participants, UserRepository users, MessageRepository messages, Clock clock,ApplicationEventPublisher publisher) {
         this.conversations=conversations;this.participants=participants;this.users=users;this.messages=messages;this.clock=clock;
+        this.publisher=publisher;
     }
     public Conversation require(UUID id) {return conversations.findConversation(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Conversation not found"));}
     public synchronized Conversation create(String title, List<String> memberIds) {
@@ -32,11 +36,12 @@ public class ConversationService {
     }
     public List<Message> messages(UUID id) {require(id);return messages.findMessages(id);}
     /** Sequence allocation and save form one process-local critical section. */
-    public synchronized Message send(UUID id,String speaker,String text) {
+    public Message send(UUID id,String speaker,String text) {return send(id,speaker,text,null);}
+    public synchronized Message send(UUID id,String speaker,String text,UUID requestId) {
         require(id);
         if(participants.findParticipants(id).stream().noneMatch(p->p.userId().equals(speaker))) throw new IllegalArgumentException("Speaker is not a participant");
         long next=messages.findMessages(id).stream().mapToLong(Message::sequence).max().orElse(0)+1;
         var message=new Message(UUID.randomUUID(),id,speaker,text,clock.instant(),next);
-        messages.saveMessage(message);return message;
+        messages.saveMessage(message);publisher.publishEvent(new Delivered(message,requestId));return message;
     }
 }

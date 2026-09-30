@@ -13,7 +13,8 @@ const AnalysisDashboard=lazy(()=>import('../features/analysis/AnalysisDashboard'
 export function App() {
   const adapters=useMemo(()=>{
     const query=new URLSearchParams(window.location.search);
-    return query.get('transport')==='backend'||import.meta.env.VITE_CHAT_TRANSPORT==='backend'?createBackendAdapters(query.get('conversation')??undefined):null;
+    const transport=query.get('transport')??import.meta.env.VITE_CHAT_TRANSPORT;
+    return transport==='backend'||transport==='rest'?createBackendAdapters(query.get('conversation')??undefined,transport==='backend'):null;
   },[]);
   return <ChatProvider api={adapters?.chat} transport={adapters?'backend':'local'}><AnalysisProvider api={adapters?.analysis}><Shell><Routes>
     <Route path="/" element={<Navigate to="/chat" replace />} />
