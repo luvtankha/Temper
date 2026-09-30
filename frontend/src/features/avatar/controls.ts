@@ -33,5 +33,6 @@ export function applyRigControls(inputs:NumericRigInput[]|undefined, controls:Av
     return matches[0];
   });
   const safe=normalizeControls(controls);
-  required.forEach(input=> {input.value=safe[input.name as ControlName];});
+  // Rive blend axes use percentages; API semantics remain normalized and signed.
+  required.forEach(input=> {input.value=100*safe[input.name as ControlName];});
 }

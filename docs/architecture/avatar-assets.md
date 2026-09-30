@@ -1,7 +1,5 @@
-# Avatar artwork and provenance
+# Original avatar assets
+Male Alex and female Nova are original repository-authored upper-body vectors, inspired by the user-supplied expression references. The PNG sheets are reference only; no proprietary avatar art is used.
+Phase 03 created SVG placement art. Phase 04 converts it to native cubic Rive geometry using frontend/scripts/build-rig-source.mjs, with gradients, separate articulated facial/head/body groups and continuous reversible state-machine poses.
+Source: assets/avatars/temper/scene.rml. Runtime: frontend/public/avatars/male.riv and female.riv. Both contain TemperMale and TemperFemale artboards; the renderer always selects the other participant. Each has one TemperEmotion machine and ten numeric inputs. See rive-rig-spec.md and Phase 04 handoff for reproducible build and genuine runtime evidence.
 
-The four user-provided PNGs are design references: male/female emotional sheets and cinematic magenta/violet chat examples. Original files remain unmodified in Downloads. They are not proprietary assets fetched by the agent, and they are not used as a PNG emotion-switching implementation.
-
-`frontend/public/avatars/male.svg` and `female.svg` are original vector artwork authored in this repository: neutral upper-body previews with separate facial and posture shapes, suitable as an import starting point for Rive. They are Phase 03 placement placeholders, not the final animated rig. Alex is male; Nova is female. Each viewer always sees the other participant.
-
-Phase 04 must replace the preview renderer with genuine authored `.riv` character files, continuous state machine inputs and reversible emotional transitions. Copying flat emotion sheets, applying CSS motion to them, or hiding a missing Rive file behind a fallback does not satisfy that gate.

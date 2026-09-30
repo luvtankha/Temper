@@ -10,7 +10,7 @@
 8. **Backend:** TemperApplication and HealthController; unchanged in this phase.
 9. **AI/model/rig status:** No inference. No `.riv` assets supplied. Original SVG sources exist. Checking Rive editor authoring/export access; animation gate requires real rig assets and runtime evidence.
 10. **Passing tests:** Frontend 8/8 unit and 25/25 browser; Java 2/2. Both builds pass.
-11. **Known limitations:** Flat PNG sheets cannot directly become rig/state machines. Final Rive character export requires editor access; none yet established. No Docker or deployed service.
+11. **Known limitations at phase start:** Flat PNG sheets cannot directly become rigs. Initial editor-access uncertainty was cleared during this phase: official CLI builds unscripted files without an account. No Docker or deployed service.
 12. **Must preserve:** Swapped participant identity, composer containment, responsive sizing, all existing chat behaviors, health contract and ignored local outputs.
 13. **Exact scope:** Continuous control contract and safe normalization, genuine Rive runtime adapter, eight-state authoring specification, original character rig authoring/export if access permits; validate required runtime inputs and missing assets honestly.
 14. **Out of scope:** Phase 05 idle/typing micro-interactions, Phase 06+ analytics, backend chat domain, AI/persistence/security and deployment. Cannot advance sequential phase order until rig gate passes.

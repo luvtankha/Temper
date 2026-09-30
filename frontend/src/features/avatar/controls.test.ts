@@ -18,7 +18,8 @@ describe('semantic avatar controls',()=> {
   });
   it('writes all validated numeric inputs and reverses back to neutral',()=> {
     const inputs:NumericRigInput[]=controlNames.map(name=>({name,type:56,value:0}));
-    applyRigControls(inputs,expressionTarget('angry'),56); expect(inputs.find(i=>i.name==='anger')?.value).toBe(.8);
+    applyRigControls(inputs,expressionTarget('angry'),56); expect(inputs.find(i=>i.name==='anger')?.value).toBe(80);
+    expect(inputs.find(i=>i.name==='valence')?.value).toBe(-80);
     applyRigControls(inputs,neutralControls,56); expect(inputs.find(i=>i.name==='anger')?.value).toBe(0);
   });
   it('rejects missing, wrong-type and duplicate inputs before mutating a rig',()=> {

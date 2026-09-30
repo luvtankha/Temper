@@ -1,6 +1,6 @@
 # TEMPER Rive rig authoring contract
 
-Phase 04 remains incomplete until both original rigs actually run. This contract is engineering preparation, not evidence of animated character completion.
+Phase 04 is verified. Both original rigs run in the React canvas runtime; the phase handoff records actual evidence.
 
 ## Files and artboards
 
@@ -13,7 +13,7 @@ Original vector previews next to the runtime files can be imported as an authori
 
 ## Numeric inputs
 
-`anger`, `sadness`, `happiness`, `frustration`, `confusion`, `concern`, `surprise`, `arousal`, `sarcasm` range **0–1**; `valence` ranges **−1–1**. All ten are required exactly once with numeric type. Neutral uses all emotion channels zero, valence zero, arousal 0.15.
+`anger`, `sadness`, `happiness`, `frustration`, `confusion`, `concern`, `surprise`, `arousal`, `sarcasm` range **0–1**; `valence` ranges **−1–1**. All ten are required exactly once with numeric type. Neutral uses all emotion channels zero, valence zero, arousal 0.15. These are semantic API units; the renderer multiplies by 100 for Rive percentage axes (signed valence −100–100).
 
 Use separate skeleton/path groups for brows, upper/lower eyelids, pupils, mouth shape, head/neck, shoulders/torso and arms/hands. Share one rig per variant across all eight emotions. Keep hands near the lower artboard edge so the character rests above the composer.
 
@@ -36,11 +36,11 @@ Author continuous blend layers and reversible transition timing: facial channels
 
 ## Runtime and export
 
-Use the genuine `.riv` runtime export rather than an editor backup. [Rive’s runtime export documentation](https://rive.app/docs/editor/exporting/exporting-for-runtime) states that runtime export is available on paid plans. Do not buy a plan or create an account without the user’s action. Existing authored exports can be supplied independently of editor access.
+The official [Rive CLI](https://rive.app/docs/cli/getting-started) builds local unscripted runtime files without sign-in. Browser signing requirements apply to scripts; these rigs contain no scripts. The initial editor plan/access blocker is cleared. Source and generator live in the repository.
 
 The React runtime uses `useRive`, local bundled WASM and numeric input validation. Rive’s [React API](https://rive.app/docs/runtimes/react/parameters-and-return-values) says state-machine inputs still work but are deprecated for future major versions. Numeric inputs are used here to honor the requested contract; pin the lockfile and migrate internally to data binding if a future runtime removes them, without changing semantic controls.
 
-Set `VITE_MALE_RIG_URL=/avatars/male.riv` and `VITE_FEMALE_RIG_URL=/avatars/female.riv` in `frontend/.env.local` only after exports exist; restart Vite. Root `.env.example` documents the keys. Rive renderer is lazy-loaded so neutral preview mode does not download the runtime. Wrong or missing configured rigs show an explicit error; no silent preview fallback.
+Default runtime paths are `/avatars/male.riv` and `/avatars/female.riv`. Optional `VITE_MALE_RIG_URL` and `VITE_FEMALE_RIG_URL` in `frontend/.env.local` override them. Root `.env.example` documents the keys. Runtime is lazy-loaded. Wrong rigs show explicit errors.
 
 ## Required acceptance evidence
 

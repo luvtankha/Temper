@@ -13,6 +13,7 @@ interface Props { src:string; artboard:string; controls:AvatarControls; label:st
 export default function RiveCharacter({src,artboard,controls,label}:Props) {
   const [failure,setFailure]=useState<string|null>(null);
   const [ready,setReady]=useState(false);
+  const [inputValues,setInputValues]=useState<string>();
   const {rive,RiveComponent}=useRive({
     src,artboard,stateMachines:rigStateMachine,autoplay:true,
     layout:new Layout({fit:Fit.Contain,alignment:Alignment.BottomCenter}),
@@ -22,10 +23,11 @@ export default function RiveCharacter({src,artboard,controls,label}:Props) {
     if (!rive) return;
     try {
       applyRigControls(rive.stateMachineInputs(rigStateMachine),controls,StateMachineInputType.Number);
+      if (import.meta.env.DEV) setInputValues(JSON.stringify(Object.fromEntries((rive.stateMachineInputs(rigStateMachine)??[]).map(i=>[i.name,i.value]))));
       setReady(true); setFailure(null);
     } catch (cause) {setFailure(cause instanceof Error ? cause.message : 'Avatar rig is incompatible.'); setReady(false); rive.pause();}
   },[rive,controls]);
-  return <div className="rive-character" role="img" aria-label={label} data-rig-status={failure ? 'error' : ready ? 'ready' : 'loading'}>
+  return <div className="rive-character" role="img" aria-label={label} data-rig-status={failure ? 'error' : ready ? 'ready' : 'loading'} data-rig-inputs={inputValues}>
     {failure ? <span className="rig-load-error" role="alert">{failure}</span> : <><RiveComponent aria-hidden="true" />{!ready && <span className="rig-loading-label">Loading avatar rig…</span>}</>}
   </div>;
 }

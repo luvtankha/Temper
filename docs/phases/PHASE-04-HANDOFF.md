@@ -1,43 +1,31 @@
-# Phase 04 — BLOCKED / INCOMPLETE checkpoint
+# Phase 04 — COMPLETE
+Original male/female Rive character rigs now load and animate in TEMPER.
 
-**This is a resumable checkpoint, not a completion handoff. Do not advance to Phase 05 yet.**
+## Implementation
+Original SVG vectors were converted to editable RML cubic paths and gradients, with articulated brow, eye, mouth, head, upper-body and arm/hand groups. Each artboard has one TemperEmotion state machine, ten numeric inputs, eight poses and three independent layers. Continuous intensity blends between neutral and expression poses. Face/head/posture transitions take 300/400/700ms. Priority (anger, frustration, surprise, sadness, concern, confusion, happiness) makes overlapping channels deterministic. Every state has reversible transitions.
 
-## Implemented independently of editor access
+Semantic controls remain 0–1, signed valence −1–1. The adapter multiplies by 100 for Rive's percentage axes. Valence/arousal/sarcasm are exposed for later presence/context mapping; emotional pose channels drive the current layers. No inference is claimed.
 
-- Typed ten-channel semantic control contract; safe finite normalization/clamping including signed valence; eight manual authoring targets; neutral reset.
-- All-or-nothing runtime validation: missing, duplicate or wrong-type inputs reject before any mutation.
-- Optional Rive React 4.36.0 / Canvas 2.44.0 renderer behind the existing swapped RemoteAvatar component. Local bundled main/fallback WASM; lazy-loaded renderer; explicit load/incompatibility errors. State machine `TemperEmotion`; artboards `TemperMale` / `TemperFemale`.
-- Development-only `/avatar-lab`: inspect manual expression/intensity controls and participant swap; explicitly warns when no rig exists. Production route is excluded.
-- `check:rigs` checks actual exports and reports SHA256; documents that header validation cannot prove animation.
-- Original vector source/provenance and complete rig authoring/acceptance specification.
-- Visual compatibility fix: increased avatar layer height so original hair/head is not cropped at desktop or phone sizes. Existing composer containment checks pass.
-- Compatibility fixes: sidebar identity follows participant preview; media-query changes update open insights panel dialog semantics and focus when the window resizes.
+## Files / architecture
+Added assets/avatars/temper source project, frontend/scripts/build-rig-source.mjs and two public .riv files. Both files contain the same two-artboard resource; each avatar selects its own artboard. Changed rig defaults, validated input mapping, authoring lab, tests, README and architecture documents. Existing lazy runtime, locally bundled WASM, swapped participant resolution and explicit load errors are preserved. No API, backend, database or migrations changed.
 
-## Added / changed
+## Genuine evidence
+- Rive CLI 1.2.0 verify: zero errors/warnings; inspect: no problems, two artboards, three layers, eight poses per layer and ten numeric inputs per rig.
+- Each export: 37,307 bytes; SHA256 00cd823c7f9003b9eec20f3cbed427bb22b6f62862b70b7d36bec5709d452fb4.
+- React production build passes; 12 unit tests pass.
+- Full browser regression: 28/28 pass. Strengthened two real canvas tests then pass again (32.4s): visible character pixels, eight distinct poses, intermediate intensity, exact neutral reversal, in-flight transition frame, overlapping input arbitration, and concern → frustration → anger → neutral for both rigs.
+- Male/female captures visually inspected. Capture issue isolated: runtime suspends offscreen rendering; tests now resume before capture and reject blank images.
+- Previous Java build/test: 2/2 pass; backend unchanged; live proxy health regression passes.
+- Dependency audit after generator/test packages: zero vulnerabilities.
 
-Added avatar `controls.ts`, tests, rigConfig, RiveCharacter, AvatarLab; `frontend/scripts/check-rigs.mjs`; browser authoring-harness test; rig specification; phase context/checkpoint. Changed RemoteAvatar, App routing, Shell, styles, browser chat/layout tests, package/lock, root environment example, README and architecture overview. No backend/API/schema/migration changes.
+## Cleared blocker / provenance
+The earlier editor-login blocker was premature. Official Rive CLI getting-started documentation permits local builds without an account; unsigned files containing no scripts are unaffected by browser signing restrictions. This project contains no scripts. CLI release manifest hash was verified before extracting to a user-local cache. No account, purchase, publication or upload was required.
+Sources: https://rive.app/docs/cli/getting-started and https://rive.app/docs/cli/overview.
+All character geometry is original repository-authored vector art, inspired by the supplied references; no proprietary avatar asset or raster expression swap.
 
-## Evidence
+## Run / rebuild / limits
+Normal README run commands work with default /avatars/male.riv and /avatars/female.riv. Optional VITE_MALE_RIG_URL / VITE_FEMALE_RIG_URL override these paths. Development /avatar-lab supplies explicit engineering targets; it does not infer emotions.
+Rebuild: npm --prefix frontend ci; node frontend/scripts/build-rig-source.mjs; rive assets/avatars/temper --verify; rive inspect assets/avatars/temper --summary; rive assets/avatars/temper --once; copy build/temper.riv to the two public filenames. CLI is not committed. Root build ignore excludes generated source build outputs; public runtime assets are intentional deliverables.
+The source-project AGENTS.md caution against web preview concerns unsigned scripts. The user's explicit React runtime acceptance requirement applies here, and these rigs contain no scripts.
+Idle/typing motion is Phase 05; live analysis and transport remain later phases.
 
-- `npm run build`: passes with dedicated lazy Rive chunk and locally emitted WASM files.
-- `npm test`: 12/12 pass. Numeric rig input tests are mocks; they prove validation/mapping only.
-- `npm run test:e2e -- --workers=2`: 27/27 pass; ten responsive viewport sizes, live resize-to-dialog focus/semantics, sidebar participant identity and all previous chat/placement/proxy integration regressions included.
-- Java 21 `mvnw.cmd verify`: previously passed 2/2; backend unchanged. Running Java service returns UP directly and through Vite.
-- `npm audit`: zero vulnerabilities after Rive dependency installation.
-- `npm run check:rigs`: **exit 1**, accurately reports missing male and female `.riv` exports. This is an expected blocked phase acceptance gate, not a hidden passing result.
-- Desktop 1440×900 and mobile 390×844 screenshots visually inspected; hair/head now complete, composer visible. Captures are ignored local test outputs.
-
-## Blocker
-
-- **Root cause:** Neither original `.riv` character export was supplied; available source attachments are flat PNG sheets. Rive editor navigates to a login form in the available in-app browser, so character authoring is unavailable without the user’s sign-in. Runtime export requires suitable existing plan access per official export docs.
-- **Attempted fixes:** Created original importable vector sources; checked tools for a Rive authoring capability (none available); attempted browser editor, enabled accessibility, verified login redirect; read official runtime and export docs; completed code/spec/test work independent of authoring.
-- **Safe state:** Phases 00–03 remain runnable; current main chat uses clearly labeled neutral vector previews. Optional renderer will only load when configured. No PNG emotion swapping, CSS animation substitute, licensed-unclear downloaded character, account creation, purchase or public deployment performed.
-- **Required:** User sign-in to an accessible Rive editor with runtime export capability, or existing original exported male/female rigs/project. Ask the user to sign in, never request passwords in chat. Pending request was presented while independent work continued.
-
-## Run / configuration / next steps
-
-README development and test commands remain valid. Set `VITE_MALE_RIG_URL=/avatars/male.riv` and `VITE_FEMALE_RIG_URL=/avatars/female.riv` in `frontend/.env.local` after original exports exist. Restart Vite. Open `/avatar-lab`; check every target and both participant views, then return to neutral.
-
-Continue **Phase 04** after access arrives: author both rigs against `docs/architecture/rive-rig-spec.md`, record ownership/source/license and checksums, verify actual canvas playback and visible reversible face/head/body transitions, run regressions, update this handoff to COMPLETE only after evidence. Phase 05 and all later phases remain unstarted.
-
-Rollback can restore the Phase 03 commit; there is no database migration or private conversation data to recover.

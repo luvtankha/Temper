@@ -1,13 +1,7 @@
-# Architecture through Phase 03, Phase 04 preparation
+# Architecture through Phase 04
+React/Vite → typed fetch adapter → same-origin proxy → Java 21 Spring Boot modular monolith.
+Backend common module provides health only. No database/AI required at startup. Future domain/inference/persistence implementations sit behind stable contracts; message delivery remains independent from inference.
+Shell owns responsive navigation and collapsible insights. ChatProvider holds participant/messages across routes; ChatApi isolates in-memory storage. ChatPage renders chat, composer, simulated typing and selection; analytics/history/settings remain placeholders.
+RemoteAvatar resolves the other participant. Genuine original male/female Rive artboards sit above the composer. Ten normalized semantic controls convert to percentages for continuous blend states; face/head/body layers have independent transition timings. Local WASM and lazy-loaded runtime; wrong rigs show explicit errors.
+Development /avatar-lab inspects manual targets and actual playback, not NLP. Source RML is reproducible with the official Rive CLI; unscripted files require no editor account or signing. No inference or database schema exists.
 
-React/Vite → typed fetch adapter → same-origin dev proxy → Java 21 Spring Boot modular monolith.
-
-The backend common module provides health only. No database or AI is required at startup. Later domain, inference and persistence implementations must sit behind stable contracts; message delivery must remain independent from inference.
-
-React’s Shell owns responsive navigation and collapsible insights. An app-level ChatProvider holds the current participant and messages across routes; a ChatApi interface isolates local mock storage. ChatPage renders bubbles, sender metadata, composer, simulated typing and selection. The other feature routes are placeholders, and analytical values are not fabricated.
-
-RemoteAvatar resolves the other participant from local identity. Original neutral SVG previews are contained in the composer wrapper. Phase 04 preparation adds normalized semantic inputs and an optional lazy-loaded Rive renderer; configured files must expose all required numeric inputs. Runtime WASM is bundled locally. An invalid configured rig shows an error; an unconfigured rig keeps an explicitly labeled neutral preview.
-
-The development-only `/avatar-lab` inspects manual authoring targets, not NLP outputs. See `rive-rig-spec.md`. Genuine character playback cannot be verified until original `.riv` files are exported. No model is integrated and no database schema exists.
-
-The permanent UI must show the remote participant above its composer. Rive character rigs and continuous semantic emotion inputs are required at Phase 04; supplied PNG sheets are art references, not animation rigs.
