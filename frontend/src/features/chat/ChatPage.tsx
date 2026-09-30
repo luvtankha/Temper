@@ -7,6 +7,7 @@ import { RemoteAvatar } from '../avatar/RemoteAvatar';
 export function ChatPage() {
   const {messages,localId,setLocalId,loading,paused,setPaused,remoteTyping,send,reset,previewTyping,selectedMessageId:selectedId,setSelectedMessageId:setSelectedId,focusedMessageId,focusRequest,inspectMessage} = useChat();
   const remote = remoteParticipant(localId);
+  const {transport,error:loadError,retry}=useChat();
   const [draft,setDraft] = useState('');
   const [sending,setSending] = useState(false);
   const [error,setError] = useState('');
@@ -40,7 +41,8 @@ export function ChatPage() {
     <header className="chat-header"><div className="participant-heading"><span className={`contact-avatar ${remote.variant}`}>{remote.name.slice(0,1)}<i /></span><div><h1>{remote.name}<span>your conversation partner</span></h1><p><span className={paused ? 'paused-dot' : 'online-dot'} />{paused ? 'Demo paused' : remoteTyping ? 'Typing in demo…' : 'Available in local demo'}</p></div></div><div className="chat-header-right"><span className="private-label"><Sparkles size={13} /> More than words</span><button className="icon-button" aria-label="Conversation options" aria-expanded={optionsOpen} onClick={() => setOptionsOpen(!optionsOpen)}><MoreHorizontal size={20} /></button></div>
       {optionsOpen && <div className="conversation-menu"><label>Viewing as<select aria-label="Viewing as" value={localId} onChange={e => setLocalId(e.target.value as typeof localId)}>{participants.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><button onClick={() => {setPaused(!paused);setOptionsOpen(false);}}>{paused ? 'Resume local demo' : 'Pause local demo'}</button><button disabled={paused} onClick={() => {previewTyping();setOptionsOpen(false);}}>Preview remote typing</button><button onClick={() => {void reset(false);setSelectedId(null);setOptionsOpen(false);}}>New demo conversation</button><button onClick={() => {void reset(true);setSelectedId(null);setOptionsOpen(false);}}>Load sample conversation</button></div>}
     </header>
-    <div className="conversation-banner"><span className="banner-icon"><ActivityMark /></span><p>A little context. A better connection.</p><span>Local demo</span></div>
+    <div className="conversation-banner"><span className="banner-icon"><ActivityMark /></span><p>A little context. A better connection.</p><span>{transport==='backend'?'Backend chat · mock analysis':'Local demo'}</span></div>
+    {loadError&&<p role="alert" className="composer-error">{loadError} <button onClick={retry}>Retry conversation</button></p>}
     <div ref={listRef} className="message-list" aria-label="Messages" aria-live="polite" aria-busy={loading} onScroll={() => {const el=listRef.current; if(el) setAwayFromBottom(el.scrollHeight-el.scrollTop-el.clientHeight>90);}}>
       {loading ? <div className="chat-empty"><span className="loading-spinner" /><p>Opening your conversation…</p></div> : messages.length === 0 ? <div className="chat-empty"><MessageCircle size={32} strokeWidth={1.2} /><h2>Every connection starts somewhere.</h2><p>Say hello to {remote.name}.</p></div> : <><div className="date-divider"><span />DEMO CONVERSATION<span /></div><div className="conversation-intro"><span className="intro-spark">✦</span><p>Room for a little more understanding.</p><small>A fictional conversation. A familiar kind of moment.</small></div>{messages.map((message,index) => {
         const own = message.speakerId === localId;

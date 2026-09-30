@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import {lazy,Suspense} from 'react';
+import {lazy,Suspense,useMemo} from 'react';
 import { Shell } from './Shell';
 import { MessageCircle, History, Settings2 } from 'lucide-react';
 import { ChatProvider } from '../features/chat/ChatProvider';
@@ -7,10 +7,15 @@ import { ChatPage } from '../features/chat/ChatPage';
 import { AvatarLab } from '../features/avatar/AvatarLab';
 import {AnalysisProvider} from '../features/analysis/AnalysisProvider';
 import {MessageInspector} from '../features/analysis/MessageInspector';
+import {createBackendAdapters} from '../api/backendAdapters';
 const AnalysisDashboard=lazy(()=>import('../features/analysis/AnalysisDashboard').then(m=>({default:m.AnalysisDashboard})));
 
 export function App() {
-  return <ChatProvider><AnalysisProvider><Shell><Routes>
+  const adapters=useMemo(()=>{
+    const query=new URLSearchParams(window.location.search);
+    return query.get('transport')==='backend'||import.meta.env.VITE_CHAT_TRANSPORT==='backend'?createBackendAdapters(query.get('conversation')??undefined):null;
+  },[]);
+  return <ChatProvider api={adapters?.chat} transport={adapters?'backend':'local'}><AnalysisProvider api={adapters?.analysis}><Shell><Routes>
     <Route path="/" element={<Navigate to="/chat" replace />} />
     <Route path="/chat" element={<ChatPage />} />
     <Route path="/analysis" element={<Suspense fallback={<p className="route-loading">Opening the dashboard…</p>}><AnalysisDashboard/></Suspense>} />

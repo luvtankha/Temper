@@ -1,12 +1,26 @@
 openapi: 3.0.3
 info:
   title: TEMPER API
-  version: 0.1.0
-  description: Health and Phase 10 domain reads. Backend analysis remains unavailable.
+  version: 0.2.0
+  description: Versioned REST. Explicit ordinal MOCK analysis only; no AI inference. Messages are delivered independently of analysis.
 servers:
   - url: /api/v1
 paths:
   /conversations:
+    post:
+      operationId: createConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CreateConversation'}
+      responses:
+        '201':
+          description: Created in-memory conversation
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Conversation'}
+        '400': {$ref: '#/components/responses/Invalid'}
     get:
       operationId: listConversations
       responses:
@@ -33,6 +47,103 @@ paths:
               schema: {$ref: '#/components/schemas/Conversation'}
         '400': {description: Invalid UUID}
         '404': {description: Conversation does not exist}
+  /conversations/{id}/messages:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      operationId: listMessages
+      responses:
+        '200':
+          description: Ordered by sequence, ascending
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/Message'}}
+        '404': {$ref: '#/components/responses/Missing'}
+    post:
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [speakerId, text]
+              properties:
+                speakerId: {type: string, minLength: 1, maxLength: 80}
+                text: {type: string, minLength: 1, maxLength: 2000}
+      responses:
+        '201':
+          description: Delivered and saved; no inference runs in the delivery request
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Message'}
+        '400': {$ref: '#/components/responses/Invalid'}
+        '404': {$ref: '#/components/responses/Missing'}
+  /messages/{id}/analyze:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    post:
+      operationId: analyzeMessage
+      responses:
+        '200':
+          description: Explicit MOCK fixture, not text inference
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MessageAnalysis'}
+        '404': {$ref: '#/components/responses/Missing'}
+  /messages/{id}/analysis:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      operationId: getMessageAnalysis
+      responses:
+        '200':
+          description: Stored analysis
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MessageAnalysis'}
+        '409':
+          description: Analysis not requested; never returns fabricated zero scores
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Error'}
+        '404': {$ref: '#/components/responses/Missing'}
+  /conversations/{id}/analytics:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      operationId: getConversationAnalytics
+      responses:
+        '200':
+          description: Only analyzed turns; metrics null until a turn is analyzed
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Analytics'}
+        '404': {$ref: '#/components/responses/Missing'}
+  /conversations/{id}/timeline:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      operationId: getConversationTimeline
+      responses:
+        '200':
+          description: Turn series and explicit fixture markers
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Timeline'}
+        '404': {$ref: '#/components/responses/Missing'}
+  /conversations/{id}/insights:
+    parameters:
+      - {$ref: '#/components/parameters/Id'}
+    get:
+      operationId: getConversationInsights
+      responses:
+        '200':
+          description: Structured fixture provenance and markers
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Insights'}
+        '404': {$ref: '#/components/responses/Missing'}
   /health:
     get:
       operationId: getHealth
@@ -44,7 +155,111 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
 components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+  responses:
+    Invalid:
+      description: Invalid request, validation or participant membership
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Missing:
+      description: Unknown conversation or message
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
   schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: {type: string, enum: [INVALID_REQUEST, NOT_FOUND, ANALYSIS_UNAVAILABLE]}
+        message: {type: string}
+    CreateConversation:
+      type: object
+      required: [title, participantIds]
+      properties:
+        title: {type: string, minLength: 1, maxLength: 160}
+        participantIds: {type: array, minItems: 2, maxItems: 20, uniqueItems: true, items: {type: string}}
+    Message:
+      type: object
+      required: [id, conversationId, speakerId, text, sentAt, sequence]
+      properties:
+        id: {type: string, format: uuid}
+        conversationId: {type: string, format: uuid}
+        speakerId: {type: string}
+        text: {type: string, minLength: 1, maxLength: 2000}
+        sentAt: {type: string, format: date-time}
+        sequence: {type: integer, minimum: 1}
+    Scores:
+      type: object
+      additionalProperties: {type: number, minimum: 0, maximum: 1}
+    MessageAnalysis:
+      type: object
+      required: [messageId, speakerId, sequence, sentAt, mode, emotions, signals, sentiment, conflict, contextMessageIds, explanation, evidence]
+      properties:
+        messageId: {type: string, format: uuid}
+        speakerId: {type: string}
+        sequence: {type: integer, minimum: 1}
+        sentAt: {type: string, format: date-time}
+        mode: {type: string, enum: [MOCK, MODEL, HYBRID]}
+        emotions: {$ref: '#/components/schemas/Scores'}
+        signals: {$ref: '#/components/schemas/Scores'}
+        sentiment: {type: number, minimum: -1, maximum: 1}
+        conflict: {type: number, minimum: 0, maximum: 1}
+        contextMessageIds: {type: array, items: {type: string, format: uuid}}
+        explanation: {type: string}
+        evidence:
+          type: array
+          items:
+            type: object
+            required: [source, label, description]
+            properties:
+              source: {type: string, enum: [MOCK, MODEL, HEURISTIC]}
+              label: {type: string}
+              description: {type: string}
+    Event:
+      type: object
+      required: [sequence, messageId, kind, label]
+      properties:
+        sequence: {type: integer, minimum: 1}
+        messageId: {type: string, format: uuid}
+        kind: {type: string, enum: [escalation, peak, recovery]}
+        label: {type: string}
+    Timeline:
+      type: object
+      required: [conversationId, mode, messages, events, pendingMessages]
+      properties:
+        conversationId: {type: string, format: uuid}
+        mode: {type: string, enum: [MOCK, MODEL, HYBRID]}
+        messages: {type: array, items: {$ref: '#/components/schemas/MessageAnalysis'}}
+        events: {type: array, items: {$ref: '#/components/schemas/Event'}}
+        pendingMessages: {type: integer, minimum: 0}
+    Analytics:
+      allOf:
+        - {$ref: '#/components/schemas/Timeline'}
+        - type: object
+          required: [conflictScore, sentiment, emotionalIntensity, direction, escalationStart, peakTension]
+          properties:
+            conflictScore: {type: number, minimum: 0, maximum: 1, nullable: true}
+            sentiment: {type: number, minimum: -1, maximum: 1, nullable: true}
+            emotionalIntensity: {type: number, minimum: 0, maximum: 1, nullable: true}
+            direction: {type: string, enum: [steady, escalating, recovering]}
+            escalationStart: {type: integer, minimum: 1, nullable: true}
+            peakTension: {type: integer, minimum: 1, nullable: true}
+    Insights:
+      type: object
+      required: [conversationId, mode, events, pendingMessages, explanation]
+      properties:
+        conversationId: {type: string, format: uuid}
+        mode: {type: string, enum: [MOCK, MODEL, HYBRID]}
+        events: {type: array, items: {$ref: '#/components/schemas/Event'}}
+        pendingMessages: {type: integer, minimum: 0}
+        explanation: {type: string}
     Participant:
       type: object
       required: [id, name, variant]
