@@ -11,5 +11,7 @@ public record OverlaySummary(String currentState,String direction,float[] spectr
         if(!available)java.util.Arrays.fill(spectrum,0);
     }
     @Override public float[] spectrum(){return spectrum.clone();}
-    public static OverlaySummary unavailable(){return new OverlaySummary("Analysis unavailable","Uncertain",new float[8],false);}
+    public static OverlaySummary unavailable(){return new OverlaySummary("Analysis unavailable","Insufficient supported evidence",new float[8],false);}
+    public static OverlaySummary analyzing(){return new OverlaySummary("Analyzing visible messages","Waiting for model estimates",new float[8],false);}
+    public static OverlaySummary connectionUnavailable(){return new OverlaySummary("Computer connection unavailable","Check USB and local backend",new float[8],false);}
 }

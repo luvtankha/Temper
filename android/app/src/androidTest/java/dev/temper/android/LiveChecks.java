@@ -14,6 +14,7 @@ final class LiveChecks {
         if(!LiveConsent.allowed(context)||!LiveCaptureState.arm(context))throw new AssertionError("Explicit live consent not effective");
         LiveCaptureState.leave();if(!LiveCaptureState.armed())throw new AssertionError("App transition consumed selection arm");
         if(!LiveCaptureState.bind("a".repeat(64),7))throw new AssertionError("Selected chat did not bind");long generation=LiveCaptureState.generation();
+        if(!LiveCaptureState.acceptsIdentity("a".repeat(64),7)||LiveCaptureState.acceptsIdentity("b".repeat(64),7)||LiveCaptureState.acceptsIdentity("a".repeat(64),8))throw new AssertionError("Pre-read selected identity gate incorrect");
         if(LiveCaptureState.bind("b".repeat(64),7)||LiveCaptureState.bind("a".repeat(64),8))throw new AssertionError("Session crossed conversation/window boundary");
         LiveCaptureState.leave();if(LiveCaptureState.current(generation)||LiveCaptureState.active())throw new AssertionError("Departure retained session");
         LiveCaptureState.arm(context);LiveCaptureState.bind("a".repeat(64),7);base.pause(true);if(LiveConsent.allowed(context)||LiveCaptureState.active())throw new AssertionError("Pause retained capture");

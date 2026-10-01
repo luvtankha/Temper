@@ -8,11 +8,18 @@ import java.util.*;
 /** Reads only planned message/date/header fields; never composer drafts or descriptions. */
 public final class WhatsAppTextReader {
     public VisibleConversation read(AccessibilityNodeInfo root,WhatsAppAdapter adapter){
+        return read(root,adapter,key->true);
+    }
+    public VisibleConversation read(AccessibilityNodeInfo root,WhatsAppAdapter adapter,java.util.function.Predicate<String> identityAllowed){
         ScreenObservation structure=new WhatsAppStructureProbe().read(root);WhatsAppAdapter.ReadPlan plan=adapter.plan(structure);
         if(plan.status()!=VisibleConversation.Status.AVAILABLE)return VisibleConversation.unavailable(plan.status());
+        // Verify the opaque selected identity before any message/date fields are read.
+        Map<Integer,String> identity=new HashMap<>();int[] identityIndex={0},identityVisited={0};
+        walk(root,structure,Map.of(plan.identity(),128),identity,identityIndex,identityVisited,0);
+        if(identityIndex[0]!=structure.nodes().size()||!identityAllowed.test(adapter.conversationKey(identity.get(plan.identity()))))return VisibleConversation.unavailable(VisibleConversation.Status.NOT_CONVERSATION);
         Map<Integer,Integer> wanted=new HashMap<>();wanted.put(plan.identity(),128);for(var row:plan.rows()){wanted.put(row.message(),1000);wanted.put(row.date(),32);}
         Map<Integer,String> texts=new HashMap<>();int[] index={0},visited={0};walk(root,structure,wanted,texts,index,visited,0);
-        if(index[0]!=structure.nodes().size())return VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT);
+        if(index[0]!=structure.nodes().size()||!Objects.equals(identity.get(plan.identity()),texts.get(plan.identity())))return VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT);
         List<ScreenObservation.Node> enriched=new ArrayList<>();for(int i=0;i<structure.nodes().size();i++){var node=structure.nodes().get(i);enriched.add(new ScreenObservation.Node(node.parentIndex(),node.resourceId(),node.className(),node.bounds(),node.visible(),node.editable(),node.password(),texts.get(i)));}
         return adapter.read(new ScreenObservation(structure.packageName(),structure.viewport(),enriched));
     }

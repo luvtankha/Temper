@@ -15,6 +15,7 @@ public final class LiveCaptureState {
     public static synchronized boolean armed(){if(deadline>0&&SystemClock.elapsedRealtime()>deadline){deadline=0;status="Selection expired; start again";}return deadline>0;}
     public static synchronized boolean active(){return conversation!=null;}
     public static synchronized long generation(){return generation;}
+    public static synchronized boolean acceptsIdentity(String key,int id){return armed()||(conversation!=null&&conversation.equals(key)&&window==id);}
     public static synchronized boolean bind(String key,int id){if(armed()){deadline=0;conversation=key;window=id;return true;}return conversation!=null&&conversation.equals(key)&&window==id;}
     public static synchronized boolean current(long value){return generation==value&&active();}
     public static synchronized void status(long value,String message){if(generation==value)status=message;}

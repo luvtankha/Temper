@@ -39,7 +39,7 @@ public final class MainActivity extends Activity {
     private void button(String label,Runnable action){Button button=new Button(this);button.setText(label);button.setOnClickListener(v->action.run());content.addView(button);}
     private void home(){
         page("TEMPER");text("A small companion for conversations",19);
-        text("The Android overlay is in development. It will estimate language and direction in supported visible WhatsApp conversations. Estimates cannot establish another person's feelings.",16);
+        text("TEMPER places a small character above the WhatsApp message box. Tap it for estimated language, conversation direction and one emotion graph. This USB demo supports selected fictional chats on the documented WhatsApp build. Estimates cannot establish another person's feelings.",16);
         text("Test probes keep selected fictional chat text on this phone. Optional USB live analysis requires a separate opt-in to process the visible window on your connected computer.",16);
         button("Accessibility and consent",this::consent);button("Live analysis (USB demo)",this::liveAnalysis);button("Device account",this::account);button("Settings",this::settings);button("Fictional preview",this::preview);
     }
@@ -47,7 +47,10 @@ public final class MainActivity extends Activity {
         page("Settings");text("The selected-chat character overlay supports optional USB live analysis with separate consent. Pause stops inspection and clears the visible context.",16);
         Switch pause=new Switch(this);pause.setText("Keep TEMPER paused");pause.setTextColor(Color.WHITE);pause.setChecked(getPreferences(MODE_PRIVATE).getBoolean("paused",true));
         pause.setOnCheckedChangeListener((view,checked)->new ConsentStore(this).pause(checked));content.addView(pause);
-        text("No chat text is persisted. USB live analysis sends only a bounded selected-chat window after its separate opt-in. The pause preference is local to this device.",16);button("Reset pause preference",()->{new ConsentStore(this).pause(true);settings();});button("Back",this::home);
+        text("No chat text is persisted. USB live analysis sends only a bounded selected-chat window after its separate opt-in. Clearing inspection data pauses TEMPER and removes test metadata. Removing the USB connection also revokes live-processing consent; your device account stays available.",16);
+        button("Clear inspection data and pause",()->{dev.temper.android.privacy.PrivacyControls.clearInspection(this);settings();});
+        button("Remove USB connection and pause",()->{try{dev.temper.android.privacy.PrivacyControls.removeConnection(this);settings();}catch(IllegalStateException failure){Toast.makeText(this,failure.getMessage(),Toast.LENGTH_LONG).show();}});
+        button("Reset pause preference",()->{new ConsentStore(this).pause(true);settings();});button("Back",this::home);
     }
     private boolean serviceEnabled(){
         AccessibilityManager manager=(AccessibilityManager)getSystemService(ACCESSIBILITY_SERVICE);
@@ -59,9 +62,10 @@ public final class MainActivity extends Activity {
     private void consent(){
         page("Accessibility and consent");consentScreen=true;ConsentStore store=new ConsentStore(this);
         text("Android Accessibility can expose screen content. TEMPER will use only recent visible messages and composer bounds in supported WhatsApp chats to estimate language and direction. It will never click controls or send messages. Estimates cannot establish someone's feelings.",16);
-        text("Test inspection is limited to a fictional one-to-one chat you select. The layout probe reads identifiers and bounds without text. The separately armed parser reads up to eight visible messages (1000 characters each), their timestamps and a conversation identifier, keeping text only in memory. No composer draft, contact list or unrelated content is read; no raw chats are logged or exported. Pause clears the window. Server transmission requires a separate future consent.",16);
+        text("Test inspection is limited to a fictional one-to-one chat you select. The layout probe reads identifiers and bounds without text. The separately armed parser reads up to eight visible messages (1000 characters each), their timestamps and a conversation identifier, keeping text only in memory. No composer draft, contact list or unrelated content is read; no raw chats are logged or exported. Pause clears the window. USB processing requires the separate opt-in on the Live analysis page.",16);
         text("You control access: pause stops detection; revoke removes consent and disables the service. Android's Accessibility settings can also disable TEMPER at any time.",16);
         text("System service: "+(serviceEnabled()?"Enabled":"Disabled"),18);
+        if(serviceEnabled()&&!TemperAccessibilityService.connected())text("TEMPER service is not connected yet. If this persists after installation or tests, turn Use TEMPER off and on in Android Accessibility settings.",16);
         text(store.paused()?"TEMPER is paused":"TEMPER is resumed",18);
         text("WhatsApp detection: "+(store.consented()&&!store.paused()&&serviceEnabled()&&TemperAccessibilityService.recentlyDetected()?"recent supported event":"no recent supported event"),16);
         if(!store.consented()){
@@ -126,8 +130,8 @@ public final class MainActivity extends Activity {
             CheckBox agree=new CheckBox(this);agree.setText("I opt in to processing the selected fictional chat on this computer");agree.setTextColor(Color.WHITE);content.addView(agree);
             Button accept=new Button(this);accept.setText("Save live-processing consent");accept.setEnabled(false);agree.setOnCheckedChangeListener((view,checked)->accept.setEnabled(checked));accept.setOnClickListener(view->{dev.temper.android.privacy.LiveConsent.accept(this);liveAnalysis();});content.addView(accept);
         }else{
-            if(dev.temper.android.privacy.LiveConsent.allowed(this)&&serviceEnabled()&&dev.temper.android.api.LocalAnalysisClient.configured(this))button("Start selected fictional chat",()->{ProbeState.clear();ParseProbeState.clear(this);dev.temper.android.accessibility.LiveCaptureState.arm(this);liveAnalysis();});
-            else text("Resume TEMPER and enable its service under Accessibility and consent, and configure the USB connection before starting.",16);
+            if(dev.temper.android.privacy.LiveConsent.allowed(this)&&serviceEnabled()&&TemperAccessibilityService.connected()&&dev.temper.android.api.LocalAnalysisClient.configured(this))button("Start selected fictional chat",()->{ProbeState.clear();ParseProbeState.clear(this);dev.temper.android.accessibility.LiveCaptureState.arm(this);liveAnalysis();});
+            else text("Resume TEMPER, connect its service under Accessibility and consent, and configure USB before starting. If Android shows the service enabled but TEMPER reports disconnected after an update/test, turn Use TEMPER off and on.",16);
             button("Stop and pause TEMPER",()->{base.pause(true);liveAnalysis();});
             button("Revoke live-processing consent",()->{dev.temper.android.privacy.LiveConsent.revoke(this);liveAnalysis();});
         }

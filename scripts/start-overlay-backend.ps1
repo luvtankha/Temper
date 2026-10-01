@@ -29,6 +29,8 @@ $env:TEMPER_TOXICITY_MODEL_DIR = Join-Path $ModelsRoot 'toxicity-bert'
 foreach ($temperModel in @($env:TEMPER_FOUNDATION_MODEL_DIR,$env:TEMPER_SENTIMENT_MODEL_DIR,$env:TEMPER_EMOTION_MODEL_DIR,$env:TEMPER_SARCASM_MODEL_DIR,$env:TEMPER_TOXICITY_MODEL_DIR)) {
     if (!(Test-Path -LiteralPath (Join-Path $temperModel 'model.onnx'))) { throw 'A required local model is missing. See the model download scripts.' }
 }
-$temperProcess = Start-Process -FilePath $temperJava -ArgumentList @('-jar',('"{0}"' -f $temperJar)) -WorkingDirectory $temperRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $temperTemp 'overlay-backend.log') -RedirectStandardError (Join-Path $temperTemp 'overlay-backend-error.log')
+$temperRuntimeJar = Join-Path $temperTemp 'overlay-runtime.jar'
+Copy-Item -LiteralPath $temperJar -Destination $temperRuntimeJar -Force
+$temperProcess = Start-Process -FilePath $temperJava -ArgumentList @('-jar',('"{0}"' -f $temperRuntimeJar)) -WorkingDirectory $temperRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $temperTemp 'overlay-backend.log') -RedirectStandardError (Join-Path $temperTemp 'overlay-backend-error.log')
 $temperProcess.Id | Set-Content -LiteralPath (Join-Path $temperTemp 'overlay-backend.pid')
 Write-Output "Local TEMPER backend starting on127.0.0.1:8080 (PID $($temperProcess.Id)). Private connection token retained."

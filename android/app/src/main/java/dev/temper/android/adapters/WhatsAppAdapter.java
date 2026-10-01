@@ -13,6 +13,7 @@ public final class WhatsAppAdapter implements ChatPlatformAdapter {
     public record ReadPlan(Status status,List<Row> rows,int identity,ScreenObservation.Bounds composer){public ReadPlan{rows=List.copyOf(rows);}}
     private final String sessionSalt;
     public WhatsAppAdapter(String sessionSalt){this.sessionSalt=Objects.requireNonNull(sessionSalt);if(sessionSalt.length()<16)throw new IllegalArgumentException("Session salt required");}
+    public String conversationKey(String title){if(title==null||title.isBlank()||title.length()>128)throw new IllegalArgumentException("Invalid conversation identity");return hash(sessionSalt+"\u0000"+title);}
     @Override public boolean supports(String packageName){return ConsentStore.WHATSAPP.equals(packageName);}
     private ReadPlan fail(Status status){return new ReadPlan(status,List.of(),-1,null);}
     private int unique(ScreenObservation screen,String id){int found=-1;for(int i=0;i<screen.nodes().size();i++)if(id.equals(screen.nodes().get(i).resourceId())){if(found!=-1)return -2;found=i;}return found;}
@@ -67,7 +68,7 @@ public final class WhatsAppAdapter implements ChatPlatformAdapter {
     @Override public VisibleConversation read(ScreenObservation screen){
         ReadPlan plan=plan(screen);if(plan.status()!=Status.AVAILABLE)return VisibleConversation.unavailable(plan.status());
         String title=screen.nodes().get(plan.identity()).text();if(title==null||title.isBlank()||title.length()>128)return VisibleConversation.unavailable(Status.NOT_CONVERSATION);
-        String conversation=hash(sessionSalt+"\u0000"+title);List<Turn> turns=new ArrayList<>();Map<String,Integer> duplicates=new HashMap<>();
+        String conversation=conversationKey(title);List<Turn> turns=new ArrayList<>();Map<String,Integer> duplicates=new HashMap<>();
         for(Row row:plan.rows()){
             String body=screen.nodes().get(row.message()).text(),date=screen.nodes().get(row.date()).text();
             if(body==null||body.isBlank()||body.length()>1000||date==null||date.isBlank()||date.length()>32)return VisibleConversation.unavailable(Status.LIMIT_EXCEEDED);

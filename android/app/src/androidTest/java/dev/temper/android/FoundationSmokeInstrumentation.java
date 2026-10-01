@@ -43,10 +43,12 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
             if(adapterOnly){WhatsAppAdapterChecks.run(getContext(),getTargetContext());restoreSetup(originalSetup);result.putString("stream","PASS: observed WhatsApp layouts, date separators, clipped rows, roles, privacy and unsupported-content rejection\n");finish(Activity.RESULT_OK,result);return;}
             if(transportOnly){LiveTransportChecks.run(getTargetContext());restoreSetup(originalSetup);result.putString("stream","PASS: generated-text USB request reached actual model backend; stopped/revoked requests blocked; original consent restored\n");finish(Activity.RESULT_OK,result);return;}
             AdapterContractChecks.run();
+            RegistryChecks.run();
             ProbeChecks.run(getTargetContext());
             WhatsAppAdapterChecks.run(getContext(),getTargetContext());
             OverlayPlacementChecks.run();
             LiveChecks.run(getTargetContext());
+            PrivacyChecks.run(getTargetContext());
             runOnMainSync(()->{try{CharacterChecks.run(getTargetContext());AnalyticsChecks.run(getTargetContext());}catch(Exception failure){throw new RuntimeException(failure);}});
             getTargetContext().getSharedPreferences("MainActivity",0).edit().clear().commit();
             Activity first=launch();

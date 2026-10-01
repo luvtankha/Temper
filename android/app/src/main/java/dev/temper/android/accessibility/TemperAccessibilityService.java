@@ -24,6 +24,7 @@ public final class TemperAccessibilityService extends AccessibilityService imple
     private LivePipeline live;
     private final LayoutRecovery recovery=new LayoutRecovery();
     private final WhatsAppAdapter liveAdapter=new WhatsAppAdapter(UUID.randomUUID().toString());
+    private final AdapterRegistry adapters=AdapterRegistry.whatsApp(liveAdapter);
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Runnable probe=()->{
         if(consent==null||!consent.allows(ConsentStore.WHATSAPP)){hideOverlay();return;}
@@ -35,15 +36,15 @@ public final class TemperAccessibilityService extends AccessibilityService imple
                 ScreenObservation structure=new WhatsAppStructureProbe().read(root);var anchor=liveAdapter.anchor(structure);
                 if(anchor.status()!=VisibleConversation.Status.AVAILABLE){hideOverlay();return;}
                 boundWindow=root.getWindowId();overlay.show(structure.viewport(),anchor.composer(),getResources().getDisplayMetrics().density);
-                VisibleConversation snapshot=new WhatsAppTextReader().read(root,liveAdapter);
+                VisibleConversation snapshot=new WhatsAppTextReader().read(root,liveAdapter,key->LiveCaptureState.acceptsIdentity(key,boundWindow));
                 if(snapshot.status()==VisibleConversation.Status.AVAILABLE){
-                    var dedup=new VisibleSnapshotDeduplicator();dedup.accept(snapshot);var second=new WhatsAppTextReader().read(root,liveAdapter);
+                    var dedup=new VisibleSnapshotDeduplicator();dedup.accept(snapshot);var second=new WhatsAppTextReader().read(root,liveAdapter,key->LiveCaptureState.acceptsIdentity(key,boundWindow));
                     if(second.status()!=VisibleConversation.Status.AVAILABLE||dedup.accept(second))snapshot=VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT);
                 }
                 if(snapshot.status()!=VisibleConversation.Status.AVAILABLE){unreadableLayout();return;}
                 recovery.reset();
                 if(!LiveCaptureState.bind(snapshot.conversationKey(),root.getWindowId())){hideOverlay();return;}
-                live.submit(snapshot,result->{overlay.setEmotion(result.emotion());overlay.setSummary(result.summary());},this::unavailable);
+                live.submit(snapshot,result->{overlay.setEmotion(result.emotion());overlay.setSummary(result.summary());},summary->{overlay.setEmotion(Emotion.NEUTRAL);overlay.setSummary(summary);});
             }else if(ParseProbeState.armed()){
                 VisibleConversation snapshot;
                 boolean repeated=false;
@@ -91,11 +92,13 @@ public final class TemperAccessibilityService extends AccessibilityService imple
             CharSequence pkg=root.getPackageName();if(pkg!=null&&ConsentStore.WHATSAPP.contentEquals(pkg))return root;root.recycle();
         }return null;
     }
-    private boolean supportedBuild(){try{var info=getPackageManager().getPackageInfo(ConsentStore.WHATSAPP,0);long code=android.os.Build.VERSION.SDK_INT>=28?info.getLongVersionCode():info.versionCode;return "2.26.37.73".equals(info.versionName)&&code==263707322;}catch(android.content.pm.PackageManager.NameNotFoundException missing){return false;}}
+    private boolean supportedBuild(){try{var info=getPackageManager().getPackageInfo(ConsentStore.WHATSAPP,0);long code=android.os.Build.VERSION.SDK_INT>=28?info.getLongVersionCode():info.versionCode;return adapters.resolve(ConsentStore.WHATSAPP,info.versionName,code).isPresent();}catch(android.content.pm.PackageManager.NameNotFoundException missing){return false;}}
     private static volatile long lastSupportedEvent;
+    private static volatile boolean connected;
+    public static boolean connected(){return connected;}
     public static boolean recentlyDetected(){long time=lastSupportedEvent;return time>0&&SystemClock.elapsedRealtime()-time<120_000;}
     private static void clear(){lastSupportedEvent=0;}
-    @Override protected void onServiceConnected(){consent=new ConsentStore(this);overlay=new OverlayManager(this);live=new LivePipeline(this);consent.preferences().registerOnSharedPreferenceChangeListener(this);clear();if(!consent.consented())disableSelf();}
+    @Override protected void onServiceConnected(){connected=true;consent=new ConsentStore(this);overlay=new OverlayManager(this);live=new LivePipeline(this);consent.preferences().registerOnSharedPreferenceChangeListener(this);clear();if(!consent.consented())disableSelf();}
     @Override public void onAccessibilityEvent(AccessibilityEvent event){
         if(consent==null||event==null)return;
         CharSequence name=event.getPackageName();
@@ -109,6 +112,6 @@ public final class TemperAccessibilityService extends AccessibilityService imple
         if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED||type==AccessibilityEvent.TYPE_VIEW_SCROLLED){lastSupportedEvent=SystemClock.elapsedRealtime();if(ProbeState.armed()||ParseProbeState.armed()||LiveCaptureState.armed()||LiveCaptureState.active()||boundWindow>=0){handler.removeCallbacks(probe);handler.postDelayed(probe,type==AccessibilityEvent.TYPE_VIEW_SCROLLED?450:250);}}
     }
     @Override public void onSharedPreferenceChanged(SharedPreferences preferences,String key){if(consent.paused()||!consent.consented()||("liveConsentVersion".equals(key)&&!LiveConsent.allowed(this))){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}if(!consent.consented())disableSelf();}
-    @Override public void onInterrupt(){hideOverlay();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}
-    @Override public void onDestroy(){if(consent!=null)consent.preferences().unregisterOnSharedPreferenceChangeListener(this);hideOverlay();LiveCaptureState.clear();if(live!=null)live.close();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);super.onDestroy();}
+    @Override public void onInterrupt(){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}
+    @Override public void onDestroy(){connected=false;if(consent!=null)consent.preferences().unregisterOnSharedPreferenceChangeListener(this);hideOverlay();LiveCaptureState.clear();if(live!=null)live.close();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);super.onDestroy();}
 }

@@ -23,5 +23,11 @@ final class AnalyticsChecks {
         panel.measure(View.MeasureSpec.makeMeasureSpec(840,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(0,View.MeasureSpec.UNSPECIFIED));panel.layout(0,0,840,panel.getMeasuredHeight());
         Bitmap bitmap=Bitmap.createBitmap(840,panel.getHeight(),Bitmap.Config.ARGB_8888);panel.draw(new Canvas(bitmap));try(FileOutputStream out=new FileOutputStream(new File(context.getFilesDir(),"analytics-preview.png"))){bitmap.compress(Bitmap.CompressFormat.PNG,100,out);}bitmap.recycle();
         panel.bind(OverlaySummary.unavailable());String spoken=panel.getChildAt(2).getContentDescription().toString();if(spoken.contains("percent")||!spoken.contains("unavailable"))throw new AssertionError("Missing analysis presented as estimates");
+        for(var missing:new OverlaySummary[]{OverlaySummary.unavailable(),OverlaySummary.analyzing(),OverlaySummary.connectionUnavailable()}){
+            panel.bind(missing);if(panel.getChildAt(2).getContentDescription().toString().contains("percent")||panel.getChildCount()!=3)throw new AssertionError("Failure status invented scores or added content");
+            if(!((TextView)panel.getChildAt(0)).getText().toString().equals("Current state: "+missing.currentState())||!((TextView)panel.getChildAt(1)).getText().toString().equals("Direction: "+missing.direction()))throw new AssertionError("Short status mapping incorrect");
+        }
+        panel.bind(new OverlaySummary("Positive language","Appears stable",new float[]{0,.9f,0,0,0,0,0,0},true));
+        if(!panel.getChildAt(2).getContentDescription().toString().contains("Happy: 90 percent")||panel.getChildAt(2).getContentDescription().toString().contains("unavailable"))throw new AssertionError("Live chart replacement did not update");
     }
 }
