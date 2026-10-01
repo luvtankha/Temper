@@ -54,3 +54,5 @@ Updated Phase26 consent/accessibility skeleton builds, passes lint and passes ac
 Updated Phase27 bounded pure adapter contract and isolated fake adapter pass actual-device role/composer/immutability/redaction/failure checks. No real WhatsApp parsing is claimed yet.
 
 Phase28 is in progress: a user-armed text-free WhatsApp layout probe is installed and its one-shot/composer/export/cleanup device tests pass. Actual layout metadata from a fictional test chat is required before defining message/role parsing; no WhatsApp text extraction is implemented yet. Version2 consent requires a fresh opt-in. Calibration instructions: docs/architecture/android-accessibility.md.
+
+Phase28 update: actual59-node layout retrieved; conservative bounded text-row adapter and one-shot parser implemented. Build/lint and actual-device tests with the observed layout plus fictional text pass. Actual host text parsing remains pending manual activation/test. Exact supported build and parser limits: docs/architecture/whatsapp-adapter.md. Diagnostic report exports no messages or identities; no server transmission exists.

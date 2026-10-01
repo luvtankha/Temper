@@ -16,6 +16,7 @@ import dev.temper.android.accessibility.TemperAccessibilityService;
 import dev.temper.android.accessibility.ProbeState;
 import dev.temper.android.adapters.ScreenObservation;
 import dev.temper.android.accessibility.LayoutMetadata;
+import dev.temper.android.accessibility.ParseProbeState;
 
 /** Native onboarding, device account and explicit accessibility consent controls. */
 public final class MainActivity extends Activity {
@@ -36,14 +37,14 @@ public final class MainActivity extends Activity {
     private void home(){
         page("TEMPER");text("A small companion for conversations",19);
         text("The Android overlay is in development. It will estimate language and direction in supported visible WhatsApp conversations. Estimates cannot establish another person's feelings.",16);
-        text("This build can detect WhatsApp and inspect one user-armed chat layout after informed opt-in. No message text is read or sent yet.",16);
+        text("This build can inspect one user-selected fictional WhatsApp chat after informed opt-in. Text stays in memory and is never sent to a server in this build.",16);
         button("Accessibility and consent",this::consent);button("Device account",this::account);button("Settings",this::settings);button("Fictional preview",this::preview);
     }
     private void settings(){
-        page("Settings");text("Chat capture and overlay are not implemented yet. Pause also stops supported-app detection.",16);
+        page("Settings");text("Live capture and overlay are not implemented yet. Pause stops inspection and clears captured test data.",16);
         Switch pause=new Switch(this);pause.setText("Keep TEMPER paused");pause.setTextColor(Color.WHITE);pause.setChecked(getPreferences(MODE_PRIVATE).getBoolean("paused",true));
         pause.setOnCheckedChangeListener((view,checked)->new ConsentStore(this).pause(checked));content.addView(pause);
-        text("No chat text is stored or transmitted. The pause preference is local to this device.",16);button("Reset pause preference",()->{new ConsentStore(this).pause(true);settings();});button("Back",this::home);
+        text("No chat text is persisted or transmitted. The pause preference is local to this device.",16);button("Reset pause preference",()->{new ConsentStore(this).pause(true);settings();});button("Back",this::home);
     }
     private boolean serviceEnabled(){
         AccessibilityManager manager=(AccessibilityManager)getSystemService(ACCESSIBILITY_SERVICE);
@@ -55,7 +56,7 @@ public final class MainActivity extends Activity {
     private void consent(){
         page("Accessibility and consent");consentScreen=true;ConsentStore store=new ConsentStore(this);
         text("Android Accessibility can expose screen content. TEMPER will use only recent visible messages and composer bounds in supported WhatsApp chats to estimate language and direction. It will never click controls or send messages. Estimates cannot establish someone's feelings.",16);
-        text("Test inspection is limited to a fictional chat you select. The current one-shot probe reads resource identifiers and bounds, never text or descriptions. The upcoming adapter may read up to eight visible test-chat messages (1000 characters each) and a conversation identifier, keeping only a short window in memory. No composer draft, contact list or unrelated content is read; no raw chats are logged. Pause clears the window. Server transmission requires a separate future consent.",16);
+        text("Test inspection is limited to a fictional one-to-one chat you select. The layout probe reads identifiers and bounds without text. The separately armed parser reads up to eight visible messages (1000 characters each), their timestamps and a conversation identifier, keeping text only in memory. No composer draft, contact list or unrelated content is read; no raw chats are logged or exported. Pause clears the window. Server transmission requires a separate future consent.",16);
         text("You control access: pause stops detection; revoke removes consent and disables the service. Android's Accessibility settings can also disable TEMPER at any time.",16);
         text("System service: "+(serviceEnabled()?"Enabled":"Disabled"),18);
         text(store.paused()?"TEMPER is paused":"TEMPER is resumed",18);
@@ -67,8 +68,12 @@ public final class MainActivity extends Activity {
             button("Open Android Accessibility settings",()->startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
             button(store.paused()?"Resume TEMPER":"Pause TEMPER",()->{store.pause(!store.paused());consent();});
             button("Revoke consent and disable",()->{store.revoke();consent();});
-            if(!store.paused()&&serviceEnabled())button("Arm next fictional chat layout",()->{LayoutMetadata.clear(this);ProbeState.arm();consent();});
+            if(!store.paused()&&serviceEnabled()){
+                button("Arm next fictional chat layout",()->{ParseProbeState.clear(this);LayoutMetadata.clear(this);ProbeState.arm();consent();});
+                button("Parse next fictional chat once",()->{ProbeState.clear();LayoutMetadata.clear(this);ParseProbeState.arm(this);consent();});
+            }
         }
+        text("Test parser: "+ParseProbeState.status(),16);
         text("Test probe: "+ProbeState.status(),16);
         ScreenObservation observed=ProbeState.observation();
         if(observed!=null){
