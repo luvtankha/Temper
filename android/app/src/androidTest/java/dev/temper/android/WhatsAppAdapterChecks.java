@@ -42,7 +42,11 @@ final class WhatsAppAdapterChecks {
         if(adapter.read(new ScreenObservation("com.other",screen.viewport(),nodes)).status()!=VisibleConversation.Status.UNSUPPORTED_PACKAGE)throw new AssertionError("Unsupported package accepted");
         dedup.accept(VisibleConversation.unavailable(VisibleConversation.Status.NOT_CONVERSATION));if(!dedup.accept(result))throw new AssertionError("Unavailable did not reset dedup");
         try{
-            ParseProbeState.arm(target);ParseProbeState.save(target,result,true);
+            ParseProbeState.arm(target);
+            ParseProbeState.save(target,VisibleConversation.unavailable(VisibleConversation.Status.NOT_CONVERSATION),false);
+            if(!ParseProbeState.armed()||ParseProbeState.result()!=null||new File(target.getFilesDir(),"whatsapp-parser-report.json").exists())throw new AssertionError("Home/transition screen consumed one-shot capture");
+            ParseProbeState.save(target,result,true);
+            if(ParseProbeState.armed())throw new AssertionError("Successful conversation did not consume one-shot capture");
             String report=new String(Files.readAllBytes(new File(target.getFilesDir(),"whatsapp-parser-report.json").toPath()),StandardCharsets.UTF_8);
             if(report.contains("Fictional")||report.contains("SECRET")||!new JSONObject(report).getBoolean("repeatSuppressed"))throw new AssertionError("Report leaked text or missed dedup");
             new ConsentStore(target,"test_adapter_clear").pause(true);if(ParseProbeState.result()!=null||new File(target.getFilesDir(),"whatsapp-parser-report.json").exists())throw new AssertionError("Pause did not clear parser");

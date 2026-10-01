@@ -9,6 +9,8 @@ Actual-device geometry checks pass for the observed composer,64×88dp dimensions
 
 Demo gate: enable TEMPER's Android service after the test/update, return to its consent page and press Parse next fictional chat once, then open the fictional one-to-one chat within one minute. Stay there; open/close the keyboard manually and check placement/input usability. Leaving WhatsApp or pausing should hide the character. For now reopening a chat after departure requires another explicit parse; live capture is Phase32.
 
+The one-shot arm now survives WhatsApp's initial/home/transition screen: NOT_CONVERSATION does not consume it or read text. It waits for the selected chat until its one-minute expiry. A real attempt exposed premature consumption; a meaningful transition regression now passes on device. Unknown or ambiguous conversation layouts still fail closed.
+
 Test runner snapshots/restores existing consent/pause preferences after its UI tests, while Android service activation remains manual. An instrumentation launch wait on this device was resolved by clearing/relaunching only TEMPER's task with adb am start -f0x10008000; tests then passed. It did not require a system permission change. No debugger forwards remain.
 
 Platform references: [Accessibility overlay window](https://developer.android.com/reference/android/view/WindowManager.LayoutParams#TYPE_ACCESSIBILITY_OVERLAY), [service application-window access](https://developer.android.com/reference/android/accessibilityservice/AccessibilityService#getWindows()).
