@@ -49,4 +49,4 @@ Updated Phase22 trajectory and23 compact remote mapping are verified. Complete J
 
 Updated Phase25 device-only account/session support builds, passes lint and passes actual-device encrypted storage/password/session/tamper checks. Account scope and setup: docs/architecture/android-account.md. This local identity does not secure backend endpoints.
 
-Updated Phase26 consent/accessibility skeleton builds, passes lint and passes actual-device consent/pause/package-policy tests. Manual system activation and real WhatsApp package detection are pending. Current build detects package metadata only, with no chat extraction or transmission. Setup: docs/architecture/android-accessibility.md.
+Updated Phase26 consent/accessibility skeleton builds, passes lint and passes actual-device consent/pause/package-policy tests. User confirmed actual system activation and real WhatsApp package detection. Current build detects package metadata only, with no chat extraction or transmission. Setup: docs/architecture/android-accessibility.md.
