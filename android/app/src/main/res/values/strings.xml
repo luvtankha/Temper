@@ -1,0 +1,3 @@
+<resources>
+    <string name="accessibility_description">TEMPER estimates language and conversation direction in supported visible WhatsApp chats. Enable only after reviewing consent in TEMPER. Pause or revoke anytime. This build detects WhatsApp only; no chat text is read, stored or sent. TEMPER never clicks or sends messages.</string>
+</resources>

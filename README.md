@@ -48,3 +48,5 @@ Updated Phase21: additive conflictAnalysis provides configurable raw/smoothed sc
 Updated Phase22 trajectory and23 compact remote mapping are verified. Complete Java45/45 and subsequent live browser11/11 pass; legacy web22/build preserved. Android Phase24 install/run and foundation instrumentation passed on OnePlus8T Android14/API34.
 
 Updated Phase25 device-only account/session support builds, passes lint and passes actual-device encrypted storage/password/session/tamper checks. Account scope and setup: docs/architecture/android-account.md. This local identity does not secure backend endpoints.
+
+Updated Phase26 consent/accessibility skeleton builds, passes lint and passes actual-device consent/pause/package-policy tests. Manual system activation and real WhatsApp package detection are pending. Current build detects package metadata only, with no chat extraction or transmission. Setup: docs/architecture/android-accessibility.md.

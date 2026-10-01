@@ -7,17 +7,25 @@ import android.text.InputType;
 import dev.temper.android.auth.DeviceAccountStore;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
+import android.content.Intent;
+import android.provider.Settings;
+import android.accessibilityservice.AccessibilityServiceInfo;
+import android.view.accessibility.AccessibilityManager;
+import dev.temper.android.privacy.ConsentStore;
+import dev.temper.android.accessibility.TemperAccessibilityService;
 
-/** Onboarding shell only; no host-app access or permissions. */
+/** Native onboarding, device account and explicit accessibility consent controls. */
 public final class MainActivity extends Activity {
     private LinearLayout content;
     private final ExecutorService accountWorker=Executors.newSingleThreadExecutor();
     private DeviceAccountStore accountStore;
     private long pageVersion;
+    private boolean consentScreen;
+    @Override public void onResume(){super.onResume();if(consentScreen)consent();}
     @Override public void onCreate(Bundle state){super.onCreate(state);accountStore=new DeviceAccountStore(this);home();}
     @Override public void onDestroy(){accountWorker.shutdown();super.onDestroy();}
     private void page(String title){
-        pageVersion++;
+        pageVersion++;consentScreen=false;
         ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);int pad=(int)(24*getResources().getDisplayMetrics().density);content.setPadding(pad,pad*2,pad,pad);content.setBackgroundColor(Color.rgb(21,16,25));scroll.addView(content);setContentView(scroll);text(title,28);
     }
     private void text(String value,int size){TextView text=new TextView(this);text.setText(value);text.setTextColor(Color.rgb(242,230,248));text.setTextSize(size);text.setPadding(0,12,0,12);content.addView(text);}
@@ -25,14 +33,39 @@ public final class MainActivity extends Activity {
     private void home(){
         page("TEMPER");text("A small companion for conversations",19);
         text("The Android overlay is in development. It will estimate language and direction in supported visible WhatsApp conversations. Estimates cannot establish another person's feelings.",16);
-        text("Nothing is being captured. Accessibility access will require a separate informed opt-in before it is used.",16);
-        button("Device account",this::account);button("Settings",this::settings);button("Fictional preview",this::preview);
+        text("This build can detect WhatsApp after informed opt-in. It does not read or send chat text yet.",16);
+        button("Accessibility and consent",this::consent);button("Device account",this::account);button("Settings",this::settings);button("Fictional preview",this::preview);
     }
     private void settings(){
-        page("Settings");text("Capture and overlay are unavailable in this foundation build.",16);
+        page("Settings");text("Chat capture and overlay are not implemented yet. Pause also stops supported-app detection.",16);
         Switch pause=new Switch(this);pause.setText("Keep TEMPER paused");pause.setTextColor(Color.WHITE);pause.setChecked(getPreferences(MODE_PRIVATE).getBoolean("paused",true));
         pause.setOnCheckedChangeListener((view,checked)->getPreferences(MODE_PRIVATE).edit().putBoolean("paused",checked).apply());content.addView(pause);
-        text("No chat text is stored or transmitted. The pause preference is local to this device.",16);button("Clear local preferences",()->{getPreferences(MODE_PRIVATE).edit().clear().apply();settings();});button("Back",this::home);
+        text("No chat text is stored or transmitted. The pause preference is local to this device.",16);button("Reset pause preference",()->{new ConsentStore(this).pause(true);settings();});button("Back",this::home);
+    }
+    private boolean serviceEnabled(){
+        AccessibilityManager manager=(AccessibilityManager)getSystemService(ACCESSIBILITY_SERVICE);
+        for(AccessibilityServiceInfo info:manager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)){
+            android.content.pm.ServiceInfo service=info.getResolveInfo().serviceInfo;
+            if(getPackageName().equals(service.packageName)&&TemperAccessibilityService.class.getName().equals(service.name))return true;
+        }return false;
+    }
+    private void consent(){
+        page("Accessibility and consent");consentScreen=true;ConsentStore store=new ConsentStore(this);
+        text("Android Accessibility can expose screen content. TEMPER will use only recent visible messages and composer bounds in supported WhatsApp chats to estimate language and direction. It will never click controls or send messages. Estimates cannot establish someone's feelings.",16);
+        text("This build only detects WhatsApp package events. It does not read message text, traverse screen nodes, store chats or transmit anything. A later live-analysis build will require a new consent before reading or sending text to a configured analysis server.",16);
+        text("You control access: pause stops detection; revoke removes consent and disables the service. Android's Accessibility settings can also disable TEMPER at any time.",16);
+        text("System service: "+(serviceEnabled()?"Enabled":"Disabled"),18);
+        text(store.paused()?"TEMPER is paused":"TEMPER is resumed",18);
+        text("WhatsApp detection: "+(store.consented()&&!store.paused()&&serviceEnabled()&&TemperAccessibilityService.recentlyDetected()?"recent supported event":"no recent supported event"),16);
+        if(!store.consented()){
+            CheckBox agree=new CheckBox(this);agree.setText("I understand and opt in to WhatsApp package detection");agree.setTextColor(Color.WHITE);content.addView(agree);
+            Button accept=new Button(this);accept.setText("Save consent");accept.setEnabled(false);agree.setOnCheckedChangeListener((view,checked)->accept.setEnabled(checked));accept.setOnClickListener(view->{store.accept();consent();});content.addView(accept);
+        }else{
+            button("Open Android Accessibility settings",()->startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
+            button(store.paused()?"Resume TEMPER":"Pause TEMPER",()->{store.pause(!store.paused());consent();});
+            button("Revoke consent and disable",()->{store.revoke();consent();});
+        }
+        button("Refresh status",this::consent);button("Back",this::home);
     }
     private void preview(){page("Fictional preview");text("Neutral companion placeholder",22);text("This screen is a development preview only. It does not read WhatsApp, run live analysis or draw over other apps.",16);button("Back",this::home);}
     private void account(){
