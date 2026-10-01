@@ -3,8 +3,11 @@ import { ArrowDown, ArrowUpRight, CheckCheck, ChevronDown, MessageCircle, MoreHo
 import { participants, remoteParticipant } from '../../models/chat';
 import { useChat } from './ChatProvider';
 import { RemoteAvatar } from '../avatar/RemoteAvatar';
+import {useAnalysis} from '../analysis/AnalysisProvider';
 
 export function ChatPage() {
+  const {snapshot}=useAnalysis();
+  const analysisLabel=snapshot?.mode==='HYBRID'?'model + fixture analysis':snapshot?.mode==='MODEL'?'model analysis':snapshot?'mock analysis':'analysis pending';
   const {messages,localId,setLocalId,loading,paused,setPaused,remoteTyping,send,reset,previewTyping,selectedMessageId:selectedId,setSelectedMessageId:setSelectedId,focusedMessageId,focusRequest,inspectMessage} = useChat();
   const remote = remoteParticipant(localId);
   const {transport,connection,remoteOnline,setTyping,error:loadError,retry}=useChat();
@@ -47,7 +50,7 @@ export function ChatPage() {
     <header className="chat-header"><div className="participant-heading"><span className={`contact-avatar ${remote.variant}`}>{remote.name.slice(0,1)}<i /></span><div><h1>{remote.name}<span>your conversation partner</span></h1><p><span className={paused ? 'paused-dot' : 'online-dot'} />{paused ? 'Demo paused' : remoteTyping ? (live?'Typing…':'Typing in demo…') : live?(remoteOnline?'Online now':'Not connected'):transport==='backend'?'Backend REST session':'Available in local demo'}</p></div></div><div className="chat-header-right"><span className="private-label"><Sparkles size={13} /> More than words</span><button className="icon-button" aria-label="Conversation options" aria-expanded={optionsOpen} onClick={() => setOptionsOpen(!optionsOpen)}><MoreHorizontal size={20} /></button></div>
       {optionsOpen && <div className="conversation-menu"><label>Viewing as<select aria-label="Viewing as" value={localId} onChange={e => setLocalId(e.target.value as typeof localId)}>{participants.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><button onClick={() => {setPaused(!paused);setOptionsOpen(false);}}>{paused ? 'Resume local demo' : 'Pause local demo'}</button><button disabled={paused||live} onClick={() => {previewTyping();setOptionsOpen(false);}}>Preview remote typing</button><button onClick={() => {void reset(false);setSelectedId(null);setOptionsOpen(false);}}>New demo conversation</button><button onClick={() => {void reset(true);setSelectedId(null);setOptionsOpen(false);}}>Load sample conversation</button></div>}
     </header>
-    <div className="conversation-banner"><span className="banner-icon"><ActivityMark /></span><p>A little context. A better connection.</p><span>{live?'Live chat · mock analysis':transport==='backend'?'Backend chat · mock analysis':'Local demo'}</span></div>
+    <div className="conversation-banner"><span className="banner-icon"><ActivityMark /></span><p>A little context. A better connection.</p><span>{live?`Live chat · ${analysisLabel}`:transport==='backend'?`Backend chat · ${analysisLabel}`:'Local demo'}</span></div>
     {live&&<p className="live-connection-status" role="status" data-connection-state={connection}>{connection==='connected'?'Live connection ready':connection==='reconnecting'?'Reconnecting… messages will catch up':connection==='error'?'Live connection unavailable':'Connecting to live chat…'}</p>}
     {loadError&&<p role="alert" className="composer-error">{loadError} <button onClick={retry}>Retry conversation</button></p>}
     <div ref={listRef} className="message-list" aria-label="Messages" aria-live="polite" aria-busy={loading} onScroll={() => {const el=listRef.current; if(el) setAwayFromBottom(el.scrollHeight-el.scrollTop-el.clientHeight>90);}}>
@@ -72,7 +75,7 @@ export function ChatPage() {
         <textarea ref={composerRef} aria-label={`Message ${remote.name}`} placeholder={`Message ${remote.name}…`} value={draft} onChange={e=>updateDraft(e.target.value)} onBlur={()=>setTyping(false)} onKeyDown={handleKey} maxLength={2000} rows={2} disabled={paused || loading || disconnected} />
         <div className="composer-tools"><div className="composer-left-tools"><button type="button" className="icon-button" aria-label="Add emoji" aria-expanded={emojiOpen} onClick={()=>setEmojiOpen(!emojiOpen)} disabled={paused}><Smile size={18} /></button><span className="composer-hint">Enter to send <span>·</span> Shift + Enter for a new line</span></div><div className="composer-right-tools">{draft.length>1800 && <span className="character-count">{draft.length}/2000</span>}<button type="submit" className="send-button" aria-label="Send message" disabled={!draft.trim() || sending || paused || loading || disconnected}><span>Send</span><Send size={15} /></button></div></div>
         {emojiOpen && <div className="emoji-picker" aria-label="Emoji picker">{['✨','😊','💜','🤔','🙌','👍'].map(emoji=><button type="button" key={emoji} aria-label={`Insert ${emoji}`} onClick={()=>{setDraft(prev=>(prev+emoji).slice(0,2000)); setEmojiOpen(false); composerRef.current?.focus();}}>{emoji}</button>)}</div>}
-      </form><div className="composer-footnote"><span>{live?'Live delivery · in-memory backend · mock analysis':transport==='backend'?'REST delivery · in-memory backend · mock analysis':'Local demo. Messages stay in memory for this session.'}</span><span>{draft.length>0 ? `${draft.length} characters` : 'Thoughtful conversations start here.'}</span></div>{error && <p className="send-error" role="alert">{error}</p>}
+      </form><div className="composer-footnote"><span>{live?`Live delivery · in-memory backend · ${analysisLabel}`:transport==='backend'?`REST delivery · in-memory backend · ${analysisLabel}`:'Local demo. Messages stay in memory for this session.'}</span><span>{draft.length>0 ? `${draft.length} characters` : 'Thoughtful conversations start here.'}</span></div>{error && <p className="send-error" role="alert">{error}</p>}
     </div>
   </section>;
 }

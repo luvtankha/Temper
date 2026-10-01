@@ -1,0 +1,7 @@
+{
+  "modelId": "cardiffnlp/twitter-roberta-base-sentiment-latest",
+  "modelSha256": "29774d57637d3082494f8878bf700824d1c6777051d4fc36ae556231cd75ec1f",
+  "tokenizerSha256": "727009a8214ddfa5af1deedf1006d4d06e8e51e54aa5f03566263d4e19bfcdce",
+  "labels": ["negative", "neutral", "positive"],
+  "maxTokens": 512
+}

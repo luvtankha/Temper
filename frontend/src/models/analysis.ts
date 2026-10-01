@@ -10,7 +10,7 @@ export interface MessageAnalysis {
   evidence:{source:'MOCK'|'MODEL'|'HEURISTIC';label:string;description:string}[];
 }
 export interface ConversationAnalysis {
-  conversationId:string;mode:'MOCK'|'MODEL';messages:MessageAnalysis[];
+  conversationId:string;mode:'MOCK'|'MODEL'|'HYBRID';messages:MessageAnalysis[];
   conflictScore:number;sentiment:number;emotionalIntensity:number;
   direction:'steady'|'escalating'|'recovering';escalationStart:number|null;peakTension:number|null;
   events:{sequence:number;messageId:string;kind:'escalation'|'peak'|'recovery';label:string}[];

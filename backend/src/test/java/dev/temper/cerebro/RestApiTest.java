@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest @AutoConfigureMockMvc
+@SpringBootTest(properties={"temper.sentiment.model-dir=","temper.foundation.model-dir="}) @AutoConfigureMockMvc
 class RestApiTest {
     @Autowired MockMvc mvc;@Autowired ObjectMapper json;@Autowired ConversationService service;
     String create() throws Exception {return json.readTree(mvc.perform(post("/api/v1/conversations").contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"REST test\",\"participantIds\":[\"alex\",\"nova\"]}")).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).get("id").asText();}
@@ -50,3 +50,4 @@ class RestApiTest {
         mvc.perform(post(base+"/analyze")).andExpect(status().isOk()).andExpect(jsonPath("$.contextMessageIds.length()").value(5)).andExpect(jsonPath("$.contextMessageIds[0]").value(turns.get(1).id().toString())).andExpect(jsonPath("$.contextMessageIds[4]").value(turns.get(5).id().toString())).andExpect(jsonPath("$.mode").value("MOCK"));
     }
 }
+

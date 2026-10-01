@@ -7,6 +7,7 @@ import {useAnalysis} from './AnalysisProvider';
 import {emotionLabels,signalLabels} from '../../models/analysis';
 import {participants} from '../../models/chat';
 import {SignalMeter} from './AnalyticsPanel';
+import {AnalysisProvenance} from './AnalysisProvenance';
 
 export function MessageInspector() {
   const {messages,selectedMessageId,inspectorOpen,closeInspector,focusMessage}=useChat();
@@ -39,7 +40,7 @@ export function MessageInspector() {
       <header className="inspector-heading"><div><span className="eyebrow">A CLOSER LOOK AT THE LANGUAGE</span><h2>Message #{sequence}</h2><p>{participants.find(p=>p.id===message.speakerId)?.name} · {new Intl.DateTimeFormat('en-IN',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Calcutta'}).format(new Date(message.sentAt))}</p></div><button ref={closeButton} className="icon-button" aria-label="Close message details" onClick={closeInspector}><X size={20}/></button></header>
       <div className="inspector-body"><blockquote>{message.text}</blockquote>
         {!analysis ? <div className="inspector-unavailable" role="status"><Info size={20}/><h3>{status==='error'?'Analysis unavailable':status==='loading'?'Analysis pending…':'No analysis for this message'}</h3><p>{status==='error'?error:'Signal details appear once the adapter returns this turn.'}</p>{status==='error'&&<button className="analytics-toggle" onClick={retry}>Retry analysis</button>}</div> : <>
-          <div className="analysis-fixture-note"><span className="fixture-dot"/><strong>{snapshot?.mode==='MOCK'?'Mock fixtures':'Model estimates'}</strong><span>{snapshot?.mode==='MOCK'?'No AI inference':'Language signals'}</span></div>
+          <AnalysisProvenance mode={snapshot?.mode??'MOCK'}/>
           <div className="inspector-signal-grid"><section><h3>Estimated emotions</h3>{Object.entries(emotionLabels).map(([key,label])=><SignalMeter key={key} label={label} value={analysis.emotions[key as keyof typeof emotionLabels]}/>)}</section><section><h3>Language signals</h3>{Object.entries(signalLabels).map(([key,label])=><SignalMeter key={key} label={label} value={analysis.signals[key as keyof typeof signalLabels]} color="magenta"/>)}</section></div>
           <section className="inspector-explanation"><h3>Why this matters</h3><p>{analysis.explanation}</p></section>
           <section className="inspector-evidence"><h3>Source & evidence</h3>{analysis.evidence.map((e,i)=><div key={`${e.label}-${i}`}><span className="pill">{e.source}</span><strong>{e.label}</strong><p>{e.description}</p></div>)}</section>

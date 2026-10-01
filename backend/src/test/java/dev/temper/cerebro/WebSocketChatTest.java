@@ -14,7 +14,7 @@ import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import dev.temper.cerebro.conversation.service.ConversationService;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,properties={"temper.sentiment.model-dir=","temper.foundation.model-dir="})
 class WebSocketChatTest {
     @LocalServerPort int port;@Autowired ConversationService conversations;@Autowired ObjectMapper json;
     StompSession connect(WebSocketStompClient client,UUID room,String speaker) throws Exception {
@@ -40,3 +40,4 @@ class WebSocketChatTest {
         } finally {if(a!=null&&a.isConnected())a.disconnect();if(b!=null&&b.isConnected())b.disconnect();client.stop();}
     }
 }
+

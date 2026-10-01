@@ -10,7 +10,7 @@ import dev.temper.cerebro.common.DemoSeed;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties={"temper.sentiment.model-dir=","temper.foundation.model-dir="})
 @AutoConfigureMockMvc
 class ConversationReadControllerTest {
     @Autowired MockMvc mvc;
@@ -25,3 +25,4 @@ class ConversationReadControllerTest {
         mvc.perform(get("/api/v1/conversations/not-a-uuid")).andExpect(status().isBadRequest());
     }
 }
+

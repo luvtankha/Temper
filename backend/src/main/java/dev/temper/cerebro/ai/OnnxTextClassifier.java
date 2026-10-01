@@ -13,14 +13,26 @@ public final class OnnxTextClassifier implements TextClassifier, AutoCloseable {
     private final OrtEnvironment environment = OrtEnvironment.getEnvironment();
     private final OrtSession session;
     private final HuggingFaceTokenizer tokenizer;
+    private final String modelId;
+    private final List<String> labels;
 
     public OnnxTextClassifier(Path directory) throws Exception {
-        verify(directory.resolve("model.onnx"), "252cf7048af94a1599019fef35961b2bd3d6db13df0b0a4b032b92baeae31939");
-        verify(directory.resolve("tokenizer.json"), "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66");
+        this(directory, MODEL_ID, "252cf7048af94a1599019fef35961b2bd3d6db13df0b0a4b032b92baeae31939",
+            "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66", List.of("negative", "positive"), 128);
+    }
+
+    public OnnxTextClassifier(Path directory, String modelId, String modelHash, String tokenizerHash,
+                              List<String> labels, int maxTokens) throws Exception {
+        this.modelId = Objects.requireNonNull(modelId);
+        this.labels = List.copyOf(labels);
+        if (labels.isEmpty() || new HashSet<>(labels).size() != labels.size() || maxTokens < 4 || maxTokens > 512)
+            throw new IllegalArgumentException("Invalid classifier specification");
+        verify(directory.resolve("model.onnx"), modelHash);
+        verify(directory.resolve("tokenizer.json"), tokenizerHash);
         // DJL checks this supported property before its optional telemetry callback.
         System.setProperty("OPT_OUT_TRACKING", "true");
         tokenizer = HuggingFaceTokenizer.newInstance(directory.resolve("tokenizer.json"),
-            Map.of("truncation", "true", "padding", "false", "maxLength", "128", "modelMaxLength", "512"));
+            Map.of("truncation", "true", "padding", "false", "maxLength", String.valueOf(maxTokens), "modelMaxLength", "512"));
         OrtSession created = null;
         try (var options = new OrtSession.SessionOptions()) {
             options.setIntraOpNumThreads(2);
@@ -44,11 +56,14 @@ public final class OnnxTextClassifier implements TextClassifier, AutoCloseable {
              var mask = OnnxTensor.createTensor(environment, new long[][] {encoding.getAttentionMask()});
              var result = session.run(Map.of("input_ids", ids, "attention_mask", mask))) {
             float[] logits = ((float[][]) result.get(0).getValue())[0];
-            if (logits.length != 2) throw new IllegalStateException("Invalid output labels");
-            double max = Math.max(logits[0], logits[1]);
-            double negative = Math.exp(logits[0] - max), positive = Math.exp(logits[1] - max);
-            return new ClassificationResult(MODEL_ID, "MODEL", Map.of("negative", negative / (negative + positive),
-                "positive", positive / (negative + positive)), encoding.getIds().length,
+            if (logits.length != labels.size()) throw new IllegalStateException("Invalid output labels");
+            double max = Double.NEGATIVE_INFINITY;
+            for (float logit : logits) { if (!Float.isFinite(logit)) throw new IllegalStateException("Invalid model logits"); max = Math.max(max, logit); }
+            double sum = 0;
+            for (float logit : logits) sum += Math.exp(logit - max);
+            Map<String, Double> probabilities = new LinkedHashMap<>();
+            for (int i = 0; i < logits.length; i++) probabilities.put(labels.get(i), Math.exp(logits[i] - max) / sum);
+            return new ClassificationResult(modelId, "MODEL", probabilities, encoding.getIds().length,
                 (System.nanoTime() - started) / 1_000_000);
         } catch (OrtException error) {
             throw new IllegalStateException("Local classifier inference failed", error);

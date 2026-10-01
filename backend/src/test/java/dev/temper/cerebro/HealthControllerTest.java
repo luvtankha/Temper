@@ -8,7 +8,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties={"temper.sentiment.model-dir=","temper.foundation.model-dir="})
 @AutoConfigureMockMvc
 class HealthControllerTest {
     @Autowired MockMvc mvc;
@@ -22,3 +22,4 @@ class HealthControllerTest {
         mvc.perform(get("/actuator/health")).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("UP"));
     }
 }
+

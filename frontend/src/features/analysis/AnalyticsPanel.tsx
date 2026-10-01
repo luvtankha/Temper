@@ -4,6 +4,7 @@ import {NavLink} from 'react-router-dom';
 import {lazy,Suspense} from 'react';
 import {emotionLabels,signalLabels,percent} from '../../models/analysis';
 import {useAnalysis} from './AnalysisProvider';
+import {AnalysisProvenance} from './AnalysisProvenance';
 const ConflictTimeline=lazy(()=>import('./ConflictTimeline').then(m=>({default:m.ConflictTimeline})));
 
 export function SignalMeter({label,value,color='violet'}:{label:string;value:number;color?:'violet'|'magenta'}) {
@@ -17,7 +18,7 @@ export function AnalyticsPanel({onNavigate}:{onNavigate?:()=>void}={}) {
   const last=snapshot.messages.at(-1)!;
   const Direction=snapshot.direction==='recovering'?ArrowDownRight:snapshot.direction==='escalating'?ArrowUpRight:Minus;
   return <div className="live-insights" data-analysis-mode={snapshot.mode} data-message-count={snapshot.messages.length} aria-busy={status==='loading'}>
-    <div className="analysis-fixture-note"><span className="fixture-dot"/><strong>Mock fixtures</strong><span>No AI inference</span></div>
+    <AnalysisProvenance mode={snapshot.mode}/>
     <div className="insight-updated">{status==='loading'?'Refreshing preview…':`Latest turn · Message ${last.sequence}`}</div>
     <section className="conflict-card"><div><span className="metric-caption">CONFLICT SIGNAL</span><strong>{percent(snapshot.conflictScore)}<small>/100</small></strong><p>Illustrative score</p></div><div className="score-ring" style={{background:`conic-gradient(#ff2daa ${percent(snapshot.conflictScore)}%, #2b2333 0)`}}><span><Activity size={23}/></span></div></section>
     <div className="insight-stat-grid"><div><span>Current sentiment</span><strong>{snapshot.sentiment>.15?'Positive':snapshot.sentiment<-.15?'Negative':'Neutral'}</strong><small>{snapshot.sentiment.toFixed(2)} · signed scale</small></div><div><span>Emotional intensity</span><strong>{percent(snapshot.emotionalIntensity)}<small>%</small></strong><small>Estimated signal</small></div></div>
@@ -26,6 +27,6 @@ export function AnalyticsPanel({onNavigate}:{onNavigate?:()=>void}={}) {
     <section className="signal-section"><h3>Emotion signals <span>ESTIMATED</span></h3>{Object.entries(emotionLabels).map(([key,label])=><SignalMeter key={key} label={label} value={last.emotions[key as keyof typeof emotionLabels]} />)}</section>
     <section className="signal-section"><h3>Conversation signals</h3>{Object.entries(signalLabels).map(([key,label])=><SignalMeter key={key} label={label} value={last.signals[key as keyof typeof signalLabels]} color="magenta" />)}</section>
     <section className="conversation-moments"><h3>Turning points</h3><div><span>Escalation start</span><strong>{snapshot.escalationStart?`Message ${snapshot.escalationStart}`:'None in preview'}</strong></div><div><span>Peak tension</span><strong>{snapshot.peakTension?`Message ${snapshot.peakTension}`:'No turns yet'}</strong></div></section>
-    <div className="insight-note"><span className="eyebrow">UNDERSTANDING, NOT ASSUMPTIONS</span><p>These values are hand-authored UI fixtures. Future model signals will be estimates of language, never facts about someone’s feelings.</p><NavLink to="/analysis" onClick={onNavigate}>Explore full analysis <ArrowUpRight size={14}/></NavLink></div>
+    <div className="insight-note"><span className="eyebrow">UNDERSTANDING, NOT ASSUMPTIONS</span><p>{snapshot.mode==='MOCK'?'These values are hand-authored UI fixtures. Future model signals will be estimates of language, never facts about someone’s feelings.':'Sentiment uses local model estimates. Other signals and conflict remain fixtures. Inspect a message for its source and evidence.'}</p><NavLink to="/analysis" onClick={onNavigate}>Explore full analysis <ArrowUpRight size={14}/></NavLink></div>
   </div>;
 }

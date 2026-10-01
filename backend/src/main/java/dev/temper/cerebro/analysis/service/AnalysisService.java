@@ -38,6 +38,7 @@ public class AnalysisService {
         events.add(new Event(peak.sequence(),peak.messageId(),"peak","Fixture peak tension"));
         recovery.ifPresent(t->events.add(new Event(t.sequence(),t.messageId(),"recovery","Fixture recovery")));
         String direction=Math.abs(last.conflict()-previous.conflict())<.08?"steady":last.conflict()>previous.conflict()?"escalating":"recovering";
-        return new Snapshot(id,AnalysisMode.MOCK,turns,last.conflict(),last.sentiment(),last.emotions().values().stream().mapToDouble(Double::doubleValue).max().orElse(0),direction,start.map(Turn::sequence).orElse(null),peak.sequence(),List.copyOf(events),all.size()-turns.size());
+        AnalysisMode mode=turns.stream().allMatch(t->t.mode()==AnalysisMode.MOCK)?AnalysisMode.MOCK:AnalysisMode.HYBRID;
+        return new Snapshot(id,mode,turns,last.conflict(),last.sentiment(),last.emotions().values().stream().mapToDouble(Double::doubleValue).max().orElse(0),direction,start.map(Turn::sequence).orElse(null),peak.sequence(),List.copyOf(events),all.size()-turns.size());
     }
 }

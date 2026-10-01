@@ -2,6 +2,8 @@ spring:
   application:
     name: temper
 temper:
+  sentiment:
+    model-dir: ${TEMPER_SENTIMENT_MODEL_DIR:}
   foundation:
     model-dir: ${TEMPER_FOUNDATION_MODEL_DIR:}
   context:
