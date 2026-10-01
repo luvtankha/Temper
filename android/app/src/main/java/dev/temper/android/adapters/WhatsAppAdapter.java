@@ -16,12 +16,18 @@ public final class WhatsAppAdapter implements ChatPlatformAdapter {
     @Override public boolean supports(String packageName){return ConsentStore.WHATSAPP.equals(packageName);}
     private ReadPlan fail(Status status){return new ReadPlan(status,List.of(),-1,null);}
     private int unique(ScreenObservation screen,String id){int found=-1;for(int i=0;i<screen.nodes().size();i++)if(id.equals(screen.nodes().get(i).resourceId())){if(found!=-1)return -2;found=i;}return found;}
-    public ReadPlan plan(ScreenObservation screen){
+    /** Composer verification is independent of whether message content can be analyzed. */
+    public ReadPlan anchor(ScreenObservation screen){
         if(!supports(screen.packageName()))return fail(Status.UNSUPPORTED_PACKAGE);
         int entry=unique(screen,PREFIX+"entry"),list=unique(screen,"android:id/list"),identity=unique(screen,PREFIX+"conversation_contact_name");
         if(entry<0||list<0||identity<0)return fail(Status.NOT_CONVERSATION);
         var composer=screen.nodes().get(entry);var listNode=screen.nodes().get(list);var header=screen.nodes().get(identity);
-        if(!composer.editable()||composer.password()||!composer.visible()||!header.visible()||!screen.viewport().contains(composer.bounds())||composer.bounds().top()<listNode.bounds().bottom()||header.bounds().bottom()>listNode.bounds().top()||screen.viewport().right()-screen.viewport().left()>=screen.viewport().bottom()-screen.viewport().top())return fail(Status.UNSUPPORTED_LAYOUT);
+        if(!composer.editable()||composer.password()||!composer.visible()||!header.visible()||!composer.className().equals("android.widget.EditText")||!listNode.className().equals("android.widget.ListView")||!header.className().equals("android.widget.TextView")||!screen.viewport().contains(composer.bounds())||composer.bounds().top()<listNode.bounds().bottom()||header.bounds().bottom()>listNode.bounds().top()||screen.viewport().right()-screen.viewport().left()>=screen.viewport().bottom()-screen.viewport().top())return fail(Status.UNSUPPORTED_LAYOUT);
+        return new ReadPlan(Status.AVAILABLE,List.of(),identity,composer.bounds());
+    }
+    public ReadPlan plan(ScreenObservation screen){
+        ReadPlan anchor=anchor(screen);if(anchor.status()!=Status.AVAILABLE)return anchor;
+        int list=unique(screen,"android:id/list"),identity=anchor.identity();var listNode=screen.nodes().get(list);
         List<Row> rows=new ArrayList<>();
         for(int i=0;i<screen.nodes().size();i++){
             var row=screen.nodes().get(i);
@@ -50,7 +56,7 @@ public final class WhatsAppAdapter implements ChatPlatformAdapter {
         rows.sort(Comparator.comparingInt(row->screen.nodes().get(row.node()).bounds().top()));
         if(rows.isEmpty())return fail(Status.NOT_CONVERSATION);
         if(rows.size()>8)rows=new ArrayList<>(rows.subList(rows.size()-8,rows.size()));
-        return new ReadPlan(Status.AVAILABLE,rows,identity,composer.bounds());
+        return new ReadPlan(Status.AVAILABLE,rows,identity,anchor.composer());
     }
     @Override public VisibleConversation read(ScreenObservation screen){
         ReadPlan plan=plan(screen);if(plan.status()!=Status.AVAILABLE)return VisibleConversation.unavailable(plan.status());

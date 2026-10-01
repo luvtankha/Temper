@@ -39,10 +39,12 @@ public final class TemperAccessibilityService extends AccessibilityService imple
                     }
                 }
                 ParseProbeState.save(this,snapshot,repeated);
-                if(snapshot.status()==VisibleConversation.Status.AVAILABLE){boundWindow=root.getWindowId();ScreenObservation structure=new WhatsAppStructureProbe().read(root);overlay.show(structure.viewport(),snapshot.composer(),getResources().getDisplayMetrics().density);}else hideOverlay();
+                ScreenObservation structure=new WhatsAppStructureProbe().read(root);
+                var anchor=new WhatsAppAdapter("structural-anchor-session").anchor(structure);
+                if(supportedBuild()&&anchor.status()==VisibleConversation.Status.AVAILABLE){boundWindow=root.getWindowId();overlay.show(structure.viewport(),anchor.composer(),getResources().getDisplayMetrics().density);}else hideOverlay();
             }else if(ProbeState.armed())ProbeState.save(new WhatsAppStructureProbe().read(root));
             else if(boundWindow==root.getWindowId()){
-                ScreenObservation structure=new WhatsAppStructureProbe().read(root);var plan=new WhatsAppAdapter("structural-anchor-session").plan(structure);
+                ScreenObservation structure=new WhatsAppStructureProbe().read(root);var plan=new WhatsAppAdapter("structural-anchor-session").anchor(structure);
                 if(plan.status()==VisibleConversation.Status.AVAILABLE)overlay.show(structure.viewport(),plan.composer(),getResources().getDisplayMetrics().density);else hideOverlay();
             }else hideOverlay();
         }}

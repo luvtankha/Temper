@@ -13,6 +13,23 @@ import org.json.*;
 final class WhatsAppAdapterChecks {
     private static ScreenObservation.Bounds bounds(JSONArray a)throws Exception{return new ScreenObservation.Bounds(a.getInt(0),a.getInt(1),a.getInt(2),a.getInt(3));}
     private static ScreenObservation.Node text(ScreenObservation.Node n,String value){return new ScreenObservation.Node(n.parentIndex(),n.resourceId(),n.className(),n.bounds(),n.visible(),n.editable(),n.password(),value);}
+    private static void checkMediaAnchor(Context test,WhatsAppAdapter adapter)throws Exception{
+        JSONObject fixture;try(var input=test.getAssets().open("whatsapp-media-layout-2.26.37.73.json")){fixture=new JSONObject(new String(input.readAllBytes(),StandardCharsets.UTF_8));}
+        List<ScreenObservation.Node> nodes=new ArrayList<>();JSONArray raw=fixture.getJSONArray("nodes");
+        for(int i=0;i<raw.length();i++){JSONObject n=raw.getJSONObject(i);nodes.add(new ScreenObservation.Node(n.getInt("parent"),n.getString("id"),n.getString("class"),bounds(n.getJSONArray("bounds")),true,n.getBoolean("editable"),false,null));}
+        ScreenObservation screen=new ScreenObservation("com.whatsapp",bounds(fixture.getJSONArray("viewport")),nodes);
+        var anchor=adapter.anchor(screen);
+        if(anchor.status()!=VisibleConversation.Status.AVAILABLE||!anchor.composer().equals(new ScreenObservation.Bounds(171,2209,453,2305))||!anchor.rows().isEmpty())throw new AssertionError("Media chat composer was blocked by message parsing");
+        var unavailable=adapter.read(screen);if(unavailable.status()!=VisibleConversation.Status.UNSUPPORTED_LAYOUT||!unavailable.turns().isEmpty())throw new AssertionError("Unsupported media content accepted");
+        int entry=-1;for(int i=0;i<nodes.size();i++)if(nodes.get(i).resourceId().endsWith("/entry"))entry=i;
+        var original=nodes.get(entry);List<ScreenObservation.Node> changed=new ArrayList<>(nodes);
+        changed.set(entry,new ScreenObservation.Node(original.parentIndex(),original.resourceId(),"android.widget.TextView",original.bounds(),true,true,false,null));
+        if(adapter.anchor(new ScreenObservation(screen.packageName(),screen.viewport(),changed)).status()!=VisibleConversation.Status.UNSUPPORTED_LAYOUT)throw new AssertionError("Wrong composer class anchored");
+        changed=new ArrayList<>(nodes);changed.set(entry,new ScreenObservation.Node(original.parentIndex(),"",original.className(),original.bounds(),true,true,false,null));
+        if(adapter.anchor(new ScreenObservation(screen.packageName(),screen.viewport(),changed)).status()!=VisibleConversation.Status.NOT_CONVERSATION)throw new AssertionError("Missing composer anchored");
+        changed=new ArrayList<>(nodes);changed.add(original);
+        if(adapter.anchor(new ScreenObservation(screen.packageName(),screen.viewport(),changed)).status()!=VisibleConversation.Status.NOT_CONVERSATION)throw new AssertionError("Duplicate composer anchored");
+    }
     static void run(Context test,Context target)throws Exception{
         JSONObject fixture;try(var input=test.getAssets().open("whatsapp-layout-2.26.37.73.json")){fixture=new JSONObject(new String(input.readAllBytes(),StandardCharsets.UTF_8));}
         JSONArray raw=fixture.getJSONArray("nodes");List<ScreenObservation.Node> nodes=new ArrayList<>();
@@ -25,6 +42,7 @@ final class WhatsAppAdapterChecks {
             nodes.add(new ScreenObservation.Node(n.getInt("parent"),id,n.getString("class"),bounds(n.getJSONArray("bounds")),true,n.getBoolean("editable"),false,value));
         }
         ScreenObservation screen=new ScreenObservation("com.whatsapp",bounds(fixture.getJSONArray("viewport")),nodes);WhatsAppAdapter adapter=new WhatsAppAdapter("isolated-fixture-session");
+        checkMediaAnchor(test,adapter);
         var result=adapter.read(screen);if(result.status()!=VisibleConversation.Status.AVAILABLE||result.turns().size()!=8)throw new AssertionError("Observed-layout fixture not parsed");
         long local=result.turns().stream().filter(t->t.role()==VisibleConversation.Role.LOCAL).count();if(local!=1)throw new AssertionError("Observed outgoing status role incorrect");
         if(!result.composer().equals(new ScreenObservation.Bounds(168,2218,452,2315)))throw new AssertionError("Observed composer mismatch");
