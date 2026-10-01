@@ -49,6 +49,12 @@ foreach ($temperRelative in @('docs\phases\PHASE-41-CONTEXT.md', 'docs\phases\PH
 foreach ($temperRelative in @('docs\phases\PHASE-42-CONTEXT.md','docs\phases\PHASE-42-HANDOFF.md','deployment\feedback\Dockerfile','deployment\feedback\feedback.env.example','scripts\train-feedback-model.py','scripts\approve-feedback-model.py','scripts\test-feedback-training.py','scripts\model-export-requirements.txt')) {
     Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
 }
+foreach ($temperRelative in @('docs\phases\PHASE-43-CONTEXT.md','docs\phases\PHASE-43-HANDOFF.md')) {
+    Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
+}
+foreach ($temperDeploymentRelative in $temperTracked | Where-Object { $_ -like 'deployment/feedback/*' -and $_ -notin @('deployment/feedback/Dockerfile','deployment/feedback/feedback.env.example') }) {
+    Copy-TemperCandidateFile (Join-Path $temperRoot $temperDeploymentRelative) $temperDeploymentRelative
+}
 foreach ($temperEvidence in @(
     @('temp\consumer-avatar-gallery.png', 'evidence\avatar-gallery.png'),
     @('temp\consumer-dummy-spectrum.json', 'evidence\dummy-spectrum.json'),
@@ -66,13 +72,14 @@ The testing APK is installed on the test phone and has no real sale configuratio
 The UNSIGNED-review AAB cannot be uploaded as a signed production release.
 Premium purchases are disabled until real Play products and HTTPS verification exist.
 Automatic analysis currently supports the verified WhatsApp layout only.
-Read the model limits and outstanding checks in ON-DEVICE-CHECK.md and Phase 42 handoff.
+Read the model limits and outstanding checks in ON-DEVICE-CHECK.md and Phase 43 handoff.
 ANALYSIS-FEEDBACK.md documents optional rated-session sharing and the evaluated model upgrade path.
 No real feedback service is configured, no user data was collected, and the current model is unchanged.
 
 The source ZIP contains the committed repository. Extract it before building or
 deploying deployment/store/Dockerfile from its repository root. This is an untested
 cloud deployment recipe; complete the release gates before selling or publishing.
+The feedback directory contains a separate persistent-volume HTTPS deployment kit.
 Weights, credentials, test signing keys and private runtime data are excluded.
 Evidence contains only generated fixture results and TEMPER's own fictional screen.
 Avatar/spectrum/floating screenshots were captured in Phase 41 with the unchanged model/assets.

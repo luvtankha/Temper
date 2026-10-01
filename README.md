@@ -1,4 +1,4 @@
-# TEMPER — Android companion app 0.42.0 (release candidate)
+# TEMPER — Android companion app 0.43.0 (release candidate)
 
 Consumer flow: choose an avatar → activate a floating companion → optionally enable private on-phone estimates for a selected supported WhatsApp chat. Alex is free; Nova, Orbit and Luma are one-time Play purchases with eight expressions each. Normal analysis downloads verified public model weights once and does not upload chat text. Optional [rated conversation feedback](docs/release/ANALYSIS-FEEDBACK.md) has separate permission and a manual reviewed-text submission; users only give a 1–5 quality rating. Collection remains disabled until an HTTPS service is configured. The existing model is unchanged; future candidates require independently reviewed data and held-out validation before an app release.
 
@@ -8,9 +8,9 @@ The floating character works across ordinary apps; automatic analysis remains re
 
 TEMPER places a small original2D character above the bottom-left WhatsApp composer. Tap it for Current state, Direction and one eight-emotion bar graph. It estimates the remote participant's language and conversation trajectory from a bounded visible window. Estimates cannot establish someone's feelings.
 
-The Android USB demo is the primary product. Phases00–19 and working backend/models are preserved; React messaging is a legacy test harness. Roadmap: [AGENT.md](AGENT.md). Setup, fictional script and troubleshooting: [Android USB demo guide](docs/demo/ANDROID-USB-DEMO.md).
+The Android app above is the primary product. Phases00–19 and working backend/models are preserved; React messaging and the USB demo below are developer test harnesses. Roadmap: [AGENT.md](AGENT.md). USB setup, fictional script and troubleshooting: [Android USB demo guide](docs/demo/ANDROID-USB-DEMO.md).
 
-## Supported demo
+## Supported USB demo (developer history)
 
 - Verified OnePlus8T KB2001, Android14/API34, portrait.
 - Exact personal WhatsApp2.26.37.73/versionCode263707322/packagecom.whatsapp.

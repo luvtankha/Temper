@@ -1,0 +1,58 @@
+{
+    email {$ACME_EMAIL}
+    http_port 8080
+    https_port 8443
+    admin off
+    persist_config off
+    # Avoid runtime error logging of request metadata. Health/container status is monitored instead.
+    log {
+        output discard
+    }
+    servers {
+        protocols h1 h2
+        max_header_size 16KB
+        timeouts {
+            read_header 5s
+            read_body 15s
+            write 25s
+            idle 30s
+        }
+    }
+}
+
+{$FEEDBACK_DOMAIN} {
+    # Access logging is deliberately absent. No request bodies or Authorization values are logged.
+    header {
+        Cache-Control no-store
+        X-Content-Type-Options nosniff
+        Strict-Transport-Security "max-age=31536000"
+        -Server
+    }
+    request_body {
+        max_size 384000
+    }
+    @health {
+        method GET
+        path /actuator/health
+    }
+    @submit {
+        method POST
+        path /api/learning/sessions
+    }
+    @delete {
+        method DELETE
+        path /api/learning/contributions
+    }
+    handle @health {
+        reverse_proxy feedback:8080
+    }
+    handle @submit {
+        reverse_proxy feedback:8080
+    }
+    handle @delete {
+        reverse_proxy feedback:8080
+    }
+    handle {
+        respond 404
+    }
+}

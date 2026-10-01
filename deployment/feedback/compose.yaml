@@ -1,0 +1,103 @@
+name: temper-feedback
+services:
+  feedback:
+    image: temper-feedback:local
+    build:
+      context: ../..
+      dockerfile: deployment/feedback/Dockerfile
+    user: "10001:10001"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 128
+    stop_grace_period: 30s
+    environment:
+      SERVER_PORT: "8080"
+      TEMPER_LEARNING_ENABLED: "true"
+      TEMPER_LEARNING_DIRECTORY: /data/feedback
+      TEMPER_LEARNING_KEY_FILE: /run/secrets/feedback-storage-key
+      TEMPER_STORE_ENABLED: "false"
+      TEMPER_DEMO_ENABLED: "false"
+      LOGGING_LEVEL_ROOT: WARN
+      SPRING_MVC_LOG_REQUEST_DETAILS: "false"
+      SERVER_TOMCAT_ACCESSLOG_ENABLED: "false"
+      SERVER_TOMCAT_MAX_THREADS: "16"
+      SERVER_TOMCAT_ACCEPT_COUNT: "32"
+      SERVER_TOMCAT_CONNECTION_TIMEOUT: 10s
+    secrets: [feedback-storage-key]
+    volumes:
+      - type: bind
+        source: ${FEEDBACK_ROOT:?Run feedback-deploy.py --init with actual configuration}/records
+        target: /data/feedback
+        bind:
+          create_host_path: false
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,uid=10001,gid=10001,mode=0700
+    networks: [private]
+    healthcheck:
+      test: [CMD, java, -cp, /app/health, FeedbackHealth]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: local
+      options:
+        max-size: 5m
+        max-file: "2"
+  caddy:
+    image: ${CADDY_IMAGE:?Set a reviewed official caddy image digest}
+    user: "10101:10101"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 192m
+    cpus: 0.5
+    pids_limit: 64
+    environment:
+      FEEDBACK_DOMAIN: ${FEEDBACK_DOMAIN:?Set your real public DNS hostname}
+      ACME_EMAIL: ${ACME_EMAIL:?Set the publisher certificate contact}
+    command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+    depends_on:
+      feedback:
+        condition: service_healthy
+    ports:
+      - "80:8080"
+      - "443:8443"
+    volumes:
+      - type: bind
+        source: ./Caddyfile
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${FEEDBACK_ROOT:?Set the private host root}/caddy-data
+        target: /data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${FEEDBACK_ROOT:?Set the private host root}/caddy-config
+        target: /config
+        bind:
+          create_host_path: false
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,uid=10101,gid=10101,mode=0700
+    networks: [private, public]
+    logging:
+      driver: local
+      options:
+        max-size: 5m
+        max-file: "2"
+networks:
+  private:
+    internal: true
+  public: {}
+secrets:
+  feedback-storage-key:
+    file: ${FEEDBACK_ROOT:?Set the private host root}/secrets/feedback-storage.key

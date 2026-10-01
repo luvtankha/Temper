@@ -62,4 +62,45 @@ class LearningTests {
             .withPropertyValues("temper.learning.enabled=true","temper.learning.directory="+directory.resolve("records"),"temper.learning.key-file="+key,"temper.store.enabled=false","temper.demo.enabled=false")
             .run(context->{assertNull(context.getStartupFailure());assertNotNull(context.getBean(LearningController.class));var mvc=MockMvcBuilders.webAppContextSetup(context).addFilters(context.getBean(LearningBoundaryFilter.class)).build();mvc.perform(get("/api/messages")).andExpect(status().isNotFound());mvc.perform(post("/api/learning/sessions").header("Authorization","Bearer "+token).contentType(MediaType.APPLICATION_JSON).content(body().toString())).andExpect(status().isCreated());mvc.perform(delete("/api/learning/contributions").header("Authorization","Bearer "+token)).andExpect(status().isOk());});
     }
+    @Test void duplicateFieldsTrailingDocumentsAndCoercedMetadataAreRejected()throws Exception{
+        var store=store();var mvc=MockMvcBuilders.standaloneSetup(new LearningController(store)).addFilters(new LearningBoundaryFilter()).build();
+        for(String invalid:List.of(body().toString().replace("\"qualityRating\":4","\"qualityRating\":1,\"qualityRating\":4"),body()+" {}",body()+" null"))mvc.perform(post("/api/learning/sessions").header("Authorization","Bearer "+token).contentType(MediaType.APPLICATION_JSON).content(invalid)).andExpect(status().isBadRequest());
+        var numericVersion=body();numericVersion.put("appVersion",42.3);assertThrows(IllegalArgumentException.class,()->LearningSubmission.parse(numericVersion));
+        var numericSummary=body();((ObjectNode)numericSummary.path("analyses").get(0)).put("currentState",42);assertThrows(IllegalArgumentException.class,()->LearningSubmission.parse(numericSummary));
+        var invalidVersion=body();invalidVersion.put("appVersion","...");assertThrows(IllegalArgumentException.class,()->LearningSubmission.parse(invalidVersion));assertTrue(store.records().isEmpty());
+    }
+    @Test void summariesAreRedactedAndControlOnlyTextIsRejected()throws Exception{
+        var body=body();var estimate=(ObjectNode)body.path("analyses").get(0);estimate.put("currentState","Contact fake@example.invalid");estimate.put("direction","Visit https://fictional.invalid/path");var submission=LearningSubmission.parse(body);assertFalse(submission.analyses().getFirst().currentState().contains("fake@"));assertEquals("Visit [redacted]",submission.analyses().getFirst().direction());
+        var controlOnly=body();((ObjectNode)controlOnly.path("turns").get(0)).put("text","\u0000\u0001");assertThrows(IllegalArgumentException.class,()->LearningSubmission.parse(controlOnly));
+    }
+    @Test void contributorSlotsBoundDeletionFilesAndStillAllowExistingOwnerDeletion()throws Exception{
+        var store=new EncryptedLearningStore(directory,new byte[32],Clock.systemUTC(),2);String second=token(1),third=token(2);store.save(token,LearningSubmission.parse(body()));store.delete(second);
+        assertThrows(IllegalStateException.class,()->store.save(third,LearningSubmission.parse(body())));assertThrows(IllegalStateException.class,()->store.delete(third));
+        var mvc=MockMvcBuilders.standaloneSetup(new LearningController(store)).addFilters(new LearningBoundaryFilter()).build();mvc.perform(delete("/api/learning/contributions").header("Authorization","Bearer "+third)).andExpect(status().isTooManyRequests());
+        store.delete(token);store.delete(second);assertThrows(SecurityException.class,()->store.save(token,LearningSubmission.parse(body())));assertTrue(store.records().isEmpty());try(var files=Files.list(directory)){assertEquals(2,files.count());}
+    }
+    @Test void expiryRemovesEmptyDirectoriesAndUsesAuthenticatedExpiryOnExport()throws Exception{
+        var clock=new MutableClock(Instant.parse("2026-01-01T00:00:00Z"));var store=new EncryptedLearningStore(directory,new byte[32],clock,2);store.save(token,LearningSubmission.parse(body()));Path folder=directory.resolve(EncryptedLearningStore.contributor(token)),file=folder.resolve(body().path("sessionId").asText()+".enc");
+        clock.now=clock.now.plus(Duration.ofDays(90));Files.setLastModifiedTime(file,java.nio.file.attribute.FileTime.from(clock.now));assertTrue(store.records().isEmpty());store.purge();assertFalse(Files.exists(folder));
+        store.save(token,LearningSubmission.parse(body()));clock.now=clock.now.plus(Duration.ofDays(90));store.purge();assertFalse(Files.exists(folder));
+    }
+    @Test void interruptedDeletionCannotExportRevokedRemainders()throws Exception{
+        var store=store();store.save(token,LearningSubmission.parse(body()));Path folder=directory.resolve(EncryptedLearningStore.contributor(token)),file=folder.resolve(body().path("sessionId").asText()+".enc");byte[] encrypted=Files.readAllBytes(file);Path blocker=Files.createDirectory(folder.resolve("unfinished-cleanup"));
+        assertThrows(SecurityException.class,()->store.delete(token));Files.write(file,encrypted);assertTrue(store.records().isEmpty());assertThrows(SecurityException.class,()->store.save(token,LearningSubmission.parse(body())));Files.delete(blocker);store.delete(token);assertFalse(Files.exists(folder));
+    }
+    @Test void failedExportDoesNotLeaveAUsablePartialSnapshot()throws Exception{
+        var store=store();store.save(token,LearningSubmission.parse(body()));Path folder=directory.resolve(EncryptedLearningStore.contributor(token)),file=folder.resolve(body().path("sessionId").asText()+".enc");byte[] encrypted=Files.readAllBytes(file);encrypted[encrypted.length-1]^=1;Files.write(file,encrypted);
+        Path key=directory.resolve("export-key.txt"),output=directory.resolve("failed-export.jsonl");Files.writeString(key,Base64.getEncoder().encodeToString(new byte[32]));assertThrows(Exception.class,()->LearningExport.main(new String[]{directory.toString(),key.toString(),output.toString()}));assertFalse(Files.exists(output));try(var files=Files.list(directory)){assertTrue(files.noneMatch(p->p.getFileName().toString().endsWith(".partial")));}
+    }
+    @Test void nonCanonicalTokensAndUnsafeInternalSessionIdentityAreRejected()throws Exception{
+        var store=store();assertThrows(SecurityException.class,()->store.delete(token.substring(0,42)+"B"));var valid=LearningSubmission.parse(body());var unsafe=new LearningSubmission("../escape",valid.language(),valid.appVersion(),valid.modelHash(),valid.qualityRating(),valid.turns(),valid.analyses());assertThrows(IllegalArgumentException.class,()->store.save(token,unsafe));assertTrue(store.records().isEmpty());
+    }
+    @Test void arbitraryPrecisionConsentAndTurnIndicesCannotWrapIntoValidValues()throws Exception{
+        var consent=body();consent.set("consentVersion",mapper.getNodeFactory().numberNode(new java.math.BigInteger("18446744073709551617")));assertThrows(IllegalArgumentException.class,()->LearningSubmission.parse(consent));
+        var turn=body();((ObjectNode)turn.path("turns").get(0)).set("index",mapper.getNodeFactory().numberNode(new java.math.BigInteger("18446744073709551616")));assertThrows(IllegalArgumentException.class,()->LearningSubmission.parse(turn));
+    }
+    private static String token(int value){byte[] data=new byte[32];data[0]=(byte)value;return Base64.getUrlEncoder().withoutPadding().encodeToString(data);}
+    private static final class MutableClock extends Clock{
+        Instant now;MutableClock(Instant now){this.now=now;}public ZoneId getZone(){return ZoneOffset.UTC;}public Clock withZone(ZoneId zone){return this;}public Instant instant(){return now;}
+    }
 }

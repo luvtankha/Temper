@@ -12,7 +12,7 @@ import java.util.*;
 @RestController
 @ConditionalOnProperty(name="temper.learning.enabled",havingValue="true")
 public final class LearningController {
-    private final EncryptedLearningStore store;private final ObjectMapper mapper=new ObjectMapper();
+    private final EncryptedLearningStore store;private final ObjectMapper mapper=new ObjectMapper().enable(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION).enable(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
     @org.springframework.beans.factory.annotation.Autowired
     public LearningController(@Value("${temper.learning.directory}")String directory,@Value("${temper.learning.key-file}")String keyFile,@Value("${temper.store.enabled:false}")boolean storeEnabled)throws Exception{
         if(storeEnabled||directory.isBlank()||keyFile.isBlank())throw new IllegalArgumentException("Deploy learning separately with private storage and a key file");
@@ -31,5 +31,5 @@ public final class LearningController {
         catch(Exception error){return ResponseEntity.status(503).body(Map.of("error","Contribution service unavailable"));}
     }
     @DeleteMapping("/api/learning/contributions")
-    public ResponseEntity<?> delete(@RequestHeader(value="Authorization",required=false)String authorization){try{store.delete(token(authorization));return ResponseEntity.ok(Map.of("deleted",true));}catch(SecurityException error){return ResponseEntity.status(401).body(Map.of("error","Contribution authorization required"));}catch(Exception error){return ResponseEntity.status(503).body(Map.of("error","Deletion service unavailable; retry"));}}
+    public ResponseEntity<?> delete(@RequestHeader(value="Authorization",required=false)String authorization){try{store.delete(token(authorization));return ResponseEntity.ok(Map.of("deleted",true));}catch(SecurityException error){return ResponseEntity.status(401).body(Map.of("error","Contribution authorization required"));}catch(IllegalStateException error){return ResponseEntity.status(429).body(Map.of("error","Contribution limit reached; retry"));}catch(Exception error){return ResponseEntity.status(503).body(Map.of("error","Deletion service unavailable; retry"));}}
 }
