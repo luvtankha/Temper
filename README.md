@@ -42,3 +42,5 @@ Phase19 adds six separate estimated English lexical/context indicators. Default 
 ## Overlay-only roadmap
 
 Phase20 preserves analysis and retires standalone messaging ambitions. Next:21 conflict finalization,22 trajectory,23 compact mapping,24 Android foundation,25 minimal account support,26 consent/accessibility,27 adapters,28 WhatsApp validation,29–35 compact character/popup/live behavior,36 privacy,37 optional extension,38 hardening,39 packaging. Earlier roadmap references in phase00–19 handoffs are historical. No additional legacy messaging features, giant overlay dashboards, imports or social functionality are planned.
+
+Updated Phase21: additive conflictAnalysis provides configurable raw/smoothed scores, UP/FLAT/DOWN and source-aware ranked contributors. Existing conflict fields remain legacy-compatible. Formula/configuration: docs/analysis/conflict-engine.md. Configured Java40/40 pass; OpenAPI0.10.0 valid.

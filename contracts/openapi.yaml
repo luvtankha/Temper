@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: TEMPER API
-  version: 0.9.0
-  description: Versioned REST. Optional local sentiment, emotion, independent sarcasm and toxicity models replace their fields with inspectable HYBRID provenance. Emotion includes documented proxies; configured toxicity adds insult/threat and explicit max(insult,threat) hostility proxy to the bounded signals map. Six documented lexical/context indicators have separate HEURISTIC evidence and optional disagreement/withdrawal/repeatedDisagreement scores. Unconfigured model channels and conflict/markers are fixtures. Model-free mode MOCK; delivery independent of analysis.
+  version: 0.10.0
+  description: Versioned REST. Additive conflictAnalysis contains rawScore, smoothedScore, UP/FLAT/DOWN trend, ranked source-aware topContributors, fixtureInputs and priorSequences; existing conflict remains the legacy field. Optional local sentiment, emotion, independent sarcasm and toxicity models replace their fields with inspectable HYBRID provenance. Emotion includes documented proxies; configured toxicity adds insult/threat and explicit max(insult,threat) hostility proxy to the bounded signals map. Six documented lexical/context indicators have separate HEURISTIC evidence and optional disagreement/withdrawal/repeatedDisagreement scores. Unconfigured model channels and conflict/markers are fixtures. Model-free mode MOCK; delivery independent of analysis.
 servers:
   - url: /api/v1
 paths:
@@ -279,6 +279,7 @@ components:
         signals: {$ref: '#/components/schemas/Scores'}
         sentiment: {type: number, minimum: -1, maximum: 1}
         conflict: {type: number, minimum: 0, maximum: 1}
+        conflictAnalysis: {$ref: '#/components/schemas/ConflictAnalysis'}
         contextMessageIds: {type: array, items: {type: string, format: uuid}}
         explanation: {type: string}
         evidence:
@@ -290,6 +291,26 @@ components:
               source: {type: string, enum: [MOCK, MODEL, HEURISTIC]}
               label: {type: string}
               description: {type: string}
+    ConflictAnalysis:
+      type: object
+      required: [rawScore, smoothedScore, trend, topContributors, fixtureInputs, priorSequences]
+      properties:
+        rawScore: {type: number, minimum: 0, maximum: 1}
+        smoothedScore: {type: number, minimum: 0, maximum: 1}
+        trend: {type: string, enum: [UP, FLAT, DOWN]}
+        fixtureInputs: {type: boolean}
+        priorSequences: {type: array, items: {type: integer, minimum: 1}}
+        topContributors:
+          type: array
+          items:
+            type: object
+            required: [signal, value, weight, contribution, source]
+            properties:
+              signal: {type: string}
+              value: {type: number, minimum: 0, maximum: 1}
+              weight: {type: number, minimum: 0, maximum: 1}
+              contribution: {type: number, minimum: 0, maximum: 1}
+              source: {type: string, enum: [MOCK, MODEL, HEURISTIC]}
     Event:
       type: object
       required: [sequence, messageId, kind, label]

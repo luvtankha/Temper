@@ -1,5 +1,6 @@
 package dev.temper.cerebro.analysis.service;
 import java.time.*;
+import dev.temper.cerebro.conflict.ConflictEngine;
 import java.util.*;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
@@ -15,11 +16,12 @@ import dev.temper.cerebro.conversation.context.*;
 public class AnalysisService {
     private final MessageRepository messages;private final AnalysisRepository analyses;
     private final EmotionAnalysisService engine;private final ConversationService conversations;
-    private final ConversationContextService contexts;
-    public AnalysisService(MessageRepository messages,AnalysisRepository analyses,EmotionAnalysisService engine,ConversationService conversations,ConversationContextService contexts) {this.messages=messages;this.analyses=analyses;this.engine=engine;this.conversations=conversations;this.contexts=contexts;}
+    private final ConversationContextService contexts;private final ConflictEngine conflictEngine;
+    public AnalysisService(MessageRepository messages,AnalysisRepository analyses,EmotionAnalysisService engine,ConversationService conversations,ConversationContextService contexts,ConflictEngine conflictEngine) {this.messages=messages;this.analyses=analyses;this.engine=engine;this.conversations=conversations;this.contexts=contexts;this.conflictEngine=conflictEngine;}
     public Message message(UUID id) {return messages.findMessage(id).orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Message not found"));}
-    public record Turn(UUID messageId,String speakerId,long sequence,Instant sentAt,AnalysisMode mode,Map<String,Double> emotions,Map<String,Double> signals,double sentiment,double conflict,List<UUID> contextMessageIds,String explanation,List<MessageAnalysis.Evidence> evidence) {}
-    private Turn view(MessageAnalysis a) {return new Turn(a.messageId(),a.speakerId(),a.sequence(),message(a.messageId()).sentAt(),a.mode(),a.emotions(),a.signals(),a.sentiment(),a.conflict(),a.contextMessageIds(),a.explanation(),a.evidence());}
+    public record Turn(UUID messageId,String speakerId,long sequence,Instant sentAt,AnalysisMode mode,Map<String,Double> emotions,Map<String,Double> signals,double sentiment,double conflict,List<UUID> contextMessageIds,String explanation,List<MessageAnalysis.Evidence> evidence,ConflictEngine.Result conflictAnalysis) {}
+    private ConflictEngine.Result conflict(MessageAnalysis a){var current=message(a.messageId());var history=conversations.messages(current.conversationId()).stream().filter(m->m.sequence()<a.sequence()).map(m->analyses.findMessageAnalysis(m.id())).flatMap(Optional::stream).toList();return conflictEngine.calculate(a,history);}
+    private Turn view(MessageAnalysis a) {return new Turn(a.messageId(),a.speakerId(),a.sequence(),message(a.messageId()).sentAt(),a.mode(),a.emotions(),a.signals(),a.sentiment(),a.conflict(),a.contextMessageIds(),a.explanation(),a.evidence(),conflict(a));}
     public ContextWindow context(UUID id) {var current=message(id);return contexts.buildContext(current.conversationId(),id);}
     public Turn analyze(UUID id) {var current=message(id);var result=engine.analyze(current,contexts.buildContext(current.conversationId(),id));analyses.saveMessageAnalysis(result);return view(result);}
     public Turn get(UUID id) {message(id);return view(analyses.findMessageAnalysis(id).orElseThrow(()->new ResponseStatusException(HttpStatus.CONFLICT,"Analysis has not been requested for this message")));}

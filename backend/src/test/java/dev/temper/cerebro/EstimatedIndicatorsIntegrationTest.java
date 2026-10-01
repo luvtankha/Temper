@@ -17,6 +17,7 @@ class EstimatedIndicatorsIntegrationTest {
         for(String key:List.of("disagreement","repeatedDisagreement","blame","withdrawal"))assertTrue(result.signals().get(key)>0);
         assertEquals(result.signals(),analysis.get(b.id()).signals());assertEquals(result.signals(),analysis.snapshot(room.id()).messages().getLast().signals());
         conversations.send(room.id(),"alex","Future disagreement should not alter old estimates.");assertEquals(result.signals(),analysis.analyze(b.id()).signals());
+        assertNotNull(result.conflictAnalysis());assertTrue(result.conflictAnalysis().rawScore()>=0);assertEquals(result.conflictAnalysis(),analysis.get(b.id()).conflictAnalysis());
         assertEquals("HYBRID",result.mode().name());assertTrue(result.evidence().stream().anyMatch(e->e.label().equals("Estimated repeatedDisagreement")));
     }
 }
