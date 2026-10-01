@@ -46,3 +46,5 @@ Phase20 preserves analysis and retires standalone messaging ambitions. Next:21 c
 Updated Phase21: additive conflictAnalysis provides configurable raw/smoothed scores, UP/FLAT/DOWN and source-aware ranked contributors. Existing conflict fields remain legacy-compatible. Formula/configuration: docs/analysis/conflict-engine.md. Configured Java40/40 pass; OpenAPI0.10.0 valid.
 
 Updated Phase22 trajectory and23 compact remote mapping are verified. Complete Java45/45 and subsequent live browser11/11 pass; legacy web22/build preserved. Android Phase24 install/run and foundation instrumentation passed on OnePlus8T Android14/API34.
+
+Updated Phase25 device-only account/session support builds, passes lint and passes actual-device encrypted storage/password/session/tamper checks. Account scope and setup: docs/architecture/android-account.md. This local identity does not secure backend endpoints.

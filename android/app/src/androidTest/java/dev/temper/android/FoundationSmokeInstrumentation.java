@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Switch;
 import android.widget.TextView;
+import dev.temper.android.auth.DeviceAccountStore;
+import java.security.KeyStore;
 
 /** Device smoke check for our own app only; never interacts with a host chat app. */
 public final class FoundationSmokeInstrumentation extends Instrumentation {
@@ -34,7 +36,21 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
                 click(second,"Settings");Switch pause=(Switch)find(second.getWindow().getDecorView(),"Keep TEMPER paused");if(pause==null||pause.isChecked())throw new AssertionError("Pause preference did not persist");
                 click(second,"Clear local preferences");Switch reset=(Switch)find(second.getWindow().getDecorView(),"Keep TEMPER paused");if(reset==null||!reset.isChecked())throw new AssertionError("Clear must restore paused");second.finish();
             });
-            result.putString("stream","PASS: onboarding, fictional preview, pause persistence and clear-to-paused\n");finish(Activity.RESULT_OK,result);
+            String testStorage="test_auth_phase25";
+            getTargetContext().getSharedPreferences(testStorage,0).edit().clear().commit();
+            try{
+                DeviceAccountStore accounts=new DeviceAccountStore(getTargetContext(),testStorage);
+                char[] password="Fictional pass25!".toCharArray();accounts.create("foundation25_demo",password);
+                for(char value:password)if(value!='\0')throw new AssertionError("Password buffer not cleared");
+                if(!"foundation25_demo".equals(new DeviceAccountStore(getTargetContext(),testStorage).session()))throw new AssertionError("Session did not survive store recreation");
+                String blob=getTargetContext().getSharedPreferences(testStorage,0).getString("encrypted","");if(blob.contains("foundation25_demo")||blob.contains("Fictional"))throw new AssertionError("Plaintext account leak");
+                accounts.signOut();if(accounts.session()!=null)throw new AssertionError("Signout did not clear session");
+                try{accounts.signIn("foundation25_demo","Wrong password!".toCharArray());throw new AssertionError("Wrong password accepted");}catch(IllegalArgumentException expected){}
+                accounts.signIn("foundation25_demo","Fictional pass25!".toCharArray());if(accounts.session()==null)throw new AssertionError("Sign in failed");
+                String damaged=blob.substring(0,blob.length()-4)+"AAAA";getTargetContext().getSharedPreferences(testStorage,0).edit().putString("encrypted",damaged).commit();
+                try{accounts.session();throw new AssertionError("Modified ciphertext accepted");}catch(java.security.GeneralSecurityException expected){}
+            }finally{getTargetContext().getSharedPreferences(testStorage,0).edit().clear().commit();KeyStore keyStore=KeyStore.getInstance("AndroidKeyStore");keyStore.load(null);keyStore.deleteEntry("dev.temper.auth."+testStorage);}
+            result.putString("stream","PASS: foundation UI/pause/reset; Keystore encrypted account, password rejection, sign-in/out, persistent session and tamper rejection\n");finish(Activity.RESULT_OK,result);
         }catch(Throwable failure){result.putString("stream","FAIL: "+failure.getClass().getSimpleName()+": "+failure.getMessage());finish(Activity.RESULT_CANCELED,result);}
     }
 }

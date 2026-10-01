@@ -1,0 +1,7 @@
+# Updated Phase25 — COMPLETE
+1. Changed: minimal device-only account creation, sign in/out and persistent current session. Android Keystore AES-GCM encrypts local state; salted PBKDF2 password verification runs off the UI thread. Sign out restores pause. UI explicitly distinguishes this identity from cloud accounts or server authorization.
+2. Files: MainActivity.java, auth/DeviceAccountStore.java, FoundationSmokeInstrumentation.java, Phase25 context and this handoff.
+3. Verification: assembleDebug, assembleDebugAndroidTest and lint passed; both APKs installed successfully on OnePlus8T KB2001 Android14/API34.
+4. Tests: actual-device foundation UI/pause/reset plus isolated account creation, password-buffer wiping, encrypted storage inspection, session reconstruction, wrong-password rejection, sign out/in and ciphertext-tamper rejection all PASS. Real account storage was not modified by the isolated crypto tests. Own-app fictional preview visually verified after the user unlocked the phone.
+5. Known issues: one local account per installation; no cloud identity, email recovery or analysis-server authentication. Keystore invalidation fails closed. This is demo support infrastructure. Backend and legacy UI unchanged; their previous results remain preserved, not rerun for this Android-only change.
+6. Next: Phase26 informed accessibility consent, supported-package detection and pause/disable controls; system accessibility activation must be performed by the user.
