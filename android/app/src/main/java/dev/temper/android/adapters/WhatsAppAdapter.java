@@ -32,9 +32,15 @@ public final class WhatsAppAdapter implements ChatPlatformAdapter {
         for(int i=0;i<screen.nodes().size();i++){
             var row=screen.nodes().get(i);
             if(row.parentIndex()!=list||!row.resourceId().startsWith(PREFIX+"conversation_row_"))continue;
-            if(!row.resourceId().equals(PREFIX+"conversation_row_text"))return fail(Status.UNSUPPORTED_LAYOUT);
+            // Date separators are list metadata, never message text or sender evidence.
+            if(row.resourceId().equals(PREFIX+"conversation_row_date_divider")){
+                if(!row.className().equals("android.widget.TextView")||row.editable()||row.password())return fail(Status.UNSUPPORTED_LAYOUT);
+                for(var child:screen.nodes())if(child.parentIndex()==i)return fail(Status.UNSUPPORTED_LAYOUT);
+                continue;
+            }
             // A row touching either list edge may have clipped sender/timestamp evidence.
             if(!row.visible()||row.bounds().top()<=listNode.bounds().top()+1||row.bounds().bottom()>=listNode.bounds().bottom()-1)continue;
+            if(!row.resourceId().equals(PREFIX+"conversation_row_text"))return fail(Status.UNSUPPORTED_LAYOUT);
             int message=-1,date=-1,status=-1;
             for(int j=i+1;j<screen.nodes().size();j++){
                 var child=screen.nodes().get(j);if(child.parentIndex()!=i)continue;

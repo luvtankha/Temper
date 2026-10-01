@@ -13,6 +13,27 @@ import org.json.*;
 final class WhatsAppAdapterChecks {
     private static ScreenObservation.Bounds bounds(JSONArray a)throws Exception{return new ScreenObservation.Bounds(a.getInt(0),a.getInt(1),a.getInt(2),a.getInt(3));}
     private static ScreenObservation.Node text(ScreenObservation.Node n,String value){return new ScreenObservation.Node(n.parentIndex(),n.resourceId(),n.className(),n.bounds(),n.visible(),n.editable(),n.password(),value);}
+    private static void checkDateAndClippedMedia(Context test,WhatsAppAdapter adapter)throws Exception{
+        JSONObject fixture;try(var input=test.getAssets().open("whatsapp-date-clipped-media-layout-2.26.37.73.json")){fixture=new JSONObject(new String(input.readAllBytes(),StandardCharsets.UTF_8));}
+        List<ScreenObservation.Node> nodes=new ArrayList<>();JSONArray raw=fixture.getJSONArray("nodes");
+        for(int i=0;i<raw.length();i++){
+            JSONObject n=raw.getJSONObject(i);String id=n.getString("id"),value="EXCLUDED METADATA";
+            if(id.endsWith("/message_text"))value="Generated fixture turn "+i;
+            if(id.endsWith("/date"))value="10:00";
+            if(id.endsWith("/conversation_contact_name"))value="Generated participant";
+            nodes.add(new ScreenObservation.Node(n.getInt("parent"),id,n.getString("class"),bounds(n.getJSONArray("bounds")),true,n.getBoolean("editable"),false,value));
+        }
+        ScreenObservation screen=new ScreenObservation("com.whatsapp",bounds(fixture.getJSONArray("viewport")),nodes);
+        var plan=adapter.plan(screen);var result=adapter.read(screen);
+        if(result.status()!=VisibleConversation.Status.AVAILABLE||result.turns().size()!=8||result.turns().stream().filter(t->t.role()==VisibleConversation.Role.LOCAL).count()!=4)throw new AssertionError("Date separators or clipped media blocked complete text rows");
+        if(result.turns().stream().anyMatch(t->t.text().contains("EXCLUDED")||t.text().endsWith("13"))||plan.rows().stream().anyMatch(r->r.node()==56))throw new AssertionError("Metadata or clipped content entered read plan");
+        List<ScreenObservation.Node> changed=new ArrayList<>(nodes);var media=nodes.get(56);
+        changed.set(56,new ScreenObservation.Node(media.parentIndex(),media.resourceId(),media.className(),new ScreenObservation.Bounds(4,2092,1076,2160),true,false,false,null));
+        if(adapter.plan(new ScreenObservation(screen.packageName(),screen.viewport(),changed)).status()!=VisibleConversation.Status.UNSUPPORTED_LAYOUT)throw new AssertionError("Fully visible media accepted");
+        changed=new ArrayList<>(nodes);var divider=nodes.get(16);
+        changed.set(16,new ScreenObservation.Node(divider.parentIndex(),divider.resourceId(),"android.widget.EditText",divider.bounds(),true,true,false,null));
+        if(adapter.plan(new ScreenObservation(screen.packageName(),screen.viewport(),changed)).status()!=VisibleConversation.Status.UNSUPPORTED_LAYOUT)throw new AssertionError("Unrecognized date separator accepted");
+    }
     private static void checkMediaAnchor(Context test,WhatsAppAdapter adapter)throws Exception{
         JSONObject fixture;try(var input=test.getAssets().open("whatsapp-media-layout-2.26.37.73.json")){fixture=new JSONObject(new String(input.readAllBytes(),StandardCharsets.UTF_8));}
         List<ScreenObservation.Node> nodes=new ArrayList<>();JSONArray raw=fixture.getJSONArray("nodes");
@@ -43,6 +64,7 @@ final class WhatsAppAdapterChecks {
         }
         ScreenObservation screen=new ScreenObservation("com.whatsapp",bounds(fixture.getJSONArray("viewport")),nodes);WhatsAppAdapter adapter=new WhatsAppAdapter("isolated-fixture-session");
         checkMediaAnchor(test,adapter);
+        checkDateAndClippedMedia(test,adapter);
         var result=adapter.read(screen);if(result.status()!=VisibleConversation.Status.AVAILABLE||result.turns().size()!=8)throw new AssertionError("Observed-layout fixture not parsed");
         long local=result.turns().stream().filter(t->t.role()==VisibleConversation.Role.LOCAL).count();if(local!=1)throw new AssertionError("Observed outgoing status role incorrect");
         if(!result.composer().equals(new ScreenObservation.Bounds(168,2218,452,2315)))throw new AssertionError("Observed composer mismatch");
