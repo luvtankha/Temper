@@ -17,6 +17,8 @@ import dev.temper.android.accessibility.ProbeState;
 import dev.temper.android.adapters.ScreenObservation;
 import dev.temper.android.accessibility.LayoutMetadata;
 import dev.temper.android.accessibility.ParseProbeState;
+import dev.temper.android.character.CharacterView;
+import dev.temper.android.character.Emotion;
 
 /** Native onboarding, device account and explicit accessibility consent controls. */
 public final class MainActivity extends Activity {
@@ -41,7 +43,7 @@ public final class MainActivity extends Activity {
         button("Accessibility and consent",this::consent);button("Device account",this::account);button("Settings",this::settings);button("Fictional preview",this::preview);
     }
     private void settings(){
-        page("Settings");text("Live capture and overlay are not implemented yet. Pause stops inspection and clears captured test data.",16);
+        page("Settings");text("The selected-chat character overlay is available for testing. Live analysis is still in development. Pause stops inspection and clears captured test data.",16);
         Switch pause=new Switch(this);pause.setText("Keep TEMPER paused");pause.setTextColor(Color.WHITE);pause.setChecked(getPreferences(MODE_PRIVATE).getBoolean("paused",true));
         pause.setOnCheckedChangeListener((view,checked)->new ConsentStore(this).pause(checked));content.addView(pause);
         text("No chat text is persisted or transmitted. The pause preference is local to this device.",16);button("Reset pause preference",()->{new ConsentStore(this).pause(true);settings();});button("Back",this::home);
@@ -89,7 +91,23 @@ public final class MainActivity extends Activity {
         }
         button("Refresh status",this::consent);button("Back",this::home);
     }
-    private void preview(){page("Fictional preview");text("Neutral companion placeholder",22);text("This screen is a development preview only. It does not read WhatsApp, run live analysis or draw over other apps.",16);button("Back",this::home);}
+    private void preview(){
+        page("Fictional preview");text("Eight compact expressions",22);text("Fictional states for appearance testing. Select an expression to see the transition.",16);
+        float density=getResources().getDisplayMetrics().density;CharacterView live=new CharacterView(this);
+        LinearLayout.LayoutParams size=new LinearLayout.LayoutParams(Math.round(64*density),Math.round(88*density));size.gravity=android.view.Gravity.CENTER_HORIZONTAL;content.addView(live,size);
+        Spinner chooser=new Spinner(this);String[] labels=java.util.Arrays.stream(Emotion.values()).map(Emotion::label).toArray(String[]::new);
+        chooser.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));
+        chooser.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){public void onItemSelected(AdapterView<?> parent,android.view.View view,int position,long id){live.setEmotion(Emotion.values()[position],true);}public void onNothingSelected(AdapterView<?> parent){}});content.addView(chooser);
+        for(int row=0;row<4;row++){
+            LinearLayout pair=new LinearLayout(this);pair.setGravity(android.view.Gravity.CENTER);content.addView(pair);
+            for(int col=0;col<2;col++){
+                Emotion emotion=Emotion.values()[row*2+col];LinearLayout cell=new LinearLayout(this);cell.setOrientation(LinearLayout.VERTICAL);cell.setGravity(android.view.Gravity.CENTER);pair.addView(cell,new LinearLayout.LayoutParams(0,-2,1));
+                CharacterView sample=new CharacterView(this);sample.setEmotion(emotion,false);cell.addView(sample,new LinearLayout.LayoutParams(Math.round(64*density),Math.round(88*density)));
+                TextView label=new TextView(this);label.setText(emotion.label());label.setTextColor(Color.WHITE);label.setTextSize(14);label.setPadding(0,0,0,16);cell.addView(label);
+            }
+        }
+        button("Back",this::home);
+    }
     private void account(){
         page("Device account");text("This demo account stays on this phone. It does not create a cloud account or secure the analysis server.",16);
         long version=pageVersion;accountWorker.execute(()->{try{String session=accountStore.session();runOnUiThread(()->{if(!isDestroyed()&&version==pageVersion)accountForm(session);});}catch(Exception failure){runOnUiThread(()->{if(!isDestroyed()&&version==pageVersion){text("Account storage unavailable. No session is active.",16);button("Back",this::home);}});}});

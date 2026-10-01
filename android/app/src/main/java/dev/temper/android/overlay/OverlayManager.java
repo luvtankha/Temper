@@ -5,15 +5,18 @@ import android.content.Context;
 import android.graphics.*;
 import android.view.*;
 import dev.temper.android.adapters.ScreenObservation.Bounds;
+import dev.temper.android.character.CharacterView;
+import dev.temper.android.character.Emotion;
 
-/** Service-owned, compact, touch-through placeholder; expression and popup arrive later. */
+/** Service-owned compact character; touch-through until the popup interaction is added. */
 public final class OverlayManager {
     private final WindowManager windows;
-    private final View character;
+    private final CharacterView character;
     private boolean attached;
     private Bounds placement;
     private static volatile String status="Hidden";
-    public OverlayManager(AccessibilityService service){windows=(WindowManager)service.getSystemService(Context.WINDOW_SERVICE);character=new Placeholder(service);}
+    public OverlayManager(AccessibilityService service){windows=(WindowManager)service.getSystemService(Context.WINDOW_SERVICE);character=new CharacterView(service);character.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);}
+    public void setEmotion(Emotion emotion){character.setEmotion(emotion,true);}
     public static String status(){return status;}
     public boolean show(Bounds viewport,Bounds composer,float density){
         try{
@@ -27,20 +30,4 @@ public final class OverlayManager {
         }catch(RuntimeException unavailable){hide();status="Hidden: overlay unavailable";return false;}
     }
     public void hide(){if(attached){try{windows.removeViewImmediate(character);}catch(RuntimeException ignored){}attached=false;}placement=null;status="Hidden";}
-    private static final class Placeholder extends View {
-        private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
-        Placeholder(Context context){super(context);setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);}
-        private void fill(Canvas c,int color,float left,float top,float right,float bottom){paint.setColor(color);c.drawOval(left,top,right,bottom,paint);}
-        @Override protected void onDraw(Canvas canvas){
-            canvas.save();canvas.scale(getWidth()/64f,getHeight()/88f);
-            fill(canvas,0x55350c44,4,83,60,88); // tiny grounding shadow
-            paint.setColor(0xff675078);canvas.drawRoundRect(18,48,46,76,9,9,paint);
-            paint.setColor(0xff302139);canvas.drawRoundRect(17,73,29,86,4,4,paint);canvas.drawRoundRect(35,73,47,86,4,4,paint);
-            fill(canvas,0xff35243b,10,6,54,50);fill(canvas,0xffffc894,13,13,51,52);
-            paint.setColor(0xff35243b);canvas.drawArc(12,8,52,36,180,180,true,paint);
-            fill(canvas,0xff332438,23,29,27,34);fill(canvas,0xff332438,37,29,41,34);
-            paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1.8f);paint.setColor(0xff8b4b43);canvas.drawArc(25,35,39,43,15,150,false,paint);paint.setStyle(Paint.Style.FILL);
-            canvas.restore();
-        }
-    }
 }

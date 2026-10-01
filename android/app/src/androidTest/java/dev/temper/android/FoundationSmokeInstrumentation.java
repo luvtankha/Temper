@@ -23,6 +23,10 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
         return null;
     }
     private void click(Activity activity,String label){View view=find(activity.getWindow().getDecorView(),label);if(!(view instanceof Button))throw new AssertionError("Missing button: "+label);view.performClick();}
+    private dev.temper.android.character.CharacterView character(View view){
+        if(view instanceof dev.temper.android.character.CharacterView c)return c;
+        if(view instanceof ViewGroup group)for(int i=0;i<group.getChildCount();i++){var found=character(group.getChildAt(i));if(found!=null)return found;}return null;
+    }
     private void restoreSetup(java.util.Map<String,?> original){
         var preferences=getTargetContext().getSharedPreferences("MainActivity",0);var edit=preferences.edit().clear();
         for(var item:original.entrySet()){
@@ -38,11 +42,22 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
             ProbeChecks.run(getTargetContext());
             WhatsAppAdapterChecks.run(getContext(),getTargetContext());
             OverlayPlacementChecks.run();
+            runOnMainSync(()->{try{CharacterChecks.run(getTargetContext());}catch(Exception failure){throw new RuntimeException(failure);}});
             getTargetContext().getSharedPreferences("MainActivity",0).edit().clear().commit();
             Activity first=launch();
             runOnMainSync(()->{
                 if(find(first.getWindow().getDecorView(),"TEMPER")==null)throw new AssertionError("Onboarding missing");
-                click(first,"Fictional preview");if(find(first.getWindow().getDecorView(),"Neutral companion placeholder")==null)throw new AssertionError("Preview missing");click(first,"Back");
+                click(first,"Fictional preview");if(find(first.getWindow().getDecorView(),"Eight compact expressions")==null)throw new AssertionError("Preview missing");
+            });
+            waitForIdleSync();
+            runOnMainSync(()->{
+                var c=character(first.getWindow().getDecorView());if(c==null||!c.isAttachedToWindow())throw new AssertionError("Character preview not attached");
+                c.setEmotion(dev.temper.android.character.Emotion.HAPPY,true);c.setEmotion(dev.temper.android.character.Emotion.SURPRISED,true);
+            });
+            android.os.SystemClock.sleep(400);waitForIdleSync();
+            runOnMainSync(()->{
+                var c=character(first.getWindow().getDecorView());if(c.transitioning()||c.emotion()!=dev.temper.android.character.Emotion.SURPRISED)throw new AssertionError("Interrupted transition did not settle");
+                c.setEmotion(dev.temper.android.character.Emotion.SAD,true);click(first,"Back");if(c.transitioning())throw new AssertionError("Detached character kept animating");
                 click(first,"Settings");Switch pause=(Switch)find(first.getWindow().getDecorView(),"Keep TEMPER paused");if(pause==null||!pause.isChecked())throw new AssertionError("Must default paused");pause.performClick();first.finish();
             });
             waitForIdleSync();Activity second=launch();
