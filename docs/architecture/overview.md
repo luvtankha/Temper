@@ -1,4 +1,10 @@
-# Architecture through Phase17
+# Architecture — Android overlay pivot after Phase19
+
+Primary product: Android AccessibilityService → supported-app adapter (WhatsApp first) → minimum visible rolling context → reusable Spring analysis → conflict/trajectory → compact character mapping → grounded2D character + dismissible popup. Popup contains only current state, direction and one emotional spectrum graph. Explicit consent, pause/disable and fail-closed parsing are mandatory; no host-app clicks or message sending.
+
+Android is pending the updated Phase24. Existing React/STOMP/in-memory conversation infrastructure below is a **legacy test harness**, not the primary product. Keep model/native tokenization, causal context, bounded signals and provenance. Remote participant aliases and demo transport are development-only; Android will supply normalized local/remote roles behind separate adapters. No old imports/database/deployment roadmap applies after19.
+
+# Preserved foundation through Phase19
 React19/Vite → typed local/REST/live adapters and providers → same-origin dev proxy → Java21 SpringBoot modular monolith. Responsive Shell owns navigation/insight overlays; ChatProvider merges sequence-ordered UUID events and REST snapshots. AnalysisProvider aborts stale work and exposes load/empty/error/retry. Inspector/dashboard reuse causal references, bounded values and source evidence.
 Original swapped Rive characters animate frontend semantic controls, typing and idle behavior. No backend animation frames. Backend-driven semantic emotional controls follow22; current conversation avatar targets remain neutral while typing/presence are live.
 Domain repository ports cover user/conversation/participant/message/analysis/snapshot/event. Synchronized memory validates ownership/order/immutable messages; optional fictional seed has no analyses. Native STOMP brokers guarded room destinations; claimed identities are dev-only. Saved message events broadcast before inference; asynchronous analysis events follow23.

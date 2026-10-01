@@ -1,5 +1,9 @@
-# TEMPER
-Conversation intelligence for CEREBRO. Source of truth: AGENT.md; sequential evidence: docs/phases. **Phases00–17 verified.**
+# TEMPER — Android overlay companion
+
+TEMPER is an Android-first overlay for existing chat apps, with WhatsApp as the first supported target. The product is a small grounded 2D character near the composer; tapping it shows current state, direction and one emotional-spectrum bar graph. Source of truth: docs/TEMPER-AGENT-UPDATED.md (also root AGENT.md). The revised roadmap replaces all earlier plans after Phase19.
+
+The Android client is not implemented yet. The existing React chat/dashboard is a **legacy development and test harness**, retained to verify backend/model behavior; it is not the product or an Android overlay.
+Conversation intelligence for CEREBRO. Historical foundation evidence: docs/phases. **Phases00–17 verified.**
 
 ## Development
 Requires Node22+ (tested24), Java21 JDK; Maven wrapper included. No DB or models required for the default fictional frontend demo; backend language rules are enabled by default.
@@ -34,3 +38,7 @@ Phase17 adds genuine dedicated sarcasm independent of sentiment. Run scripts/dow
 Phase18 adds independent toxicity, insult and threat signals, with separately inspectable hostility=max(insult,threat) explicitly marked as a proxy. Run scripts/download-toxicity.ps1 -Destination CACHE_DIRECTORY -Python EXPORT_PYTHON; set TEMPER_TOXICITY_MODEL_DIR. Pinned Apache2 checkpoint, tokenizer, export/parity and limits: docs/model-cards/toxicity.md. TEMPER_REAL_TOXICITY_TEST=1 enables its genuine browser gate. Additional linguistic indicators/conflict/arc remain fixtures until their phases.
 
 Phase19 adds six separate estimated English lexical/context indicators. Default TEMPER_INDICATORS_ENABLED=true uses inspectable HEURISTIC cues; set false for the backend fixture demonstration. Rules, scores, supported quote/negation handling and limits: docs/analysis/estimated-indicators.md. Repeated disagreement uses current and prior same-speaker cues only; all six are separately inspectable. Unconfigured model channels/conflict/arc remain fixtures.
+
+## Overlay-only roadmap
+
+Phase20 preserves analysis and retires standalone messaging ambitions. Next:21 conflict finalization,22 trajectory,23 compact mapping,24 Android foundation,25 minimal account support,26 consent/accessibility,27 adapters,28 WhatsApp validation,29–35 compact character/popup/live behavior,36 privacy,37 optional extension,38 hardening,39 packaging. Earlier roadmap references in phase00–19 handoffs are historical. No additional legacy messaging features, giant overlay dashboards, imports or social functionality are planned.
