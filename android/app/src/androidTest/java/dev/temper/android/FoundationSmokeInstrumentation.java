@@ -26,6 +26,7 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
     @Override public void onStart(){
         Bundle result=new Bundle();
         try{
+            AdapterContractChecks.run();
             getTargetContext().getSharedPreferences("MainActivity",0).edit().clear().commit();
             Activity first=launch();
             runOnMainSync(()->{
@@ -70,7 +71,7 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
                 String damaged=blob.substring(0,blob.length()-4)+"AAAA";getTargetContext().getSharedPreferences(testStorage,0).edit().putString("encrypted",damaged).commit();
                 try{accounts.session();throw new AssertionError("Modified ciphertext accepted");}catch(java.security.GeneralSecurityException expected){}
             }finally{getTargetContext().getSharedPreferences(testStorage,0).edit().clear().commit();KeyStore keyStore=KeyStore.getInstance("AndroidKeyStore");keyStore.load(null);keyStore.deleteEntry("dev.temper.auth."+testStorage);}
-            result.putString("stream","PASS: foundation UI/pause/reset; consent UI opt-in/resume/revoke and package/version gates; Keystore encrypted account, password rejection, sign-in/out, persistent session and tamper rejection\n");finish(Activity.RESULT_OK,result);
+            result.putString("stream","PASS: adapter contract bounds/roles/immutability/failure/redaction; foundation UI/pause/reset; consent UI opt-in/resume/revoke and package/version gates; Keystore encrypted account, password rejection, sign-in/out, persistent session and tamper rejection\n");finish(Activity.RESULT_OK,result);
         }catch(Throwable failure){result.putString("stream","FAIL: "+failure.getClass().getSimpleName()+": "+failure.getMessage());finish(Activity.RESULT_CANCELED,result);}
     }
 }
