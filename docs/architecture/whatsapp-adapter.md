@@ -11,4 +11,6 @@ Current app behavior is an explicitly armed, one-minute-expiring single inspecti
 
 Actual-device fixture tests use the real structural asset with invented text. They verify eight complete rows (one local/seven remote in the latest bounded window), composer, clipped-row/draft exclusion, repeat dedup, changed content, unknown group markers and missing sender evidence, text-free report and pause cleanup. Actual host text parsing remains a separate manual/device acceptance gate.
 
+That actual host gate passed2026-10-01: the selected fictional conversation produced AVAILABLE, repeatedSuppressed=true, ordered roles REMOTE/REMOTE/REMOTE/LOCAL/REMOTE/REMOTE/REMOTE/REMOTE and composer [168,2218,452,2315]. Only diagnostic metadata was retrieved; no message/identity export.
+
 For that gate: save consent, enable the Android service after test runs, resume, press Parse next fictional chat once, open the chosen chat within one minute, return and Refresh status. No export action is necessary: diagnostic metadata is saved automatically. Keep TEMPER resumed until the report is retrieved. Confirm that the ordered roles/counts correspond to the visible complete test messages.
