@@ -15,6 +15,7 @@ import android.view.accessibility.AccessibilityWindowInfo;
 import dev.temper.android.privacy.AnalysisConsent;
 import dev.temper.android.analytics.OverlaySummary;
 import dev.temper.android.character.Emotion;
+import android.app.KeyguardManager;
 
 /** Package detection and explicitly armed text-free layout calibration; never performs host actions. */
 public final class TemperAccessibilityService extends AccessibilityService implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -28,19 +29,28 @@ public final class TemperAccessibilityService extends AccessibilityService imple
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Runnable probe=()->{
         if(consent==null||!consent.allows(ConsentStore.WHATSAPP)){hideOverlay();return;}
-        AccessibilityNodeInfo root=hostRoot();
-        if(root==null){hideOverlay();return;}
+        HostObservation host=hostRoot();
+        if(host.decision()==ForegroundSessionPolicy.Decision.END_SESSION){hideOverlay();return;}
+        AccessibilityNodeInfo root=host.root();
+        if(root==null){if(LiveCaptureState.armed()||LiveCaptureState.active())unreadableLayout();else hideOverlay();return;}
         try{CharSequence pkg=root.getPackageName();if(pkg!=null&&ConsentStore.WHATSAPP.contentEquals(pkg)){
             if(LiveCaptureState.armed()||LiveCaptureState.active()){
                 if(!AnalysisConsent.allowed(this)||!supportedBuild()){LiveCaptureState.clear();hideOverlay();return;}
                 ScreenObservation structure=new WhatsAppStructureProbe().read(root);var anchor=liveAdapter.anchor(structure);
-                if(anchor.status()!=VisibleConversation.Status.AVAILABLE){hideOverlay();return;}
+                if(anchor.status()!=VisibleConversation.Status.AVAILABLE){unreadableLayout();return;}
                 boundWindow=root.getWindowId();overlay.show(structure.viewport(),anchor.composer(),getResources().getDisplayMetrics().density);
-                VisibleConversation snapshot=new WhatsAppTextReader().read(root,liveAdapter,key->LiveCaptureState.acceptsIdentity(key,boundWindow));
+                boolean[] changedIdentity={false};
+                java.util.function.Predicate<String> identityAllowed=key->{
+                    boolean accepted=LiveCaptureState.acceptsIdentity(key,boundWindow);
+                    if(!accepted&&LiveCaptureState.active())changedIdentity[0]=true;
+                    return accepted;
+                };
+                VisibleConversation snapshot=new WhatsAppTextReader().read(root,liveAdapter,identityAllowed);
                 if(snapshot.status()==VisibleConversation.Status.AVAILABLE){
-                    var dedup=new VisibleSnapshotDeduplicator();dedup.accept(snapshot);var second=new WhatsAppTextReader().read(root,liveAdapter,key->LiveCaptureState.acceptsIdentity(key,boundWindow));
+                    var dedup=new VisibleSnapshotDeduplicator();dedup.accept(snapshot);var second=new WhatsAppTextReader().read(root,liveAdapter,identityAllowed);
                     if(second.status()!=VisibleConversation.Status.AVAILABLE||dedup.accept(second))snapshot=VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT);
                 }
+                if(changedIdentity[0]){LiveCaptureState.changedConversation();hideOverlay();return;}
                 if(snapshot.status()!=VisibleConversation.Status.AVAILABLE){unreadableLayout();return;}
                 recovery.reset();
                 if(!LiveCaptureState.bind(snapshot.conversationKey(),root.getWindowId())){hideOverlay();return;}
@@ -72,25 +82,38 @@ public final class TemperAccessibilityService extends AccessibilityService imple
         catch(IllegalArgumentException unavailable){if(LiveCaptureState.armed()||LiveCaptureState.active())unreadableLayout();else{hideOverlay();if(ParseProbeState.armed())ParseProbeState.save(this,VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT),false);else if(ProbeState.armed())ProbeState.fail();}}
         finally{root.recycle();}
     };
-    private void unavailable(){overlay.setEmotion(Emotion.NEUTRAL);overlay.setSummary(OverlaySummary.unavailable());}
     private void unreadableLayout(){
-        live.clear();overlay.setEmotion(Emotion.NEUTRAL);
-        if(recovery.retry(SystemClock.elapsedRealtime())){
+        if(!recovery.waiting())live.suspend();
+        overlay.setEmotion(Emotion.NEUTRAL);
+        long now=SystemClock.elapsedRealtime();
+        if(recovery.retry(now)){
             LiveCaptureState.status(LiveCaptureState.generation(),"Waiting for chat layout to settle");
             overlay.setSummary(new OverlaySummary("Chat layout changing","Waiting for readable text",new float[8],false));
-            handler.removeCallbacks(probe);handler.postDelayed(probe,400);
         }else{
-            LiveCaptureState.unavailable();recovery.reset();
-            overlay.setSummary(new OverlaySummary("Unsupported chat layout","Restart live analysis in TEMPER",new float[8],false));
+            LiveCaptureState.unavailable();
+            overlay.setSummary(new OverlaySummary("Waiting for readable text","Analysis resumes automatically",new float[8],false));
         }
+        handler.removeCallbacks(probe);
+        if(LiveCaptureState.armed()||LiveCaptureState.active())handler.postDelayed(probe,recovery.delay(now));
     }
-    private void hideOverlay(){recovery.reset();if(overlay!=null)overlay.hide();if(live!=null)live.clear();LiveCaptureState.leave();boundWindow=-1;ParseProbeState.forgetContent();}
-    private AccessibilityNodeInfo hostRoot(){
+    private void hideOverlay(){handler.removeCallbacks(probe);recovery.reset();if(overlay!=null)overlay.hide();if(live!=null)live.clear();LiveCaptureState.leave();boundWindow=-1;ParseProbeState.forgetContent();}
+    private record HostObservation(AccessibilityNodeInfo root,ForegroundSessionPolicy.Decision decision){}
+    private HostObservation hostRoot(){
+        ForegroundSessionPolicy policy=new ForegroundSessionPolicy();
+        AccessibilityNodeInfo selected=null;
         for(AccessibilityWindowInfo window:getWindows()){
-            if(window.getType()!=AccessibilityWindowInfo.TYPE_APPLICATION||(!window.isActive()&&!window.isFocused()))continue;
-            AccessibilityNodeInfo root=window.getRoot();if(root==null)continue;
-            CharSequence pkg=root.getPackageName();if(pkg!=null&&ConsentStore.WHATSAPP.contentEquals(pkg))return root;root.recycle();
-        }return null;
+            try{
+                if(window.getType()!=AccessibilityWindowInfo.TYPE_APPLICATION||(!window.isActive()&&!window.isFocused()))continue;
+                AccessibilityNodeInfo root=window.getRoot();if(root==null)continue;
+                CharSequence pkg=root.getPackageName();String name=pkg==null?null:pkg.toString();
+                policy.observe(true,window.isActive(),window.isFocused(),name);
+                if(ConsentStore.WHATSAPP.equals(name)&&selected==null)selected=root;else root.recycle();
+            }finally{window.recycle();}
+        }
+        KeyguardManager keyguard=(KeyguardManager)getSystemService(KEYGUARD_SERVICE);
+        var decision=policy.decision(keyguard!=null&&keyguard.isKeyguardLocked());
+        if(decision!=ForegroundSessionPolicy.Decision.READ_HOST&&selected!=null){selected.recycle();selected=null;}
+        return new HostObservation(selected,decision);
     }
     private boolean supportedBuild(){try{var info=getPackageManager().getPackageInfo(ConsentStore.WHATSAPP,0);long code=android.os.Build.VERSION.SDK_INT>=28?info.getLongVersionCode():info.versionCode;return adapters.resolve(ConsentStore.WHATSAPP,info.versionName,code).isPresent();}catch(android.content.pm.PackageManager.NameNotFoundException missing){return false;}}
     private static volatile long lastSupportedEvent;
@@ -104,8 +127,10 @@ public final class TemperAccessibilityService extends AccessibilityService imple
         CharSequence name=event.getPackageName();
         int type=event.getEventType();
         if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED){
-            if(name!=null&&ConsentStore.WHATSAPP.contentEquals(name)&&boundWindow>=0)hideOverlay();
             if(consent.paused()||!consent.consented()){hideOverlay();return;}
+            // An old inference must not publish while a new host screen is awaiting
+            // identity verification. Our own accessibility popup does not change the chat.
+            if(LiveCaptureState.active()&&(name==null||!getPackageName().contentEquals(name)))unreadableLayout();
             handler.removeCallbacks(probe);handler.postDelayed(probe,150);
         }
         if(name==null||!consent.allows(name.toString())){clear();return;}

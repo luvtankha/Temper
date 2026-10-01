@@ -22,8 +22,7 @@ public final class FloatingOverlayService extends Service {
     private AnalyticsPanel panel;
     private WindowManager.LayoutParams position;
     private boolean attached,popup,locked;
-    private float downX,downY,startX,startY;
-    private boolean dragged;
+    private DragGesture gesture;
     private long outsideDismissedAt;
     private final Handler main=new Handler(Looper.getMainLooper());
     private final Runnable check=()->{if(instance==this){refresh();main.postDelayed(this.check,60000);}};
@@ -38,14 +37,19 @@ public final class FloatingOverlayService extends Service {
     public static void start(Context context){context.startForegroundService(new Intent(context,FloatingOverlayService.class));}
     @Override public void onCreate(){
         super.onCreate();instance=this;windows=(WindowManager)getSystemService(WINDOW_SERVICE);character=new CharacterView(this);panel=new AnalyticsPanel(this);
+        gesture=new DragGesture(ViewConfiguration.get(this).getScaledTouchSlop());
         panel.bind(new OverlaySummary("Open a supported chat for analysis","Automatic estimates unavailable here",new float[8],false));
         panel.setOnTouchListener((view,event)->{if(event.getAction()==MotionEvent.ACTION_OUTSIDE){outsideDismissedAt=SystemClock.elapsedRealtime();dismiss();return true;}return false;});
         character.setOnClickListener(view->{if(popup)dismiss();else if(SystemClock.elapsedRealtime()-outsideDismissedAt>350)showPanel();});
         character.setOnTouchListener((view,event)->{
-            if(event.getAction()==MotionEvent.ACTION_DOWN){downX=event.getRawX();downY=event.getRawY();startX=position.x;startY=position.y;dragged=false;return true;}
-            if(event.getAction()==MotionEvent.ACTION_MOVE){float dx=event.getRawX()-downX,dy=event.getRawY()-downY;if(Math.hypot(dx,dy)>8*getResources().getDisplayMetrics().density)dragged=true;if(dragged){dismiss();move(startX+dx,startY+dy);}return true;}
-            if(event.getAction()==MotionEvent.ACTION_UP){if(dragged)savePosition();else view.performClick();return true;}
-            return true;
+            if(!attached||position==null){gesture.cancel();return false;}
+            switch(event.getActionMasked()){
+                case MotionEvent.ACTION_DOWN -> {gesture.begin(event.getRawX(),event.getRawY(),position.x,position.y);return true;}
+                case MotionEvent.ACTION_MOVE -> {if(event.getPointerCount()!=1){cancelGesture();return true;}moveGesture(event);return true;}
+                case MotionEvent.ACTION_UP -> {moveGesture(event);DragGesture.Finish finished=gesture.finish();if(finished==DragGesture.Finish.DRAG)savePosition();else if(finished==DragGesture.Finish.TAP)view.performClick();return true;}
+                case MotionEvent.ACTION_CANCEL,MotionEvent.ACTION_POINTER_DOWN,MotionEvent.ACTION_POINTER_UP -> {cancelGesture();return true;}
+                default -> {return true;}
+            }
         });
         IntentFilter filter=new IntentFilter();filter.addAction(Intent.ACTION_SCREEN_OFF);filter.addAction(Intent.ACTION_USER_PRESENT);
         if(Build.VERSION.SDK_INT>=33)registerReceiver(screen,filter,Context.RECEIVER_NOT_EXPORTED);else registerReceiver(screen,filter);
@@ -70,6 +74,8 @@ public final class FloatingOverlayService extends Service {
         try{windows.addView(character,position);attached=true;}catch(RuntimeException denied){stopSelf();}
     }
     private void move(float x,float y){Rect bounds=display();int maxX=Math.max(1,bounds.width()-dp(64)),maxY=Math.max(1,bounds.height()-dp(88)-dp(32));var point=FloatingPlacement.place(x/maxX,y/maxY,bounds.width(),bounds.height(),dp(64),dp(88),dp(32),dp(32));position.x=point.x();position.y=point.y();try{windows.updateViewLayout(character,position);}catch(RuntimeException gone){hide();}}
+    private void moveGesture(MotionEvent event){var next=gesture.move(event.getRawX(),event.getRawY());if(next!=null){dismiss();move(next.x(),next.y());}}
+    private void cancelGesture(){if(gesture!=null&&gesture.cancel()&&position!=null)savePosition();}
     private void savePosition(){Rect bounds=display();getSharedPreferences("temper_floating",0).edit().putFloat("x",position.x/(float)Math.max(1,bounds.width()-dp(64))).putFloat("y",position.y/(float)Math.max(1,bounds.height()-dp(88)-dp(32))).apply();}
     private void showPanel(){
         if(!attached)return;Rect bounds=display();int width=Math.min(dp(280),bounds.width());panel.measure(View.MeasureSpec.makeMeasureSpec(width,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(0,View.MeasureSpec.UNSPECIFIED));int height=panel.getMeasuredHeight();if(height>bounds.height()-dp(64))return;
@@ -77,7 +83,7 @@ public final class FloatingOverlayService extends Service {
         try{windows.addView(panel,params);popup=true;}catch(RuntimeException denied){dismiss();}
     }
     private void dismiss(){if(popup){try{windows.removeViewImmediate(panel);}catch(RuntimeException ignored){}popup=false;}}
-    private void hide(){dismiss();if(attached){try{windows.removeViewImmediate(character);}catch(RuntimeException ignored){}attached=false;}}
+    private void hide(){cancelGesture();dismiss();if(attached){try{windows.removeViewImmediate(character);}catch(RuntimeException ignored){}attached=false;}}
     @Override public void onConfigurationChanged(Configuration config){super.onConfigurationChanged(config);hide();refresh();}
     @Override public void onDestroy(){main.removeCallbacksAndMessages(null);unregisterReceiver(screen);hide();if(instance==this)instance=null;stopForeground(STOP_FOREGROUND_REMOVE);super.onDestroy();}
     @Override public IBinder onBind(Intent intent){return null;}

@@ -24,3 +24,9 @@ Direction compares the latest two remote turns using a conservative tension prox
 Additional checks passed: 105 tokenization cases matched independent Hugging Face reference IDs on Android; all four avatars rendered eight distinct expressions; unowned premium selection was rejected. The complete structural adapter/consent/pause/keyboard test suite also passed. The previously verified live WhatsApp flow used the older USB engine; this phase tested the new phone engine with dummy normalized conversations. A full consumer consent → verified WhatsApp → on-device refresh check remains a release gate.
 
 Model SHA256: `0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958`. The phone test model was seeded over USB after the same hash was verified; a first-install network model download remains to be exercised. No weights or raw phone data are included in the release archive.
+
+## 0.44.0 continuity and movement check
+
+October 2, 2026, same OnePlus 8T. Twenty-eight JVM tests and native foundation/consumer checks passed. The actual phone worker rejected results after suspension/explicit stop and resumed numeric estimates for identical generated text without rearming. The 25 generated model cases and tokenizer/speaker controls also passed with unchanged weights; these do not measure live-human accuracy.
+
+The production analysis-overlay manager was exercised over TEMPER's own fictional screen using the user-granted application-overlay permission. Generated touch events moved the companion, distinguished tap/drag/cancel, preserved position through simulated keyboard changes/analysis updates, fitted the popup below a top-positioned companion and restored placement after recreation. This test used application-overlay windows rather than production Accessibility-overlay windows, and did not obtain a host root. A fresh user-driven WhatsApp keyboard/drag check remains a release validation step. See [Phase 44 handoff](../phases/PHASE-44-HANDOFF.md).

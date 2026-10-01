@@ -17,7 +17,8 @@ final class AnalyticsChecks {
         var viewport=new Bounds(0,103,1080,2352);var character=new Bounds(0,1954,192,2218);var popup=PopupPlacement.place(viewport,character,840,830,12);
         if(!viewport.contains(popup)||popup.bottom()>=character.top())throw new AssertionError("Popup overlaps character/composer");
         var keyboard=PopupPlacement.place(viewport,new Bounds(0,1130,192,1394),840,830,12);if(keyboard.bottom()!=1118)throw new AssertionError("Popup did not track raised composer");
-        try{PopupPlacement.place(viewport,new Bounds(0,500,192,764),840,830,12);throw new AssertionError("Oversized popup accepted");}catch(IllegalArgumentException expected){}
+        var topCharacter=new Bounds(0,103,192,367);var below=PopupPlacement.place(viewport,topCharacter,840,830,12);if(below.top()!=379||!viewport.contains(below))throw new AssertionError("Top-dragged character cannot open popup below");
+        try{PopupPlacement.place(viewport,new Bounds(0,500,192,764),840,2250,12);throw new AssertionError("Oversized popup accepted");}catch(IllegalArgumentException expected){}
         AnalyticsPanel panel=new AnalyticsPanel(context);panel.bind(summary);
         if(panel.getChildCount()!=3||!(panel.getChildAt(0) instanceof TextView)||!(panel.getChildAt(1) instanceof TextView)||!(panel.getChildAt(2) instanceof SpectrumView))throw new AssertionError("Popup content exceeds two summaries and one graph");
         panel.measure(View.MeasureSpec.makeMeasureSpec(840,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(0,View.MeasureSpec.UNSPECIFIED));panel.layout(0,0,840,panel.getMeasuredHeight());

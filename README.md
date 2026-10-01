@@ -1,4 +1,4 @@
-# TEMPER — Android companion app 0.43.0 (release candidate)
+# TEMPER — Android companion app 0.44.0 (release candidate)
 
 Consumer flow: choose an avatar → activate a floating companion → optionally enable private on-phone estimates for a selected supported WhatsApp chat. Alex is free; Nova, Orbit and Luma are one-time Play purchases with eight expressions each. Normal analysis downloads verified public model weights once and does not upload chat text. Optional [rated conversation feedback](docs/release/ANALYSIS-FEEDBACK.md) has separate permission and a manual reviewed-text submission; users only give a 1–5 quality rating. Collection remains disabled until an HTTPS service is configured. The existing model is unchanged; future candidates require independently reviewed data and held-out validation before an app release.
 
@@ -6,7 +6,7 @@ The app, Billing integration, purchase-verification backend and release tooling 
 
 The floating character works across ordinary apps; automatic analysis remains restricted to verified adapters. Universal automatic chat reading, Hinglish accuracy and store approval are not claimed. The former USB demo below is retained as developer history and an optional debug tool.
 
-TEMPER places a small original2D character above the bottom-left WhatsApp composer. Tap it for Current state, Direction and one eight-emotion bar graph. It estimates the remote participant's language and conversation trajectory from a bounded visible window. Estimates cannot establish someone's feelings.
+TEMPER places a small original2D character above the WhatsApp composer initially. Drag it to either side or another comfortable place; its chosen position is remembered. Tap it for Current state, Direction and one eight-emotion bar graph. Closing the keyboard or analytics panel keeps the selected analysis session running. Temporarily unreadable layouts show no scores and recover automatically when supported text returns. It estimates the remote participant's language and conversation trajectory from a bounded visible window. Estimates cannot establish someone's feelings.
 
 The Android app above is the primary product. Phases00–19 and working backend/models are preserved; React messaging and the USB demo below are developer test harnesses. Roadmap: [AGENT.md](AGENT.md). USB setup, fictional script and troubleshooting: [Android USB demo guide](docs/demo/ANDROID-USB-DEMO.md).
 
@@ -18,7 +18,7 @@ The Android app above is the primary product. Phases00–19 and working backend/
 - Fully visible media/documents, quotes, reactions, groups, landscape and unrecognized layouts/builds are unavailable. Edge-clipped rows excluded; date/call metadata are not message text.
 - Windows computer with Java21, five prepared local model directories and authorized USB/ADB. No public deployment or standalone phone inference.
 
-The real model graph, scrolling refresh, keyboard movement and popup input usability were confirmed on the test phone. Persistent unsupported layout ends the session; start again after choosing a supported text area. Android service rebind can be needed after APK updates/tests.
+The real model graph, scrolling refresh, keyboard movement and popup input usability were confirmed on the test phone in the earlier demo. Version 0.44.0 keeps the selection during temporary keyboard/layout gaps and waits for supported text instead of requiring a restart. Leaving WhatsApp, switching to another supported chat, explicit pause/stop, revocation or service shutdown still ends capture. Android service rebind can be needed after APK updates/tests.
 
 Phase40 fixes cross-speaker contamination in the live spectrum. [Dummy English/Hinglish results and model limits](docs/demo/EMOTIONAL-SPECTRUM-CHECK.md) cover25 generated endpoint checks and the reproducible evaluation script. Hindi-heavy Roman Hindi and sarcasm remain unreliable; dummy agreement is not measured live-human accuracy.
 
