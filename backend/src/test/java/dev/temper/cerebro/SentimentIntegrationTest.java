@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.junit.jupiter.api.Assertions.*;
 
 @EnabledIfEnvironmentVariable(named="TEMPER_SENTIMENT_MODEL_DIR",matches=".+")
-@SpringBootTest(properties="temper.emotion.model-dir=") @AutoConfigureMockMvc
+@SpringBootTest(properties={"temper.emotion.model-dir=","temper.sarcasm.model-dir="}) @AutoConfigureMockMvc
 class SentimentIntegrationTest {
     @Autowired SentimentModel model;
     @Autowired ConversationService conversations;

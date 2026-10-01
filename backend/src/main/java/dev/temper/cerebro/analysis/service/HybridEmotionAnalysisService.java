@@ -2,6 +2,7 @@ package dev.temper.cerebro.analysis.service;
 
 import dev.temper.cerebro.ai.SentimentModel;
 import dev.temper.cerebro.ai.EmotionModel;
+import dev.temper.cerebro.ai.SarcasmModel;
 import dev.temper.cerebro.analysis.domain.*;
 import dev.temper.cerebro.chat.domain.Message;
 import dev.temper.cerebro.conversation.context.ContextWindow;
@@ -9,14 +10,15 @@ import java.util.*;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-/** Replaces only sentiment; unimplemented signals remain explicitly identified fixtures. */
+/** Independent configured classifiers replace their fields; unimplemented signals remain explicit fixtures. */
 @Primary @Service
 public class HybridEmotionAnalysisService implements EmotionAnalysisService {
     private final MockEmotionAnalysisService fixtures;
     private final SentimentModel sentiment;
     private final EmotionModel emotion;
-    public HybridEmotionAnalysisService(MockEmotionAnalysisService fixtures, SentimentModel sentiment, EmotionModel emotion) {
-        this.fixtures = fixtures; this.sentiment = sentiment; this.emotion=emotion;
+    private final SarcasmModel sarcasm;
+    public HybridEmotionAnalysisService(MockEmotionAnalysisService fixtures, SentimentModel sentiment, EmotionModel emotion, SarcasmModel sarcasm) {
+        this.fixtures = fixtures; this.sentiment = sentiment; this.emotion=emotion; this.sarcasm=sarcasm;
     }
     public static String input(ContextWindow context) {
         // Current first preserves its beginning if token truncation occurs. Bound history individually.
@@ -28,7 +30,7 @@ public class HybridEmotionAnalysisService implements EmotionAnalysisService {
     }
     @Override public MessageAnalysis analyze(Message message, ContextWindow context) {
         var baseline = fixtures.analyze(message, context);
-        if (!sentiment.available()&&!emotion.available()) return baseline;
+        if (!sentiment.available()&&!emotion.available()&&!sarcasm.available()) return baseline;
         var signals = new LinkedHashMap<>(baseline.signals());
         var emotions=baseline.emotions(); double signed=baseline.sentiment();
         var evidence=new ArrayList<MessageAnalysis.Evidence>();
@@ -44,8 +46,13 @@ public class HybridEmotionAnalysisService implements EmotionAnalysisService {
             evidence.add(new MessageAnalysis.Evidence(MessageAnalysis.EvidenceSource.MODEL,"GoEmotions emotion",
                 result.modelId()+"; raw independent sigmoid probabilities "+result.probabilities()+". anger→anger, annoyance→frustration proxy, sadness→sadness, joy→happiness, confusion→confusion, max(caring,fear,nervousness)→concern proxy; surprise/neutral retained. "+result.tokenCount()+" tokens with causal history; Reddit-trained, not dialogue-validated."));
         }
+        if(sarcasm.available()) {
+            var result=sarcasm.classify(input(context));signals.put("sarcasm",result.probabilities().get("sarcasm"));
+            evidence.add(new MessageAnalysis.Evidence(MessageAnalysis.EvidenceSource.MODEL,"Sarcasm classifier",
+                result.modelId()+"; dedicated probabilities "+result.probabilities()+"; "+result.tokenCount()+" tokens. Uses current text and "+context.previous().size()+" preceding speaker-tagged turns, independently of sentiment. Fine-tuning domain is not dialogue-validated; this is an uncertain linguistic estimate."));
+        }
         evidence.add(new MessageAnalysis.Evidence(MessageAnalysis.EvidenceSource.MOCK,"Remaining fixture signals",
-            (sentiment.available()?"":"Signed and negative sentiment, ")+(emotion.available()?"":"Emotions, ")+"sarcasm, toxicity, passive aggression, blame, defensiveness, conflict and timeline markers still use ordinal fixtures. See MODEL evidence for the fields replaced by actual inference."));
+            (sentiment.available()?"":"Signed and negative sentiment, ")+(emotion.available()?"":"Emotions, ")+(sarcasm.available()?"":"Sarcasm, ")+"toxicity, passive aggression, blame, defensiveness, conflict and timeline markers still use ordinal fixtures. See MODEL evidence for the fields replaced by actual inference."));
         return new MessageAnalysis(baseline.messageId(), baseline.speakerId(), baseline.sequence(), AnalysisMode.HYBRID,
             emotions, signals, signed, baseline.conflict(), baseline.contextMessageIds(),
             "Configured local classifiers estimate language signals using current text and causal history. Source evidence identifies model outputs, semantic proxies and remaining fixtures; these estimates do not establish the speaker’s internal feelings.", evidence, baseline.analyzedAt());

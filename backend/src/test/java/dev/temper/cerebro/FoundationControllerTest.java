@@ -8,7 +8,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties={"temper.sentiment.model-dir=","temper.foundation.model-dir=","temper.emotion.model-dir="})
+@SpringBootTest(properties={"temper.sentiment.model-dir=","temper.foundation.model-dir=","temper.emotion.model-dir=","temper.sarcasm.model-dir="})
 @AutoConfigureMockMvc
 class FoundationControllerTest {
     @Autowired MockMvc mvc;
