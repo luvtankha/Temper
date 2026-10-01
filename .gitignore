@@ -128,3 +128,8 @@ cypress/videos/
 *.swo
 *~
 *.tsbuildinfo
+
+# Android generated output and machine-specific SDK path
+android/local.properties
+*.apk
+*.aab
