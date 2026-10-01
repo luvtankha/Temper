@@ -26,12 +26,15 @@ public final class LivePipeline {
             LocalAnalysisClient.Result analyzed=null;
             try{if(current(expected,generation)&&AnalysisConsent.allowed(context))analyzed=AnalysisConsent.local(context)?onDevice.analyze(context,snapshot,()->current(expected,generation)&&AnalysisConsent.local(context)):new LocalAnalysisClient().analyze(context,snapshot,()->current(expected,generation));}catch(Exception|LinkageError ignored){}
             LocalAnalysisClient.Result completed=analyzed;
-            main.post(()->{if(expected!=revision||!LiveCaptureState.current(generation)||!AnalysisConsent.allowed(context))return;
-                if(completed!=null){if(AnalysisConsent.local(context)&&completed.summary().available()&&new dev.temper.android.learning.LearningConsent(context).accepted())dev.temper.android.learning.LearningConsent.SESSION.observe(snapshot,completed.summary().spectrum(),completed.summary().currentState(),completed.summary().direction(),completed.trajectory());LiveCaptureState.status(generation,completed.summary().available()?"Model analysis updated":"Analysis unavailable: more supported context or models needed");result.accept(completed);}else{fingerprint=null;LiveCaptureState.status(generation,"Analysis unavailable; check model setup");unavailable.accept(AnalysisConsent.local(context)?OverlaySummary.unavailable():OverlaySummary.connectionUnavailable());}
+            main.post(()->{if(!current(expected,generation))return;
+                if(completed!=null){if(LiveCaptureState.selected()&&AnalysisConsent.local(context)&&completed.summary().available()&&new dev.temper.android.learning.LearningConsent(context).accepted())dev.temper.android.learning.LearningConsent.SESSION.observe(snapshot,completed.summary().spectrum(),completed.summary().currentState(),completed.summary().direction(),completed.trajectory());LiveCaptureState.status(generation,completed.summary().available()?"Model analysis updated":"Analysis unavailable: more supported context or models needed");result.accept(completed);}else{fingerprint=null;LiveCaptureState.status(generation,"Analysis unavailable; check model setup");unavailable.accept(AnalysisConsent.local(context)?OverlaySummary.unavailable():OverlaySummary.connectionUnavailable());}
             });
         });
     }
-    private boolean current(long expected,long generation){return expected==revision&&LiveCaptureState.current(generation);}
+    private boolean current(long expected,long generation){
+        return expected==revision&&LiveCaptureState.current(generation)&&AnalysisConsent.allowed(context)&&
+                (!LiveCaptureState.automatic()||AutomaticCapturePolicy.ready(new dev.temper.android.privacy.PowerStore(context).enabled(),AnalysisConsent.auto(context),dev.temper.android.inference.ModelFiles.ready(context),dev.temper.android.overlay.FloatingOverlayService.running()));
+    }
     /** Suppress obsolete estimates and pending snapshots while retaining the loaded local model. */
     public void suspend(){revision++;fingerprint=null;worker.getQueue().clear();}
     public void clear(){suspend();if(!worker.isShutdown())worker.execute(onDevice::close);}

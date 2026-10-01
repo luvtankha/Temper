@@ -12,10 +12,12 @@ import dev.temper.android.MainActivity;
 import dev.temper.android.character.*;
 import dev.temper.android.store.PurchaseStore;
 import dev.temper.android.analytics.*;
+import dev.temper.android.privacy.PowerStore;
+import dev.temper.android.privacy.ConsentStore;
 
 /** Explicitly started floating companion; never inspects any other application's content. */
-public final class FloatingOverlayService extends Service {
-    private static FloatingOverlayService instance;
+public final class FloatingOverlayService extends Service implements SharedPreferences.OnSharedPreferenceChangeListener {
+    private static volatile FloatingOverlayService instance;
     private static boolean appVisible,analysisVisible,checkoutVisible;
     private WindowManager windows;
     private CharacterView character;
@@ -24,6 +26,7 @@ public final class FloatingOverlayService extends Service {
     private boolean attached,popup,locked;
     private DragGesture gesture;
     private long outsideDismissedAt;
+    private ConsentStore consent;
     private final Handler main=new Handler(Looper.getMainLooper());
     private final Runnable check=()->{if(instance==this){refresh();main.postDelayed(this.check,60000);}};
     private final BroadcastReceiver screen=new BroadcastReceiver(){@Override public void onReceive(Context context,Intent intent){locked=Intent.ACTION_SCREEN_OFF.equals(intent.getAction())||((KeyguardManager)getSystemService(KEYGUARD_SERVICE)).isKeyguardLocked();refresh();}};
@@ -33,10 +36,10 @@ public final class FloatingOverlayService extends Service {
     public static void analysisVisible(boolean value){analysisVisible=value;if(instance!=null)instance.refresh();}
     public static void changed(){if(instance!=null)instance.refresh();}
     public static void checkoutVisible(boolean value){checkoutVisible=value;if(instance!=null)instance.refresh();}
-    public static void stop(Context context){context.stopService(new Intent(context,FloatingOverlayService.class));}
-    public static void start(Context context){context.startForegroundService(new Intent(context,FloatingOverlayService.class));}
+    public static void stop(Context context){new PowerStore(context).setEnabled(false);context.stopService(new Intent(context,FloatingOverlayService.class));}
+    public static void start(Context context){if(!new PowerStore(context).enabled())throw new IllegalStateException("Turn TEMPER ON first");context.startForegroundService(new Intent(context,FloatingOverlayService.class));}
     @Override public void onCreate(){
-        super.onCreate();instance=this;windows=(WindowManager)getSystemService(WINDOW_SERVICE);character=new CharacterView(this);panel=new AnalyticsPanel(this);
+        super.onCreate();instance=this;consent=new ConsentStore(this);consent.preferences().registerOnSharedPreferenceChangeListener(this);windows=(WindowManager)getSystemService(WINDOW_SERVICE);character=new CharacterView(this);panel=new AnalyticsPanel(this);
         gesture=new DragGesture(ViewConfiguration.get(this).getScaledTouchSlop());
         panel.bind(new OverlaySummary("Open a supported chat for analysis","Automatic estimates unavailable here",new float[8],false));
         panel.setOnTouchListener((view,event)->{if(event.getAction()==MotionEvent.ACTION_OUTSIDE){outsideDismissedAt=SystemClock.elapsedRealtime();dismiss();return true;}return false;});
@@ -56,16 +59,20 @@ public final class FloatingOverlayService extends Service {
         NotificationManager notifications=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);notifications.createNotificationChannel(new NotificationChannel("companion","Companion controls",NotificationManager.IMPORTANCE_LOW));
         PendingIntent open=PendingIntent.getActivity(this,0,new Intent(this,MainActivity.class),PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent stop=PendingIntent.getService(this,1,new Intent(this,FloatingOverlayService.class).setAction("STOP"),PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);
-        Notification notification=new Notification.Builder(this,"companion").setSmallIcon(dev.temper.android.R.drawable.ic_notification).setContentTitle("TEMPER companion is active").setContentText("Drag to move • tap for estimates • Stop to hide").setContentIntent(open).setOngoing(true).addAction(new Notification.Action.Builder(null,"Stop",stop).build()).build();
+        Notification notification=new Notification.Builder(this,"companion").setSmallIcon(dev.temper.android.R.drawable.ic_notification).setContentTitle("TEMPER is ON").setContentText("Drag to move • tap for estimates • OFF to hide").setContentIntent(open).setOngoing(true).addAction(new Notification.Action.Builder(null,"OFF",stop).build()).build();
         if(Build.VERSION.SDK_INT>=34)startForeground(41,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);else startForeground(41,notification);
+        dev.temper.android.accessibility.TemperAccessibilityService.refreshPowerState();
         main.post(check);
     }
-    @Override public int onStartCommand(Intent intent,int flags,int id){if(intent!=null&&"STOP".equals(intent.getAction())){new dev.temper.android.privacy.ConsentStore(this).pause(true);stopSelf();}else refresh();return START_NOT_STICKY;}
+    @Override public int onStartCommand(Intent intent,int flags,int id){if(intent!=null&&"STOP".equals(intent.getAction())){new PowerStore(this).requestOff();hide();stopSelf();}else refresh();return START_NOT_STICKY;}
+    @Override public void onSharedPreferenceChanged(SharedPreferences preferences,String key){if(!new PowerStore(this).enabled()){hide();stopSelf();}}
+    @Override public void onTaskRemoved(Intent rootIntent){new PowerStore(this).setEnabled(false);hide();stopSelf();super.onTaskRemoved(rootIntent);}
     private Rect display(){if(Build.VERSION.SDK_INT>=30)return windows.getMaximumWindowMetrics().getBounds();android.util.DisplayMetrics metrics=new android.util.DisplayMetrics();windows.getDefaultDisplay().getRealMetrics(metrics);return new Rect(0,0,metrics.widthPixels,metrics.heightPixels);}
     private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
     private WindowManager.LayoutParams params(int width,int height){var params=new WindowManager.LayoutParams(width,height,WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,PixelFormat.TRANSLUCENT);params.gravity=Gravity.TOP|Gravity.LEFT;params.setTitle("TEMPER floating companion");if(Build.VERSION.SDK_INT>=30)params.setFitInsetsTypes(0);return params;}
     private void refresh(){
-        if(!Settings.canDrawOverlays(this)){stopSelf();return;}
+        if(!new PowerStore(this).enabled()){hide();stopSelf();return;}
+        if(!Settings.canDrawOverlays(this)){new PowerStore(this).setEnabled(false);hide();stopSelf();return;}
         if(appVisible||analysisVisible||checkoutVisible||locked||((KeyguardManager)getSystemService(KEYGUARD_SERVICE)).isKeyguardLocked()){hide();return;}
         character.setAvatar(new AvatarSelection(this,new PurchaseStore(this)::owned).selected());
         if(attached)return;
@@ -85,6 +92,6 @@ public final class FloatingOverlayService extends Service {
     private void dismiss(){if(popup){try{windows.removeViewImmediate(panel);}catch(RuntimeException ignored){}popup=false;}}
     private void hide(){cancelGesture();dismiss();if(attached){try{windows.removeViewImmediate(character);}catch(RuntimeException ignored){}attached=false;}}
     @Override public void onConfigurationChanged(Configuration config){super.onConfigurationChanged(config);hide();refresh();}
-    @Override public void onDestroy(){main.removeCallbacksAndMessages(null);unregisterReceiver(screen);hide();if(instance==this)instance=null;stopForeground(STOP_FOREGROUND_REMOVE);super.onDestroy();}
+    @Override public void onDestroy(){main.removeCallbacksAndMessages(null);if(consent!=null)consent.preferences().unregisterOnSharedPreferenceChangeListener(this);unregisterReceiver(screen);if(instance==this)instance=null;new PowerStore(this).setEnabled(false);hide();dev.temper.android.accessibility.TemperAccessibilityService.refreshPowerState();stopForeground(STOP_FOREGROUND_REMOVE);super.onDestroy();}
     @Override public IBinder onBind(Intent intent){return null;}
 }

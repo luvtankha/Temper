@@ -13,11 +13,14 @@ import java.util.UUID;
 import dev.temper.android.overlay.OverlayManager;
 import android.view.accessibility.AccessibilityWindowInfo;
 import dev.temper.android.privacy.AnalysisConsent;
+import dev.temper.android.privacy.PowerStore;
+import dev.temper.android.inference.ModelFiles;
+import dev.temper.android.overlay.FloatingOverlayService;
 import dev.temper.android.analytics.OverlaySummary;
 import dev.temper.android.character.Emotion;
 import android.app.KeyguardManager;
 
-/** Package detection and explicitly armed text-free layout calibration; never performs host actions. */
+/** Consent-gated visible chat processing and text-free calibration; never performs host actions. */
 public final class TemperAccessibilityService extends AccessibilityService implements SharedPreferences.OnSharedPreferenceChangeListener {
     private ConsentStore consent;
     private OverlayManager overlay;
@@ -29,18 +32,30 @@ public final class TemperAccessibilityService extends AccessibilityService imple
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Runnable probe=()->{
         if(consent==null||!consent.allows(ConsentStore.WHATSAPP)){hideOverlay();return;}
+        if(LiveCaptureState.automatic()&&!automaticReady()){hideOverlay();return;}
+        if(automaticReady())LiveCaptureState.beginAutomatic(this);
         HostObservation host=hostRoot();
         if(host.decision()==ForegroundSessionPolicy.Decision.END_SESSION){hideOverlay();return;}
         AccessibilityNodeInfo root=host.root();
-        if(root==null){if(LiveCaptureState.armed()||LiveCaptureState.active())unreadableLayout();else hideOverlay();return;}
+        if(root==null){if(captureRequested())unreadableLayout();else hideOverlay();return;}
         try{CharSequence pkg=root.getPackageName();if(pkg!=null&&ConsentStore.WHATSAPP.contentEquals(pkg)){
-            if(LiveCaptureState.armed()||LiveCaptureState.active()){
+            if(LiveCaptureState.armed()||LiveCaptureState.active()||LiveCaptureState.automatic()){
                 if(!AnalysisConsent.allowed(this)||!supportedBuild()){LiveCaptureState.clear();hideOverlay();return;}
                 ScreenObservation structure=new WhatsAppStructureProbe().read(root);var anchor=liveAdapter.anchor(structure);
                 if(anchor.status()!=VisibleConversation.Status.AVAILABLE){unreadableLayout();return;}
                 boundWindow=root.getWindowId();overlay.show(structure.viewport(),anchor.composer(),getResources().getDisplayMetrics().density);
                 boolean[] changedIdentity={false};
+                boolean[] firstIdentity={true};
                 java.util.function.Predicate<String> identityAllowed=key->{
+                    if(firstIdentity[0]&&LiveCaptureState.automatic()){
+                        if(!automaticReady())return false;
+                        if(!LiveCaptureState.acceptsIdentity(key,boundWindow)){
+                            // Select the new verified header before any of its body fields are read.
+                            live.suspend();overlay.setEmotion(Emotion.NEUTRAL);overlay.setSummary(OverlaySummary.analyzing());
+                            if(!LiveCaptureState.selectAutomatic(key,boundWindow))return false;
+                        }
+                    }
+                    firstIdentity[0]=false;
                     boolean accepted=LiveCaptureState.acceptsIdentity(key,boundWindow);
                     if(!accepted&&LiveCaptureState.active())changedIdentity[0]=true;
                     return accepted;
@@ -50,7 +65,14 @@ public final class TemperAccessibilityService extends AccessibilityService imple
                     var dedup=new VisibleSnapshotDeduplicator();dedup.accept(snapshot);var second=new WhatsAppTextReader().read(root,liveAdapter,identityAllowed);
                     if(second.status()!=VisibleConversation.Status.AVAILABLE||dedup.accept(second))snapshot=VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT);
                 }
-                if(changedIdentity[0]){LiveCaptureState.changedConversation();hideOverlay();return;}
+                if(changedIdentity[0]){
+                    if(LiveCaptureState.automatic()){
+                        live.suspend();LiveCaptureState.clear();
+                        if(automaticReady())LiveCaptureState.beginAutomatic(this);
+                        unreadableLayout();
+                    }else{LiveCaptureState.changedConversation();hideOverlay();}
+                    return;
+                }
                 if(snapshot.status()!=VisibleConversation.Status.AVAILABLE){unreadableLayout();return;}
                 recovery.reset();
                 if(!LiveCaptureState.bind(snapshot.conversationKey(),root.getWindowId())){hideOverlay();return;}
@@ -79,7 +101,7 @@ public final class TemperAccessibilityService extends AccessibilityService imple
                 if(plan.status()==VisibleConversation.Status.AVAILABLE)overlay.show(structure.viewport(),plan.composer(),getResources().getDisplayMetrics().density);else hideOverlay();
             }else hideOverlay();
         }}
-        catch(IllegalArgumentException unavailable){if(LiveCaptureState.armed()||LiveCaptureState.active())unreadableLayout();else{hideOverlay();if(ParseProbeState.armed())ParseProbeState.save(this,VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT),false);else if(ProbeState.armed())ProbeState.fail();}}
+        catch(IllegalArgumentException unavailable){if(captureRequested())unreadableLayout();else{hideOverlay();if(ParseProbeState.armed())ParseProbeState.save(this,VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT),false);else if(ProbeState.armed())ProbeState.fail();}}
         finally{root.recycle();}
     };
     private void unreadableLayout(){
@@ -94,8 +116,10 @@ public final class TemperAccessibilityService extends AccessibilityService imple
             overlay.setSummary(new OverlaySummary("Waiting for readable text","Analysis resumes automatically",new float[8],false));
         }
         handler.removeCallbacks(probe);
-        if(LiveCaptureState.armed()||LiveCaptureState.active())handler.postDelayed(probe,recovery.delay(now));
+        if(captureRequested())handler.postDelayed(probe,recovery.delay(now));
     }
+    private boolean automaticReady(){return AutomaticCapturePolicy.ready(new PowerStore(this).enabled(),AnalysisConsent.auto(this),ModelFiles.ready(this),FloatingOverlayService.running());}
+    private boolean captureRequested(){return LiveCaptureState.armed()||LiveCaptureState.active()||LiveCaptureState.automatic()||automaticReady();}
     private void hideOverlay(){handler.removeCallbacks(probe);recovery.reset();if(overlay!=null)overlay.hide();if(live!=null)live.clear();LiveCaptureState.leave();boundWindow=-1;ParseProbeState.forgetContent();}
     private record HostObservation(AccessibilityNodeInfo root,ForegroundSessionPolicy.Decision decision){}
     private HostObservation hostRoot(){
@@ -118,10 +142,13 @@ public final class TemperAccessibilityService extends AccessibilityService imple
     private boolean supportedBuild(){try{var info=getPackageManager().getPackageInfo(ConsentStore.WHATSAPP,0);long code=android.os.Build.VERSION.SDK_INT>=28?info.getLongVersionCode():info.versionCode;return adapters.resolve(ConsentStore.WHATSAPP,info.versionName,code).isPresent();}catch(android.content.pm.PackageManager.NameNotFoundException missing){return false;}}
     private static volatile long lastSupportedEvent;
     private static volatile boolean connected;
+    private static volatile TemperAccessibilityService instance;
     public static boolean connected(){return connected;}
     public static boolean recentlyDetected(){long time=lastSupportedEvent;return time>0&&SystemClock.elapsedRealtime()-time<120_000;}
     private static void clear(){lastSupportedEvent=0;}
-    @Override protected void onServiceConnected(){connected=true;consent=new ConsentStore(this);overlay=new OverlayManager(this);live=new LivePipeline(this);consent.preferences().registerOnSharedPreferenceChangeListener(this);clear();if(!consent.consented())disableSelf();}
+    /** Called by the foreground companion after ON/OFF ownership changes; no host controls are touched. */
+    public static void refreshPowerState(){TemperAccessibilityService service=instance;if(service!=null){service.handler.removeCallbacks(service.probe);service.handler.post(service.probe);}}
+    @Override protected void onServiceConnected(){connected=true;consent=new ConsentStore(this);overlay=new OverlayManager(this);live=new LivePipeline(this);consent.preferences().registerOnSharedPreferenceChangeListener(this);instance=this;clear();if(!consent.consented())disableSelf();else handler.post(probe);}
     @Override public void onAccessibilityEvent(AccessibilityEvent event){
         if(consent==null||event==null)return;
         CharSequence name=event.getPackageName();
@@ -134,9 +161,16 @@ public final class TemperAccessibilityService extends AccessibilityService imple
             handler.removeCallbacks(probe);handler.postDelayed(probe,150);
         }
         if(name==null||!consent.allows(name.toString())){clear();return;}
-        if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED||type==AccessibilityEvent.TYPE_VIEW_SCROLLED){lastSupportedEvent=SystemClock.elapsedRealtime();if(ProbeState.armed()||ParseProbeState.armed()||LiveCaptureState.armed()||LiveCaptureState.active()||boundWindow>=0){handler.removeCallbacks(probe);handler.postDelayed(probe,type==AccessibilityEvent.TYPE_VIEW_SCROLLED?450:250);}}
+        if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED||type==AccessibilityEvent.TYPE_VIEW_SCROLLED){lastSupportedEvent=SystemClock.elapsedRealtime();if(ProbeState.armed()||ParseProbeState.armed()||captureRequested()||boundWindow>=0){handler.removeCallbacks(probe);handler.postDelayed(probe,type==AccessibilityEvent.TYPE_VIEW_SCROLLED?450:250);}}
     }
-    @Override public void onSharedPreferenceChanged(SharedPreferences preferences,String key){if(consent.paused()||!consent.consented()||(("liveConsentVersion".equals(key)||"onDeviceConsentVersion".equals(key)||"analysisMode".equals(key))&&!AnalysisConsent.allowed(this))){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}if(!consent.consented())disableSelf();}
+    @Override public void onSharedPreferenceChanged(SharedPreferences preferences,String key){
+        if(consent.paused()||!consent.consented()||(("liveConsentVersion".equals(key)||"onDeviceConsentVersion".equals(key)||"analysisMode".equals(key))&&!AnalysisConsent.allowed(this))){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}
+        else if("powerEnabled".equals(key)||"autoConsentVersion".equals(key)){
+            if(LiveCaptureState.automatic()&&!automaticReady())hideOverlay();
+            handler.removeCallbacks(probe);handler.post(probe);
+        }
+        if(!consent.consented())disableSelf();
+    }
     @Override public void onInterrupt(){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}
-    @Override public void onDestroy(){connected=false;if(consent!=null)consent.preferences().unregisterOnSharedPreferenceChangeListener(this);hideOverlay();LiveCaptureState.clear();if(live!=null)live.close();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);super.onDestroy();}
+    @Override public void onDestroy(){connected=false;instance=null;if(consent!=null)consent.preferences().unregisterOnSharedPreferenceChangeListener(this);hideOverlay();LiveCaptureState.clear();if(live!=null)live.close();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);super.onDestroy();}
 }

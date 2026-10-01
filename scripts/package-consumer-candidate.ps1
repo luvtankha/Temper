@@ -49,7 +49,7 @@ foreach ($temperRelative in @('docs\phases\PHASE-41-CONTEXT.md', 'docs\phases\PH
 foreach ($temperRelative in @('docs\phases\PHASE-42-CONTEXT.md','docs\phases\PHASE-42-HANDOFF.md','deployment\feedback\Dockerfile','deployment\feedback\feedback.env.example','scripts\train-feedback-model.py','scripts\approve-feedback-model.py','scripts\test-feedback-training.py','scripts\model-export-requirements.txt')) {
     Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
 }
-foreach ($temperRelative in @('docs\phases\PHASE-43-CONTEXT.md','docs\phases\PHASE-43-HANDOFF.md','docs\phases\PHASE-44-CONTEXT.md','docs\phases\PHASE-44-HANDOFF.md')) {
+foreach ($temperRelative in @('docs\phases\PHASE-43-CONTEXT.md','docs\phases\PHASE-43-HANDOFF.md','docs\phases\PHASE-44-CONTEXT.md','docs\phases\PHASE-44-HANDOFF.md','docs\phases\PHASE-45-CONTEXT.md','docs\phases\PHASE-45-HANDOFF.md')) {
     Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
 }
 foreach ($temperDeploymentRelative in $temperTracked | Where-Object { $_ -like 'deployment/feedback/*' -and $_ -notin @('deployment/feedback/Dockerfile','deployment/feedback/feedback.env.example') }) {
@@ -59,6 +59,7 @@ foreach ($temperEvidence in @(
     @('temp\consumer-avatar-gallery.png', 'evidence\avatar-gallery.png'),
     @('temp\consumer-dummy-spectrum.json', 'evidence\dummy-spectrum.json'),
     @('temp\learning-training-smoke-42\smoke-report.json', 'evidence\synthetic-training-smoke.json'),
+    @('temp\phase45-home.png', 'evidence\home-on-off.png'),
     @('screenshots\test\phase41-floating-dummy.png', 'evidence\floating-dummy.png'),
     @('screenshots\test\phase41-floating-popup.png', 'evidence\floating-popup.png')
 )) {
@@ -72,7 +73,7 @@ The testing APK is installed on the test phone and has no real sale configuratio
 The UNSIGNED-review AAB cannot be uploaded as a signed production release.
 Premium purchases are disabled until real Play products and HTTPS verification exist.
 Automatic analysis currently supports the verified WhatsApp layout only.
-Read the model limits and outstanding checks in ON-DEVICE-CHECK.md and Phase 44 handoff.
+Read the model limits and outstanding checks in ON-DEVICE-CHECK.md and Phase 45 handoff.
 ANALYSIS-FEEDBACK.md documents optional rated-session sharing and the evaluated model upgrade path.
 No real feedback service is configured, no user data was collected, and the current model is unchanged.
 
@@ -83,6 +84,7 @@ The feedback directory contains a separate persistent-volume HTTPS deployment ki
 Weights, credentials, test signing keys and private runtime data are excluded.
 Evidence contains only generated fixture results and TEMPER's own fictional screen.
 Avatar/spectrum/floating screenshots were captured in Phase 41 with the unchanged model/assets.
+The ON/OFF home screenshot was captured from the installed Phase 45 app.
 The Phase 42 training smoke is synthetic and cannot be promoted as a customer model.
 '@
 $temperReadme | Set-Content -LiteralPath (Join-Path $temperStage 'README.md') -Encoding utf8
