@@ -1,0 +1,6 @@
+# Estimated trajectory v1
+Pure deterministic rules consume three consecutive analyzed turns and new conflict results. Fewer turns, gaps or MOCK weighted conflict inputs → UNCERTAIN with strength0. Evidence strength is an assigned uncalibrated rule strength, never forecast probability. Data is bounded to latest three turns; REST calculation uses only current/prior sequences.
+
+Priority: withdrawal≥.55 after preceding smoothed conflict≥.30 → WITHDRAWAL_RISK(.65). Otherwise current smoothed conflict≥.55, or UP and conflict≥.40, or repeated disagreement≥.70 and conflict≥.35 → ESCALATION_RISK(.70). Otherwise DOWN, current conflict≤.30, prior≥.35 and signed sentiment>.15 → REPAIR_OPPORTUNITY(.60). Otherwise DOWN → DEESCALATING(.60); UP → TENSION_RISING(.60); otherwise STABLE(.55). Explanations use may/appears/suggests rather than certainties. All supporting numerical signals and sequence IDs are returned. Thresholds are engineering defaults; not a psychological classifier or prediction of behavior.
+
+The trajectory field is additive on REST analyzed/snapshot turns. Legacy direction/markers remain untouched; Android mapping uses the new field. Model domain shift and lexical false positives remain; zero cues cannot prove absence of feelings or risk.

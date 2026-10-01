@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: TEMPER API
-  version: 0.10.0
+  version: 0.11.0
   description: Versioned REST. Additive conflictAnalysis contains rawScore, smoothedScore, UP/FLAT/DOWN trend, ranked source-aware topContributors, fixtureInputs and priorSequences; existing conflict remains the legacy field. Optional local sentiment, emotion, independent sarcasm and toxicity models replace their fields with inspectable HYBRID provenance. Emotion includes documented proxies; configured toxicity adds insult/threat and explicit max(insult,threat) hostility proxy to the bounded signals map. Six documented lexical/context indicators have separate HEURISTIC evidence and optional disagreement/withdrawal/repeatedDisagreement scores. Unconfigured model channels and conflict/markers are fixtures. Model-free mode MOCK; delivery independent of analysis.
 servers:
   - url: /api/v1
@@ -279,6 +279,7 @@ components:
         signals: {$ref: '#/components/schemas/Scores'}
         sentiment: {type: number, minimum: -1, maximum: 1}
         conflict: {type: number, minimum: 0, maximum: 1}
+        trajectory: {$ref: '#/components/schemas/Trajectory'}
         conflictAnalysis: {$ref: '#/components/schemas/ConflictAnalysis'}
         contextMessageIds: {type: array, items: {type: string, format: uuid}}
         explanation: {type: string}
@@ -291,6 +292,15 @@ components:
               source: {type: string, enum: [MOCK, MODEL, HEURISTIC]}
               label: {type: string}
               description: {type: string}
+    Trajectory:
+      type: object
+      required: [state, evidenceStrength, explanation, contributingSignals, sequences]
+      properties:
+        state: {type: string, enum: [STABLE, TENSION_RISING, ESCALATION_RISK, DEESCALATING, WITHDRAWAL_RISK, REPAIR_OPPORTUNITY, UNCERTAIN]}
+        evidenceStrength: {type: number, minimum: 0, maximum: 1, description: "Uncalibrated engineering rule strength, not a probability"}
+        explanation: {type: string}
+        contributingSignals: {$ref: '#/components/schemas/Scores'}
+        sequences: {type: array, items: {type: integer, minimum: 1}}
     ConflictAnalysis:
       type: object
       required: [rawScore, smoothedScore, trend, topContributors, fixtureInputs, priorSequences]
