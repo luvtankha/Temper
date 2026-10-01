@@ -1,4 +1,4 @@
-# Updated Phase24 — IMPLEMENTED FOUNDATION, DEVICE GATE BLOCKED
+# Updated Phase24 — COMPLETE
 1. Changed: primary native Android onboarding/settings/fictional preview shell; no permissions, host-app capture or actual overlay. Pause defaults true, persists locally and clear restores safe default. Backup/cloud/device transfer explicitly excluded.
 2. Files: android Gradle8.13 checksum-pinned wrapper and AGP8.13.2 project, MainActivity, manifest/theme/extraction rules, device smoke instrumentation, Android README; root ignore/README/context.
 3. Verification: assembleDebug, assembleDebugAndroidTest and lint BUILD SUCCESSFUL (71tasks). Signed debug APK verifies. Instrumentation compiles but has NOT RUN; do not count as device success. Previous native Java45/45 and live legacy browser11/11 pass; frontend22/build preserved.
@@ -8,3 +8,5 @@
 7. Other failures fixed: initial Android SDK missing; installed with explicit user acceptance. Temporary MavenCentral DNS lint dependency failure retried, final lint passes. Initial overly bundled shell edit rejected by tool policy; used ordinary patches/separate tooling commands safely. XML version/deprecated Gradle warnings do not fail build.
 8. CURRENT SAFE STATE: signed foundation/debug+test APKs, build/lint good, no capture/overlay permissions, no private chat data. No Android/device/WhatsApp acceptance claim. Phase24 NOT COMPLETE;25+ not advanced.
 9. REQUIRED NEXT: user's pending authorization to install Android Emulator Hypervisor Driver (persistent Windows system driver) or a connected authorized test phone. Then install both APKs and run dev.temper.android.test/dev.temper.android.FoundationSmokeInstrumentation; verify actual onboarding/preview/pause persistence/reset, record device/API and screenshots, complete24 before25.
+
+10. DEVICE GATE RESOLVED2026-10-01: user selected physical phone, driver installation canceled; OnePlus8T KB2001 Android14/API34 authorized via USB. Both app and instrumentation APK install Success. Actual instrumentation PASS: onboarding, fictional preview, pause persistence and clear-to-paused. Launch and own-app screenshot verified; no host chat interaction. No emulator driver installed. Phase24 acceptance complete. Next25 minimal account/session support.
