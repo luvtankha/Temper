@@ -13,15 +13,19 @@ public final class CharacterView extends View {
     private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Path path=new Path();
     private Emotion emotion=Emotion.NEUTRAL;
+    private Avatar avatar=Avatar.ALEX;
     private float[] pose=emotion.pose();
     private ValueAnimator transition;
     public CharacterView(Context context){super(context);setContentDescription("Neutral companion");}
     public Emotion emotion(){return emotion;}
+    public Avatar avatar(){return avatar;}
+    @Override public boolean performClick(){return super.performClick();}
+    public void setAvatar(Avatar value){avatar=Objects.requireNonNull(value);setContentDescription(avatar.displayName()+", "+emotion.label()+" companion");invalidate();}
     public boolean transitioning(){return transition!=null&&transition.isRunning();}
     public void setEmotion(Emotion next,boolean animate){
         Objects.requireNonNull(next);
         if(transition!=null){transition.cancel();transition=null;}
-        emotion=next;setContentDescription(next.label()+" companion");
+        emotion=next;setContentDescription(avatar.displayName()+", "+next.label()+" companion");
         float[] from=pose.clone(),to=next.pose();
         if(!animate||!isAttachedToWindow()||!ValueAnimator.areAnimatorsEnabled()){pose=to;invalidate();return;}
         transition=ValueAnimator.ofFloat(0,1);transition.setDuration(260);transition.setInterpolator(new DecelerateInterpolator());
@@ -34,14 +38,18 @@ public final class CharacterView extends View {
     @Override protected void onDraw(Canvas canvas){
         super.onDraw(canvas);canvas.save();canvas.scale(getWidth()/64f,getHeight()/88f);
         oval(canvas,0x55350c44,4,83,60,88);
-        paint.setColor(0xff332839);canvas.drawRoundRect(18,71,29,86,4,4,paint);canvas.drawRoundRect(35,71,46,86,4,4,paint);
-        paint.setColor(0xff795f89);canvas.drawRoundRect(17,48+pose[3],47,75,9,9,paint);
+        paint.setColor(avatar.shoes());canvas.drawRoundRect(18,71,29,86,4,4,paint);canvas.drawRoundRect(35,71,46,86,4,4,paint);
+        if(avatar==Avatar.NOVA)oval(canvas,avatar.hair(),9,7,55,68);
+        paint.setColor(avatar.shirt());canvas.drawRoundRect(17,48+pose[3],47,75,9,9,paint);
         line(canvas,0xff564363,3,21,56+pose[3],20,69);line(canvas,0xff564363,3,43,56+pose[3],44,69);
-        paint.setColor(0xffe9af7e);canvas.drawRoundRect(28,45,36,54,3,3,paint);
+        paint.setColor(avatar.skin());canvas.drawRoundRect(28,45,36,54,3,3,paint);
         canvas.save();canvas.rotate(pose[0],32,45);
-        oval(canvas,0xff3f2a2b,10,5,54,48);oval(canvas,0xffffc894,12,15,52,51);
-        oval(canvas,0xffdca372,10,29,16,38);oval(canvas,0xffdca372,48,29,54,38);
-        paint.setColor(0xff503334);path.reset();path.moveTo(12,28);path.cubicTo(8,13,18,4,33,8);path.cubicTo(41,3,55,9,52,25);path.cubicTo(44,23,37,14,31,16);path.cubicTo(25,24,19,16,12,28);canvas.drawPath(path,paint);
+        if(avatar==Avatar.ORBIT){paint.setColor(avatar.hair());path.reset();path.moveTo(11,24);path.lineTo(10,3);path.lineTo(25,13);path.close();path.moveTo(39,13);path.lineTo(54,3);path.lineTo(53,24);path.close();canvas.drawPath(path,paint);}
+        if(avatar==Avatar.LUMA){line(canvas,0xffb4d7ec,2,32,6,32,12);oval(canvas,0xffed8dde,29,2,35,8);paint.setColor(avatar.hair());canvas.drawRoundRect(10,13,54,51,9,9,paint);paint.setColor(avatar.skin());canvas.drawRoundRect(14,17,50,47,7,7,paint);}
+        else{oval(canvas,avatar.hair(),10,5,54,48);oval(canvas,avatar.skin(),12,15,52,51);}
+        oval(canvas,avatar.skin(),10,29,16,38);oval(canvas,avatar.skin(),48,29,54,38);
+        if(avatar!=Avatar.LUMA&&avatar!=Avatar.ORBIT){paint.setColor(avatar.hair());path.reset();path.moveTo(12,28);path.cubicTo(8,13,18,4,33,8);path.cubicTo(41,3,55,9,52,25);path.cubicTo(44,23,37,14,31,16);path.cubicTo(25,24,19,16,12,28);canvas.drawPath(path,paint);}
+        if(avatar==Avatar.ORBIT){oval(canvas,0xffffecd5,18,35,46,48);oval(canvas,0xff553c3b,29,35,35,39);}
         line(canvas,0xff785044,2,19,13,29,10);
         float browY=25+pose[1],slope=pose[2];
         line(canvas,0xff503334,2.1f,20,browY+slope,28,browY-slope);

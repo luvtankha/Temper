@@ -19,37 +19,98 @@ import dev.temper.android.accessibility.LayoutMetadata;
 import dev.temper.android.accessibility.ParseProbeState;
 import dev.temper.android.character.CharacterView;
 import dev.temper.android.character.Emotion;
+import dev.temper.android.character.Avatar;
+import dev.temper.android.character.AvatarSelection;
+import dev.temper.android.store.PlayStore;
+import dev.temper.android.store.PurchaseStore;
+import dev.temper.android.overlay.FloatingOverlayService;
+import dev.temper.android.inference.ModelFiles;
+import dev.temper.android.privacy.AnalysisConsent;
 
 /** Native onboarding, device account and explicit accessibility consent controls. */
-public final class MainActivity extends Activity {
+public final class MainActivity extends androidx.activity.ComponentActivity {
     private LinearLayout content;
     private final ExecutorService accountWorker=Executors.newSingleThreadExecutor();
     private DeviceAccountStore accountStore;
     private long pageVersion;
     private boolean consentScreen;
     private boolean liveScreen;
-    @Override public void onResume(){super.onResume();if(consentScreen)consent();else if(liveScreen)liveAnalysis();}
-    @Override public void onCreate(Bundle state){super.onCreate(state);accountStore=new DeviceAccountStore(this);home();}
-    @Override public void onDestroy(){accountWorker.shutdown();super.onDestroy();}
+    private boolean shopScreen,activationScreen,analysisScreen,downloading;
+    private PlayStore shop;
+    @Override public void onResume(){super.onResume();FloatingOverlayService.appVisible(true);FloatingOverlayService.checkoutVisible(false);if(BuildConfig.DEBUG&&getIntent().getBooleanExtra("debugOverlayFixture",false)&&Settings.canDrawOverlays(this)){getIntent().removeExtra("debugOverlayFixture");new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(()->{if(!isDestroyed()){FloatingOverlayService.start(this);startActivity(new Intent().setClassName(this,"dev.temper.android.DebugOverlayActivity"));}},300);}if(shopScreen){shop.restore();avatars();}else if(activationScreen)activation();else if(analysisScreen)privateAnalysis();else if(consentScreen)consent();else if(liveScreen)liveAnalysis();}
+    @Override public void onPause(){FloatingOverlayService.appVisible(false);super.onPause();}
+    @Override public void onCreate(Bundle state){super.onCreate(state);getOnBackPressedDispatcher().addCallback(this,new androidx.activity.OnBackPressedCallback(true){@Override public void handleOnBackPressed(){if(homeScreen)finish();else home();}});if(android.os.Build.VERSION.SDK_INT>=31)getWindow().setHideOverlayWindows(true);accountStore=new DeviceAccountStore(this);shop=new PlayStore(this,()->{FloatingOverlayService.changed();if(shopScreen)avatars();});home();}
+    @Override public void onDestroy(){accountWorker.shutdownNow();shop.close();super.onDestroy();}
+    private boolean homeScreen;
     private void page(String title){
-        pageVersion++;consentScreen=false;liveScreen=false;
+        pageVersion++;homeScreen=false;consentScreen=false;liveScreen=false;shopScreen=false;activationScreen=false;analysisScreen=false;
         ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);int pad=(int)(24*getResources().getDisplayMetrics().density);content.setPadding(pad,pad*2,pad,pad);content.setBackgroundColor(Color.rgb(21,16,25));scroll.addView(content);setContentView(scroll);text(title,28);
     }
     private void text(String value,int size){TextView text=new TextView(this);text.setText(value);text.setTextColor(Color.rgb(242,230,248));text.setTextSize(size);text.setPadding(0,12,0,12);content.addView(text);}
     private void button(String label,Runnable action){Button button=new Button(this);button.setText(label);button.setOnClickListener(v->action.run());content.addView(button);}
     private void home(){
-        page("TEMPER");text("A small companion for conversations",19);
-        text("TEMPER places a small character above the WhatsApp message box. Tap it for estimated language, conversation direction and one emotion graph. This USB demo supports selected fictional chats on the documented WhatsApp build. Estimates cannot establish another person's feelings.",16);
-        text("Test probes keep selected fictional chat text on this phone. Optional USB live analysis requires a separate opt-in to process the visible window on your connected computer.",16);
-        button("Accessibility and consent",this::consent);button("Live analysis (USB demo)",this::liveAnalysis);button("Device account",this::account);button("Settings",this::settings);button("Fictional preview",this::preview);
+        page("TEMPER");homeScreen=true;text("A small companion for conversations",19);
+        Avatar selected=new AvatarSelection(this,new PurchaseStore(this)::owned).selected();character(selected,Emotion.NEUTRAL);text(selected.displayName()+" is your companion",20);
+        text("Bring your companion to other apps. Tap for a compact emotional spectrum when a supported chat is being analyzed. Choose a new look with a one-time upgrade. The starter companion and overlay are free.",16);
+        button("Choose companion",this::avatars);button(FloatingOverlayService.running()?"Manage active overlay":"Activate overlay",this::activation);button("Analyze a chat privately",this::privateAnalysis);button("Settings",this::settings);button("Fictional preview",this::preview);
+        text("Language estimates can be wrong and do not reveal anyone's feelings. Automatic analysis currently supports the verified WhatsApp layout. Other apps can display the floating companion without automatic estimates.",14);
+        if(BuildConfig.DEBUG)button("Developer tools",()->{page("Developer tools");button("Accessibility and consent",this::consent);button("Live analysis (USB demo)",this::liveAnalysis);button("Device account",this::account);button("Back",this::home);});
+    }
+    private void character(Avatar avatar,Emotion emotion){CharacterView view=new CharacterView(this);view.setAvatar(avatar);view.setEmotion(emotion,false);float density=getResources().getDisplayMetrics().density;var size=new LinearLayout.LayoutParams(Math.round(64*density),Math.round(88*density));size.gravity=android.view.Gravity.CENTER_HORIZONTAL;content.addView(view,size);}
+    private void avatars(){
+        page("Choose your companion");shopScreen=true;text("One-time avatar upgrades",20);text("Every companion uses the same analysis. A purchase changes appearance and includes all eight expressions. Restore purchases with the same Google Play account.",16);text(shop.status(),14);
+        Avatar selected=new AvatarSelection(this,shop::owned).selected();
+        for(Avatar avatar:Avatar.values()){
+            text(avatar.displayName()+(selected==avatar?" • Selected":""),22);character(avatar,Emotion.HAPPY);text(avatar.description(),15);
+            button("Preview "+avatar.displayName(),()->avatarPreview(avatar));
+            if(shop.owned(avatar))button(selected==avatar?"Selected companion":"Use "+avatar.displayName(),()->{new AvatarSelection(this,shop::owned).select(avatar);FloatingOverlayService.changed();avatars();});
+            else{String price=shop.price(avatar);Button buy=new Button(this);buy.setText(price==null?"Available at store launch":"Buy "+avatar.displayName()+" • "+price);buy.setEnabled(shop.canBuy(avatar));buy.setOnClickListener(v->shop.buy(avatar));content.addView(buy);}
+        }
+        button("Restore purchases",shop::restore);button("Back",this::home);
+    }
+    private void avatarPreview(Avatar avatar){page(avatar.displayName()+" preview");text("All expressions are included with this companion",16);for(Emotion emotion:Emotion.values()){character(avatar,emotion);text(emotion.label(),16);}button("Back to companions",this::avatars);}
+    private void activation(){
+        page("Activate your companion");activationScreen=true;text("A small character over your apps",20);text("Allow TEMPER to appear over other apps. This floating companion reads no screen content. Drag it to a comfortable position and tap to open its compact panel. Some apps and secure Android screens can hide overlays.",16);
+        text("Overlay permission: "+(Settings.canDrawOverlays(this)?"Allowed":"Needed"),16);
+        if(!Settings.canDrawOverlays(this))button("Allow display over other apps",()->startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,android.net.Uri.parse("package:"+getPackageName()))));
+        else if(FloatingOverlayService.running())button("Stop companion and pause analysis",()->{FloatingOverlayService.stop(this);new ConsentStore(this).pause(true);activation();});
+        else button("Activate companion",()->{try{FloatingOverlayService.start(this);Toast.makeText(this,"Companion activated. Open a chat app to see it.",Toast.LENGTH_LONG).show();home();}catch(RuntimeException denied){Toast.makeText(this,"Android could not start the overlay. Check permission and retry.",Toast.LENGTH_LONG).show();}});
+        if(android.os.Build.VERSION.SDK_INT>=33&&checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED)button("Allow notification stop control",()->requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},41));
+        button("Set up private chat analysis",this::privateAnalysis);button("Back",this::home);
+    }
+    private void privateAnalysis(){
+        page("Private chat analysis");analysisScreen=true;ConsentStore base=new ConsentStore(this);
+        text("Analyze on this phone",21);text("TEMPER uses Android Accessibility to read up to eight fully visible plain-text messages, sent/received roles and the message-box position in one supported one-to-one WhatsApp chat you select. A conversation identifier and timestamps are read locally to keep the selected window consistent. It does not read drafts, contact lists or chat history, or send messages or tap chat controls.",16);
+        text("Chat text stays in memory on this phone and is never uploaded, saved or logged. Leaving the selected chat, pausing or revoking access clears the visible window. A model request already running may finish in memory; its result is discarded after you stop. You can also disable access in Android Accessibility settings.",16);
+        text("English model • Hinglish estimates can be unreliable. Bars show independent language scores, so they do not add to 100%. Direction uses changes in the other person's visible language; it may remain uncertain. Unsupported chat layouts show no estimate.",15);
+        text("Offline model: "+(ModelFiles.ready(this)?"Downloaded":"Download needed • 125 MB"),17);
+        if(!ModelFiles.ready(this)){
+            text("Download public model weights from Hugging Face once. The download shares your network address with the host and sends no messages. Allow about 150 MB of free space and keep this screen open.",14);
+            Button download=new Button(this);download.setText(downloading?"Downloading model…":"Download model for offline analysis");download.setEnabled(!downloading);content.addView(download);
+            TextView progress=new TextView(this);progress.setTextColor(Color.WHITE);content.addView(progress);long version=pageVersion;
+            download.setOnClickListener(v->{downloading=true;download.setEnabled(false);accountWorker.execute(()->{String failure=null;try{ModelFiles.download(this,percent->runOnUiThread(()->{if(!isDestroyed()&&version==pageVersion)progress.setText("Downloading: "+percent+"%");}),this::isDestroyed);}catch(Exception error){failure=error.getMessage();}String message=failure;runOnUiThread(()->{downloading=false;if(isDestroyed())return;if(message!=null)Toast.makeText(this,message,Toast.LENGTH_LONG).show();if(analysisScreen)privateAnalysis();});});});
+        }
+        boolean accepted=base.consented()&&base.preferences().getInt("onDeviceConsentVersion",0)==1;
+        if(!accepted){CheckBox agree=new CheckBox(this);agree.setText("I opt in to reading the selected visible chat for on-phone analysis");agree.setTextColor(Color.WHITE);content.addView(agree);Button save=new Button(this);save.setText("Save analysis consent");save.setEnabled(false);content.addView(save);agree.setOnCheckedChangeListener((v,checked)->save.setEnabled(checked));save.setOnClickListener(v->{AnalysisConsent.acceptLocal(this);privateAnalysis();});}
+        else{
+            text("Accessibility service: "+(serviceEnabled()?"Enabled":"Enable in Android settings"),16);button("Open Android Accessibility settings",()->startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
+            if(serviceEnabled()&&!TemperAccessibilityService.connected())text("If the service does not connect after an update, switch Use TEMPER off and on in Android settings.",14);
+            if(ModelFiles.ready(this)&&serviceEnabled()&&TemperAccessibilityService.connected())button("Analyze my next WhatsApp chat",()->{base.pause(false);if(dev.temper.android.accessibility.LiveCaptureState.arm(this)){Intent launch=getPackageManager().getLaunchIntentForPackage(ConsentStore.WHATSAPP);if(launch!=null)startActivity(launch);else Toast.makeText(this,"Open a supported WhatsApp chat within one minute",Toast.LENGTH_LONG).show();}});
+            button("Pause and clear analysis",()->{base.pause(true);privateAnalysis();});button("Revoke analysis access",()->{base.revoke();privateAnalysis();});
+        }
+        text("Session: "+dev.temper.android.accessibility.LiveCaptureState.status(),14);text("Verified automatic support: WhatsApp 2.26.37.73, portrait, at least three complete text turns with both roles. Replies, documents and reactions can make a layout unavailable. A floating companion is available in other apps.",14);button("Refresh status",this::privateAnalysis);button("Back",this::home);
     }
     private void settings(){
-        page("Settings");text("The selected-chat character overlay supports optional USB live analysis with separate consent. Pause stops inspection and clears the visible context.",16);
+        page("Settings");text("Pause stops chat inspection and clears the visible context. Stop companion also removes the floating overlay.",16);
         Switch pause=new Switch(this);pause.setText("Keep TEMPER paused");pause.setTextColor(Color.WHITE);pause.setChecked(getPreferences(MODE_PRIVATE).getBoolean("paused",true));
         pause.setOnCheckedChangeListener((view,checked)->new ConsentStore(this).pause(checked));content.addView(pause);
-        text("No chat text is persisted. USB live analysis sends only a bounded selected-chat window after its separate opt-in. Clearing inspection data pauses TEMPER and removes test metadata. Removing the USB connection also revokes live-processing consent; your device account stays available.",16);
+        text("No chat text is saved. On-phone analysis works offline after the model download. Paid avatars use Google Play; only purchase verification data goes to the store server.",16);
+        button("Stop companion",()->{FloatingOverlayService.stop(this);new ConsentStore(this).pause(true);settings();});
+        button("Choose companion",this::avatars);
+        button("Privacy and model information",()->{page("Privacy and model information");text("Chat text stays in memory on this phone for optional on-device analysis. It is never saved or uploaded. Leaving the selected chat, pausing or revoking clears the visible window. An inference already running may finish in memory; its result is discarded after stopping.",16);text("Google Play handles payment information. TEMPER sends signed purchase receipts to its HTTPS verification server and Google to validate purchases and restore ownership. A short-lived, signed ownership claim is cached locally. No chat data enters the store server. Model weights download from Hugging Face, whose servers receive ordinary connection metadata including your network address.",16);text("The model is SamLowe's English GoEmotions RoBERTa INT8 model, pinned to revision 90ee0c1c4796d370e68968687b8ba51fc11224f4 and verified with SHA-256. Its model card declares the MIT license. Hinglish, sarcasm and conversation direction are not validated for accuracy. Scores estimate language and cannot establish anyone's feelings.",16);text("Uninstall removes local model and settings. Google retains purchase history and can restore it with the same account. Android Accessibility settings can disable TEMPER at any time.",16);button("Back",this::settings);});
+        button("Remove offline model and pause",()->{new ConsentStore(this).pause(true);accountWorker.execute(()->{try{java.nio.file.Files.deleteIfExists(ModelFiles.file(this).toPath());}catch(Exception ignored){}runOnUiThread(()->{if(!isDestroyed())settings();});});});
         button("Clear inspection data and pause",()->{dev.temper.android.privacy.PrivacyControls.clearInspection(this);settings();});
-        button("Remove USB connection and pause",()->{try{dev.temper.android.privacy.PrivacyControls.removeConnection(this);settings();}catch(IllegalStateException failure){Toast.makeText(this,failure.getMessage(),Toast.LENGTH_LONG).show();}});
+        if(BuildConfig.DEBUG)button("Remove USB connection and pause",()->{try{dev.temper.android.privacy.PrivacyControls.removeConnection(this);settings();}catch(IllegalStateException failure){Toast.makeText(this,failure.getMessage(),Toast.LENGTH_LONG).show();}});
         button("Reset pause preference",()->{new ConsentStore(this).pause(true);settings();});button("Back",this::home);
     }
     private boolean serviceEnabled(){

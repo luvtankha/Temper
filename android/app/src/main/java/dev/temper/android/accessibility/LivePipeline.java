@@ -5,7 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 import dev.temper.android.adapters.*;
 import dev.temper.android.api.LocalAnalysisClient;
-import dev.temper.android.privacy.LiveConsent;
+import dev.temper.android.privacy.AnalysisConsent;
 import dev.temper.android.analytics.OverlaySummary;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -17,19 +17,20 @@ public final class LivePipeline {
     private final ThreadPoolExecutor worker=new ThreadPoolExecutor(1,1,0,TimeUnit.MILLISECONDS,new ArrayBlockingQueue<>(1),new ThreadPoolExecutor.DiscardOldestPolicy());
     private long revision;
     private String fingerprint;
+    private final dev.temper.android.inference.OnDeviceAnalysis onDevice=new dev.temper.android.inference.OnDeviceAnalysis();
     public LivePipeline(Context context){this.context=context.getApplicationContext();}
     public void submit(VisibleConversation snapshot,Consumer<LocalAnalysisClient.Result> result,Consumer<OverlaySummary> unavailable){
         String next=snapshot.conversationKey()+snapshot.turns().stream().map(VisibleConversation.Turn::key).reduce("",String::concat);if(next.equals(fingerprint))return;
-        fingerprint=next;long expected=++revision,generation=LiveCaptureState.generation();worker.getQueue().clear();unavailable.accept(OverlaySummary.analyzing());LiveCaptureState.status(generation,"Analyzing visible turns on this computer");
+        fingerprint=next;long expected=++revision,generation=LiveCaptureState.generation();worker.getQueue().clear();unavailable.accept(OverlaySummary.analyzing());LiveCaptureState.status(generation,AnalysisConsent.local(context)?"Analyzing privately on this phone":"Analyzing visible turns on this computer");
         worker.execute(()->{
             LocalAnalysisClient.Result analyzed=null;
-            try{if(LiveCaptureState.current(generation)&&LiveConsent.allowed(context))analyzed=new LocalAnalysisClient().analyze(context,snapshot,()->LiveCaptureState.current(generation));}catch(Exception ignored){}
+            try{if(LiveCaptureState.current(generation)&&AnalysisConsent.allowed(context))analyzed=AnalysisConsent.local(context)?onDevice.analyze(context,snapshot,()->LiveCaptureState.current(generation)&&AnalysisConsent.local(context)):new LocalAnalysisClient().analyze(context,snapshot,()->LiveCaptureState.current(generation));}catch(Exception|LinkageError ignored){}
             LocalAnalysisClient.Result completed=analyzed;
-            main.post(()->{if(expected!=revision||!LiveCaptureState.current(generation)||!LiveConsent.allowed(context))return;
-                if(completed!=null){LiveCaptureState.status(generation,completed.summary().available()?"Model analysis updated":"Analysis unavailable: more supported context or models needed");result.accept(completed);}else{fingerprint=null;LiveCaptureState.status(generation,"Analysis connection unavailable");unavailable.accept(OverlaySummary.connectionUnavailable());}
+            main.post(()->{if(expected!=revision||!LiveCaptureState.current(generation)||!AnalysisConsent.allowed(context))return;
+                if(completed!=null){LiveCaptureState.status(generation,completed.summary().available()?"Model analysis updated":"Analysis unavailable: more supported context or models needed");result.accept(completed);}else{fingerprint=null;LiveCaptureState.status(generation,"Analysis unavailable; check model setup");unavailable.accept(AnalysisConsent.local(context)?OverlaySummary.unavailable():OverlaySummary.connectionUnavailable());}
             });
         });
     }
-    public void clear(){revision++;fingerprint=null;worker.getQueue().clear();}
-    public void close(){clear();worker.shutdownNow();}
+    public void clear(){revision++;fingerprint=null;worker.getQueue().clear();if(!worker.isShutdown())worker.execute(onDevice::close);}
+    public void close(){clear();worker.getQueue().clear();worker.execute(onDevice::close);worker.shutdown();}
 }

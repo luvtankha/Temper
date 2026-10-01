@@ -1,3 +1,3 @@
 <resources>
-    <string name="accessibility_description">TEMPER estimates language and direction in supported visible WhatsApp chats. Enable after reviewing consent in TEMPER. A user-armed test probe inspects one chat layout without text. Later parsing is limited to eight visible test-chat turns kept in memory. No server transmission is permitted by this consent. Pause or revoke anytime. TEMPER never clicks or sends messages.</string>
+    <string name="accessibility_description">TEMPER reads up to eight visible plain-text messages, sent/received roles and composer position in one supported WhatsApp chat you select. Review and opt in inside TEMPER first. Analysis runs on this phone; chat text stays in memory and is never uploaded or saved. Leaving the selected chat, pausing or revoking clears the window. TEMPER never clicks chat controls or sends messages. Estimates can be wrong.</string>
 </resources>

@@ -2,6 +2,11 @@ spring:
   application:
     name: temper
 temper:
+  store:
+    enabled: ${TEMPER_STORE_ENABLED:false}
+    play-key: ${TEMPER_PLAY_LICENSE_KEY:}
+    signing-key: ${TEMPER_STORE_SIGNING_KEY:}
+    credentials: ${TEMPER_PLAY_CREDENTIALS:}
   overlay:
     token: ${TEMPER_OVERLAY_TOKEN:}
   conflict:

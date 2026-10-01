@@ -21,7 +21,9 @@ public final class OverlayManager {
     private boolean popupAttached;
     private long outsideDismissedAt;
     private static volatile String status="Hidden";
+    private final Context context;
     public OverlayManager(AccessibilityService service){
+        context=service;
         windows=(WindowManager)service.getSystemService(Context.WINDOW_SERVICE);character=new CharacterView(service);panel=new AnalyticsPanel(service);
         character.setOnClickListener(view->{if(popupAttached)dismissPopup();else if(android.os.SystemClock.elapsedRealtime()-outsideDismissedAt>350)showPopup();});
         panel.setOnTouchListener((view,event)->{if(event.getAction()==MotionEvent.ACTION_OUTSIDE){outsideDismissedAt=android.os.SystemClock.elapsedRealtime();dismissPopup();return true;}return false;});
@@ -33,6 +35,8 @@ public final class OverlayManager {
         try{
             this.viewport=viewport;this.density=density;
             Bounds target=OverlayPlacement.place(viewport,composer,density);
+            character.setAvatar(new dev.temper.android.character.AvatarSelection(context,new dev.temper.android.store.PurchaseStore(context)::owned).selected());
+            FloatingOverlayService.analysisVisible(true);
             if(attached&&target.equals(placement))return true;
             WindowManager.LayoutParams params=new WindowManager.LayoutParams(target.right()-target.left(),target.bottom()-target.top(),WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL|WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,PixelFormat.TRANSLUCENT);
             params.setTitle("TEMPER character");
@@ -54,5 +58,5 @@ public final class OverlayManager {
         }catch(RuntimeException unavailable){dismissPopup();}
     }
     private void dismissPopup(){if(popupAttached){try{windows.removeViewImmediate(panel);}catch(RuntimeException ignored){}popupAttached=false;}}
-    public void hide(){dismissPopup();if(attached){try{windows.removeViewImmediate(character);}catch(RuntimeException ignored){}attached=false;}placement=null;viewport=null;panel.bind(OverlaySummary.unavailable());character.setEmotion(Emotion.NEUTRAL,false);status="Hidden";}
+    public void hide(){dismissPopup();if(attached){try{windows.removeViewImmediate(character);}catch(RuntimeException ignored){}attached=false;}placement=null;viewport=null;panel.bind(OverlaySummary.unavailable());character.setEmotion(Emotion.NEUTRAL,false);status="Hidden";FloatingOverlayService.analysisVisible(false);}
 }

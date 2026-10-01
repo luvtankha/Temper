@@ -17,7 +17,9 @@ import android.widget.CheckBox;
 public final class FoundationSmokeInstrumentation extends Instrumentation {
     private boolean transportOnly;
     private boolean adapterOnly;
-    @Override public void onCreate(Bundle arguments){super.onCreate(arguments);transportOnly=arguments!=null&&"true".equals(arguments.getString("transportOnly"));adapterOnly=arguments!=null&&"true".equals(arguments.getString("adapterOnly"));start();}
+    private boolean consumerOnly;
+    private boolean overlayOnly;
+    @Override public void onCreate(Bundle arguments){super.onCreate(arguments);overlayOnly=arguments!=null&&"true".equals(arguments.getString("overlayOnly"));consumerOnly=arguments!=null&&"true".equals(arguments.getString("consumerOnly"));transportOnly=arguments!=null&&"true".equals(arguments.getString("transportOnly"));adapterOnly=arguments!=null&&"true".equals(arguments.getString("adapterOnly"));start();}
     private Activity launch(){return startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));}
     private View find(View root,String label){
         if(root instanceof TextView text&&label.contentEquals(text.getText()))return root;
@@ -40,6 +42,8 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
         Bundle result=new Bundle();
         java.util.Map<String,?> originalSetup=new java.util.HashMap<>(getTargetContext().getSharedPreferences("MainActivity",0).getAll());
         try{
+            if(overlayOnly){if(!android.provider.Settings.canDrawOverlays(getTargetContext()))throw new AssertionError("Overlay permission must be enabled by the user");Activity main=launch();runOnMainSync(()->dev.temper.android.overlay.FloatingOverlayService.start(main));waitForIdleSync();startActivitySync(new Intent(getTargetContext(),DebugOverlayActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));android.os.SystemClock.sleep(600);waitForIdleSync();if(!dev.temper.android.overlay.FloatingOverlayService.visible())throw new AssertionError("Floating character not attached to dummy screen");result.putString("stream","PASS: user-authorized floating service attached over our dummy input screen; no host chat read\n");finish(Activity.RESULT_OK,result);return;}
+            if(consumerOnly){runOnMainSync(()->{try{ConsumerChecks.run(getContext(),getTargetContext());}catch(Exception failure){throw new RuntimeException(failure);}});ConsumerChecks.modelChecks(getContext(),getTargetContext());Activity activity=launch();runOnMainSync(()->{click(activity,"Choose companion");if(find(activity.getWindow().getDecorView(),"Choose your companion")==null)throw new AssertionError("Shop missing");click(activity,"Preview Nova");if(find(activity.getWindow().getDecorView(),"Nova preview")==null)throw new AssertionError("Paid preview missing");click(activity,"Back to companions");click(activity,"Back");click(activity,"Analyze a chat privately");if(find(activity.getWindow().getDecorView(),"Private chat analysis")==null)throw new AssertionError("On-device setup missing");activity.finish();});restoreSetup(originalSetup);result.putString("stream","PASS: 4 avatars x 8 expressions, paid selection gate, independent tokenizer references, real INT8 phone model, remote speaker invariance, consumer home/shop/preview/private-analysis pages\n");finish(Activity.RESULT_OK,result);return;}
             if(adapterOnly){WhatsAppAdapterChecks.run(getContext(),getTargetContext());restoreSetup(originalSetup);result.putString("stream","PASS: observed WhatsApp layouts, date separators, clipped rows, roles, privacy and unsupported-content rejection\n");finish(Activity.RESULT_OK,result);return;}
             if(transportOnly){LiveTransportChecks.run(getTargetContext());restoreSetup(originalSetup);result.putString("stream","PASS: generated-text USB request reached actual model backend; stopped/revoked requests blocked; original consent restored\n");finish(Activity.RESULT_OK,result);return;}
             AdapterContractChecks.run();
@@ -71,7 +75,7 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
             runOnMainSync(()->{
                 click(second,"Settings");Switch pause=(Switch)find(second.getWindow().getDecorView(),"Keep TEMPER paused");if(pause==null||pause.isChecked())throw new AssertionError("Pause preference did not persist");
                 click(second,"Reset pause preference");Switch reset=(Switch)find(second.getWindow().getDecorView(),"Keep TEMPER paused");if(reset==null||!reset.isChecked())throw new AssertionError("Reset must restore paused");
-                click(second,"Back");click(second,"Accessibility and consent");
+                click(second,"Back");click(second,"Developer tools");click(second,"Accessibility and consent");
                 CheckBox agreement=(CheckBox)find(second.getWindow().getDecorView(),"I understand and opt in to selected WhatsApp test-chat inspection");
                 View accept=find(second.getWindow().getDecorView(),"Save consent");
                 if(agreement==null||agreement.isChecked()||accept==null||accept.isEnabled())throw new AssertionError("Consent must require unchecked opt-in");

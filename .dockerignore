@@ -1,0 +1,11 @@
+**/.git
+**/target
+**/build
+**/node_modules
+temp
+dist
+secrets
+**/*.onnx
+**/*.jks
+**/*.keystore
+.env*

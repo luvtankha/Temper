@@ -1,4 +1,10 @@
-# TEMPER — Android overlay demo0.39.0
+# TEMPER — Android companion app 0.41.0 (release candidate)
+
+Consumer flow: choose an avatar → activate a floating companion → optionally enable private on-phone estimates for a selected supported WhatsApp chat. Alex is free; Nova, Orbit and Luma are one-time Play purchases with eight expressions each. On-phone analysis downloads verified public model weights once and does not upload chat text.
+
+The app, Billing integration, purchase-verification backend and release tooling are implemented. Real sales/public publishing still require owner Play products, production HTTPS verification, signing credentials, publisher details and successful store/device tests. Premium purchases fail closed until configured. [Consumer setup and release gates](docs/release/CONSUMER-RELEASE.md), [privacy draft](docs/release/PRIVACY-POLICY.md), [store listing](docs/release/STORE-LISTING.md), [phase 41 evidence](docs/phases/PHASE-41-HANDOFF.md).
+
+The floating character works across ordinary apps; automatic analysis remains restricted to verified adapters. Universal automatic chat reading, Hinglish accuracy and store approval are not claimed. The former USB demo below is retained as developer history and an optional debug tool.
 
 TEMPER places a small original2D character above the bottom-left WhatsApp composer. Tap it for Current state, Direction and one eight-emotion bar graph. It estimates the remote participant's language and conversation trajectory from a bounded visible window. Estimates cannot establish someone's feelings.
 

@@ -2,6 +2,44 @@ plugins { id 'com.android.application' }
 android {
     namespace 'dev.temper.android'
     compileSdk 36
-    defaultConfig { applicationId 'dev.temper.android'; minSdk 26; targetSdk 36; versionCode 39; versionName '0.39.0'; testInstrumentationRunner 'dev.temper.android.FoundationSmokeInstrumentation' }
-    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    defaultConfig {
+        applicationId 'dev.temper.android'; minSdk 26; targetSdk 36; versionCode 41; versionName '0.41.0'
+        testInstrumentationRunner 'dev.temper.android.FoundationSmokeInstrumentation'
+        buildConfigField 'String', 'STORE_URL', '"' + (project.findProperty('temperStoreUrl') ?: '') + '"'
+        buildConfigField 'String', 'ENTITLEMENT_KEY', '"' + (project.findProperty('temperEntitlementKey') ?: '') + '"'
+    }
+    buildFeatures { buildConfig true }
+    buildTypes {
+        release {
+            minifyEnabled true; shrinkResources true; proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (System.getenv('TEMPER_KEYSTORE_FILE')) signingConfig signingConfigs.create('upload') {
+                storeFile file(System.getenv('TEMPER_KEYSTORE_FILE'))
+                storePassword System.getenv('TEMPER_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('TEMPER_KEYSTORE_ALIAS')
+                keyPassword System.getenv('TEMPER_KEYSTORE_KEY_PASSWORD')
+            }
+        }
+    }
+    testOptions { unitTests.returnDefaultValues = true }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17; coreLibraryDesugaringEnabled true }
+}
+dependencies {
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')
+    implementation 'androidx.activity:activity:1.11.0'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+    implementation 'com.android.billingclient:billing:9.1.0'
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.30.0'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20250517'
+    testImplementation 'com.microsoft.onnxruntime:onnxruntime:1.30.0'
+}
+tasks.register('verifyStoreConfig') {
+    doLast {
+        def url = new URI(project.findProperty('temperStoreUrl') ?: '')
+        if (url.scheme != 'https' || !url.host || (url.path && url.path != '/') || url.query || url.fragment || url.userInfo) throw new GradleException('Supply a production HTTPS store origin.')
+        def encoded = Base64.decoder.decode(project.findProperty('temperEntitlementKey') ?: '')
+        def publicKey = java.security.KeyFactory.getInstance('RSA').generatePublic(new java.security.spec.X509EncodedKeySpec(encoded))
+        if (publicKey.modulus.bitLength() < 2048) throw new GradleException('Entitlement RSA key must be at least 2048 bits.')
+        if (!System.getenv('TEMPER_KEYSTORE_FILE') || !System.getenv('TEMPER_KEYSTORE_PASSWORD') || !System.getenv('TEMPER_KEYSTORE_ALIAS') || !System.getenv('TEMPER_KEYSTORE_KEY_PASSWORD')) throw new GradleException('Supply the owner-managed upload signing configuration.')
+    }
 }

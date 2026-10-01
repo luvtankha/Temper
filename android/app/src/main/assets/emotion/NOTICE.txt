@@ -1,0 +1,35 @@
+On-device emotion model and tokenizer
+
+Source: SamLowe/roberta-base-go_emotions-onnx
+https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx
+Pinned revision: 90ee0c1c4796d370e68968687b8ba51fc11224f4
+The model card declares the MIT license. Tokenizer vocabulary/merges accompany
+that RoBERTa model. Model weights are downloaded only on user request; they are
+not bundled in this APK. This app has no affiliation with the model author.
+
+INT8 artifact size: 125397543 bytes
+SHA256: 0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958
+Vocab SHA256: ed19656ea1707df69134c4af35c8ceda2cc9860bf2c3495026153a133670ab5e
+Merges SHA256: 1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5
+
+English Reddit-trained model; live dialogue and Hinglish accuracy are not
+validated. Model scores are independent sigmoid outputs, not proof of emotion.
+The Android app maps annoyance to frustration and fear/nervousness to concern.
+Direction is a conservative tension-change proxy across remote turns.
+
+MIT License terms:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

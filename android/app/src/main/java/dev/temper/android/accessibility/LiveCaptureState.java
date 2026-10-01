@@ -2,7 +2,7 @@ package dev.temper.android.accessibility;
 
 import android.content.Context;
 import android.os.SystemClock;
-import dev.temper.android.privacy.LiveConsent;
+import dev.temper.android.privacy.AnalysisConsent;
 
 /** One selected conversation session; only opaque identity and fixed status text survive here. */
 public final class LiveCaptureState {
@@ -11,7 +11,7 @@ public final class LiveCaptureState {
     private static int window=-1;
     private static String status="Not started";
     private LiveCaptureState(){}
-    public static synchronized boolean arm(Context context){clear();if(!LiveConsent.allowed(context)){status="Live processing consent required";return false;}deadline=SystemClock.elapsedRealtime()+60_000;status="Waiting for the selected fictional chat";return true;}
+    public static synchronized boolean arm(Context context){clear();if(!AnalysisConsent.allowed(context)){status="Live processing consent required";return false;}deadline=SystemClock.elapsedRealtime()+60_000;status="Waiting for the selected chat";return true;}
     public static synchronized boolean armed(){if(deadline>0&&SystemClock.elapsedRealtime()>deadline){deadline=0;status="Selection expired; start again";}return deadline>0;}
     public static synchronized boolean active(){return conversation!=null;}
     public static synchronized long generation(){return generation;}

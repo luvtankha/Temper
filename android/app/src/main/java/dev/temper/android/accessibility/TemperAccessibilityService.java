@@ -12,7 +12,7 @@ import dev.temper.android.adapters.*;
 import java.util.UUID;
 import dev.temper.android.overlay.OverlayManager;
 import android.view.accessibility.AccessibilityWindowInfo;
-import dev.temper.android.privacy.LiveConsent;
+import dev.temper.android.privacy.AnalysisConsent;
 import dev.temper.android.analytics.OverlaySummary;
 import dev.temper.android.character.Emotion;
 
@@ -32,7 +32,7 @@ public final class TemperAccessibilityService extends AccessibilityService imple
         if(root==null){hideOverlay();return;}
         try{CharSequence pkg=root.getPackageName();if(pkg!=null&&ConsentStore.WHATSAPP.contentEquals(pkg)){
             if(LiveCaptureState.armed()||LiveCaptureState.active()){
-                if(!LiveConsent.allowed(this)||!supportedBuild()){LiveCaptureState.clear();hideOverlay();return;}
+                if(!AnalysisConsent.allowed(this)||!supportedBuild()){LiveCaptureState.clear();hideOverlay();return;}
                 ScreenObservation structure=new WhatsAppStructureProbe().read(root);var anchor=liveAdapter.anchor(structure);
                 if(anchor.status()!=VisibleConversation.Status.AVAILABLE){hideOverlay();return;}
                 boundWindow=root.getWindowId();overlay.show(structure.viewport(),anchor.composer(),getResources().getDisplayMetrics().density);
@@ -111,7 +111,7 @@ public final class TemperAccessibilityService extends AccessibilityService imple
         if(name==null||!consent.allows(name.toString())){clear();return;}
         if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED||type==AccessibilityEvent.TYPE_VIEW_SCROLLED){lastSupportedEvent=SystemClock.elapsedRealtime();if(ProbeState.armed()||ParseProbeState.armed()||LiveCaptureState.armed()||LiveCaptureState.active()||boundWindow>=0){handler.removeCallbacks(probe);handler.postDelayed(probe,type==AccessibilityEvent.TYPE_VIEW_SCROLLED?450:250);}}
     }
-    @Override public void onSharedPreferenceChanged(SharedPreferences preferences,String key){if(consent.paused()||!consent.consented()||("liveConsentVersion".equals(key)&&!LiveConsent.allowed(this))){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}if(!consent.consented())disableSelf();}
+    @Override public void onSharedPreferenceChanged(SharedPreferences preferences,String key){if(consent.paused()||!consent.consented()||(("liveConsentVersion".equals(key)||"onDeviceConsentVersion".equals(key)||"analysisMode".equals(key))&&!AnalysisConsent.allowed(this))){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}if(!consent.consented())disableSelf();}
     @Override public void onInterrupt(){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}
     @Override public void onDestroy(){connected=false;if(consent!=null)consent.preferences().unregisterOnSharedPreferenceChangeListener(this);hideOverlay();LiveCaptureState.clear();if(live!=null)live.close();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);super.onDestroy();}
 }

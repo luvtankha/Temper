@@ -1,0 +1,12 @@
+# Owner setup for TEMPER sales
+
+The owner does not yet have a Play developer account. App engineering and a testing APK are available, but real purchases and publication remain blocked by account/configuration and release testing.
+
+1. [Create a Google Play developer account](https://play.google.com/console/signup). As an independent developer, select Personal unless publishing through an actual registered organization. Complete Google's identity and Android-device verification yourself. Google currently charges a one-time US$25 registration fee. Review and accept Google's agreements yourself; do not send passwords, identity documents or payment details through this repository or chat. [Official registration instructions](https://support.google.com/googleplay/android-developer/answer/6112435?hl=en).
+2. Set the public developer name to Luv Tankha, support email to luvtankha06@gmail.com and optional support telephone to +91-8178185449. The store-listing draft includes the requested student developer credit. Account legal identity must match Google's verified details.
+3. Configure the payments profile/merchant setup within Play Console to sell in-app products. Complete tax and payout details directly with Google. [Payments profile guidance](https://support.google.com/googleplay/android-developer/answer/7161426).
+4. Create TEMPER as an Android app. Confirm the permanent application ID `dev.temper.android` before uploading the first signed bundle. Configure Play App Signing and retain a backed-up owner-controlled upload key.
+5. Follow [the consumer release guide](CONSUMER-RELEASE.md) to configure the three non-consumable products, verification service and signing. No genuine purchase can be tested or charged by this unconfigured candidate.
+6. Use internal testing and license testers to complete the purchase checklist. New personal accounts currently also need a closed test with at least 12 continuously opted-in testers for 14 days before applying for production access; approval is a separate step. [Official personal-account testing requirements](https://support.google.com/googleplay/android-developer/answer/14151465).
+
+Next owner milestone: the developer account and payments profile are verified. Then provide the account/configuration status so the app's real Play products and verification deployment can be completed. Private keys and service-account credentials belong in local secure configuration or a secret manager, not messages.
