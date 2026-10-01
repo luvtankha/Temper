@@ -18,5 +18,5 @@ public final class ConsentStore {
     private void clearProbe(){dev.temper.android.accessibility.ProbeState.clear();dev.temper.android.accessibility.LayoutMetadata.clear(context);dev.temper.android.accessibility.ParseProbeState.clear(context);dev.temper.android.accessibility.LiveCaptureState.clear();}
     public void accept(){clearProbe();preferences.edit().putInt("consentVersion",VERSION).putBoolean("paused",true).apply();}
     public void pause(boolean paused){preferences.edit().putBoolean("paused",paused).apply();if(paused)clearProbe();}
-    public void revoke(){preferences.edit().remove("consentVersion").remove("liveConsentVersion").remove("onDeviceConsentVersion").remove("analysisMode").putBoolean("paused",true).apply();clearProbe();}
+    public void revoke(){dev.temper.android.learning.LearningConsent.discard();preferences.edit().remove("consentVersion").remove("liveConsentVersion").remove("onDeviceConsentVersion").remove("analysisMode").putBoolean("paused",true).apply();clearProbe();}
 }

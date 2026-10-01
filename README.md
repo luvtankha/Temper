@@ -1,6 +1,6 @@
-# TEMPER — Android companion app 0.41.0 (release candidate)
+# TEMPER — Android companion app 0.42.0 (release candidate)
 
-Consumer flow: choose an avatar → activate a floating companion → optionally enable private on-phone estimates for a selected supported WhatsApp chat. Alex is free; Nova, Orbit and Luma are one-time Play purchases with eight expressions each. On-phone analysis downloads verified public model weights once and does not upload chat text.
+Consumer flow: choose an avatar → activate a floating companion → optionally enable private on-phone estimates for a selected supported WhatsApp chat. Alex is free; Nova, Orbit and Luma are one-time Play purchases with eight expressions each. Normal analysis downloads verified public model weights once and does not upload chat text. Optional [rated conversation feedback](docs/release/ANALYSIS-FEEDBACK.md) has separate permission and a manual reviewed-text submission; users only give a 1–5 quality rating. Collection remains disabled until an HTTPS service is configured. The existing model is unchanged; future candidates require independently reviewed data and held-out validation before an app release.
 
 The app, Billing integration, purchase-verification backend and release tooling are implemented. Real sales/public publishing still require owner Play products, production HTTPS verification, signing credentials, publisher details and successful store/device tests. Premium purchases fail closed until configured. [Consumer setup and release gates](docs/release/CONSUMER-RELEASE.md), [privacy draft](docs/release/PRIVACY-POLICY.md), [store listing](docs/release/STORE-LISTING.md), [phase 41 evidence](docs/phases/PHASE-41-HANDOFF.md).
 

@@ -20,7 +20,7 @@ public final class LiveCaptureState {
     public static synchronized boolean current(long value){return generation==value&&active();}
     public static synchronized void status(long value,String message){if(generation==value)status=message;}
     public static synchronized String status(){armed();return status;}
-    public static synchronized void clear(){generation++;deadline=0;conversation=null;window=-1;status="Stopped; visible context cleared";}
+    public static synchronized void clear(){dev.temper.android.learning.LearningConsent.SESSION.finish();generation++;deadline=0;conversation=null;window=-1;status="Stopped; visible context cleared";}
     public static synchronized void leave(){if(active())clear();}
     public static synchronized void unavailable(){clear();status="Analysis unavailable: supported plain-text chat required";}
 }

@@ -81,6 +81,10 @@ data/
 postgres-data/
 
 # AI models / caches
+__pycache__/
+*.pyc
+*.jsonl
+learning-data/
 models/cache/
 models/downloads/
 *.onnx

@@ -1,12 +1,22 @@
 plugins { id 'com.android.application' }
+def temperModel = [url: 'https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx/resolve/90ee0c1c4796d370e68968687b8ba51fc11224f4/onnx/model_quantized.onnx', sha256: '0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958', size: 125397543L]
+if (project.findProperty('temperEmotionModelSpec')) {
+    temperModel = new groovy.json.JsonSlurper().parse(file(project.property('temperEmotionModelSpec')))
+    def modelUrl = new URI(temperModel.url ?: '')
+    if (temperModel.approved != true || temperModel.outputLabels != 28 || temperModel.maxTokens != 128 || !(temperModel.sha256 ==~ /[a-f0-9]{64}/) || temperModel.size < 10000000 || temperModel.size > 200000000 || modelUrl.scheme != 'https' || !modelUrl.host || modelUrl.userInfo || modelUrl.fragment || temperModel.vocabSha256 != 'ed19656ea1707df69134c4af35c8ceda2cc9860bf2c3495026153a133670ab5e' || temperModel.mergesSha256 != '1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5') throw new GradleException('Use an evaluated, approved mobile model spec with the existing tokenizer.')
+}
 android {
     namespace 'dev.temper.android'
     compileSdk 36
     defaultConfig {
-        applicationId 'dev.temper.android'; minSdk 26; targetSdk 36; versionCode 41; versionName '0.41.0'
+        applicationId 'dev.temper.android'; minSdk 26; targetSdk 36; versionCode 42; versionName '0.42.0'
         testInstrumentationRunner 'dev.temper.android.FoundationSmokeInstrumentation'
         buildConfigField 'String', 'STORE_URL', '"' + (project.findProperty('temperStoreUrl') ?: '') + '"'
         buildConfigField 'String', 'ENTITLEMENT_KEY', '"' + (project.findProperty('temperEntitlementKey') ?: '') + '"'
+        buildConfigField 'String', 'LEARNING_URL', groovy.json.JsonOutput.toJson(project.findProperty('temperLearningUrl') ?: '')
+        buildConfigField 'String', 'EMOTION_URL', groovy.json.JsonOutput.toJson(temperModel.url)
+        buildConfigField 'String', 'EMOTION_HASH', groovy.json.JsonOutput.toJson(temperModel.sha256)
+        buildConfigField 'long', 'EMOTION_SIZE', temperModel.size.toString() + 'L'
     }
     buildFeatures { buildConfig true }
     buildTypes {

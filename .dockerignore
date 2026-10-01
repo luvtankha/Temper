@@ -9,3 +9,6 @@ secrets
 **/*.jks
 **/*.keystore
 .env*
+learning-data
+**/*.jsonl
+**/__pycache__

@@ -2,6 +2,10 @@ spring:
   application:
     name: temper
 temper:
+  learning:
+    enabled: ${TEMPER_LEARNING_ENABLED:false}
+    directory: ${TEMPER_LEARNING_DIRECTORY:}
+    key-file: ${TEMPER_LEARNING_KEY_FILE:}
   store:
     enabled: ${TEMPER_STORE_ENABLED:false}
     play-key: ${TEMPER_PLAY_LICENSE_KEY:}

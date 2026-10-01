@@ -9,18 +9,18 @@ import java.util.function.*;
 
 /** Pinned public weights; the downloader never receives any chat data. */
 public final class ModelFiles {
-    public static final long SIZE=125397543;
-    public static final String HASH="0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958";
-    public static final String URL="https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx/resolve/90ee0c1c4796d370e68968687b8ba51fc11224f4/onnx/model_quantized.onnx";
+    public static final long SIZE=dev.temper.android.BuildConfig.EMOTION_SIZE;
+    public static final String HASH=dev.temper.android.BuildConfig.EMOTION_HASH;
+    public static final String URL=dev.temper.android.BuildConfig.EMOTION_URL;
     private ModelFiles(){}
-    public static File file(Context context){return new File(context.getNoBackupFilesDir(),"emotion-int8.onnx");}
+    public static File file(Context context){return new File(context.getNoBackupFilesDir(),HASH.equals("0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958")?"emotion-int8.onnx":"emotion-"+HASH.substring(0,16)+".onnx");}
     public static boolean ready(Context context){File file=file(context);return file.isFile()&&file.length()==SIZE;}
     public static void verify(File file)throws Exception{
         if(file.length()!=SIZE)throw new IOException("Model size mismatch");MessageDigest digest=MessageDigest.getInstance("SHA-256");try(InputStream input=new FileInputStream(file)){byte[] buffer=new byte[65536];int count;while((count=input.read(buffer))!=-1)digest.update(buffer,0,count);}
         StringBuilder hex=new StringBuilder();for(byte value:digest.digest())hex.append(String.format(java.util.Locale.ROOT,"%02x",value&255));if(!HASH.contentEquals(hex))throw new IOException("Model checksum mismatch");
     }
     public static synchronized void download(Context context,IntConsumer progress,BooleanSupplier cancelled)throws Exception{
-        File target=file(context),partial=new File(context.getNoBackupFilesDir(),"emotion-int8.partial");if(context.getNoBackupFilesDir().getUsableSpace()<SIZE+16_000_000)throw new IOException("Free up at least 150 MB and retry");
+        File target=file(context),partial=new File(context.getNoBackupFilesDir(),"emotion-int8.partial");if(context.getNoBackupFilesDir().getUsableSpace()<SIZE+16_000_000)throw new IOException("Free up at least "+((SIZE+16_999_999)/1_000_000)+" MB and retry");
         HttpURLConnection connection=(HttpURLConnection)new java.net.URL(URL).openConnection();connection.setConnectTimeout(15000);connection.setReadTimeout(30000);
         try{
             if(connection.getResponseCode()!=200||!"https".equals(connection.getURL().getProtocol()))throw new IOException("Secure download unavailable");

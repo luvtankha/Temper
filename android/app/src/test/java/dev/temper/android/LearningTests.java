@@ -1,0 +1,15 @@
+package dev.temper.android;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import dev.temper.android.learning.LearningSession;
+import dev.temper.android.adapters.*;
+
+public class LearningTests {
+    private VisibleConversation snapshot(String conversation,int start){return new VisibleConversation(VisibleConversation.Status.AVAILABLE,conversation,List.of(new VisibleConversation.Turn(String.format("%064x",start),VisibleConversation.Role.LOCAL,"Fictional question?"),new VisibleConversation.Turn(String.format("%064x",start+1),VisibleConversation.Role.REMOTE,"I am happy with this fictional project."),new VisibleConversation.Turn(String.format("%064x",start+2),VisibleConversation.Role.LOCAL,"Okay.")),new ScreenObservation.Bounds(0,100,400,150));}
+    @Test public void noArmedSessionMeansNoCollectionAndLeaveStopsIt(){var clock=new AtomicLong();var session=new LearningSession(clock::get);session.observe(snapshot("a".repeat(64),1),new float[8]);assertNull(session.review());session.arm();session.observe(snapshot("a".repeat(64),1),new float[8]);session.observe(snapshot("a".repeat(64),1),new float[8]);assertEquals(3,session.review().turns().size());assertEquals(1,session.review().analyses().size());session.finish();session.observe(snapshot("a".repeat(64),5),new float[8]);assertEquals(3,session.review().turns().size());clock.set(LearningSession.TTL);assertNull(session.review());}
+    @Test public void differentConversationAndHardLimitsCannotExpandCapture(){var session=new LearningSession(()->0);session.arm();session.observe(snapshot("a".repeat(64),1),new float[8]);session.observe(snapshot("b".repeat(64),10),new float[8]);assertFalse(session.collecting());assertEquals(3,session.review().turns().size());session.arm();for(int i=0;i<100;i++)session.observe(snapshot("a".repeat(64),i*3+1),new float[8]);assertTrue(session.review().turns().size()<=64);assertTrue(session.review().analyses().size()<=32);assertFalse(session.collecting());session.discard();assertNull(session.review());}
+    @Test public void redactionAndContextUseOnlyTheActualVisibleSnapshot(){assertEquals("Call [redacted] or [redacted] [redacted] [redacted]",LearningSession.redact("Call +91-8178185449 or fake@example.invalid https://example.invalid @fictional"));var session=new LearningSession(()->0);session.arm();session.observe(snapshot("a".repeat(64),10),new float[8]);session.observe(snapshot("a".repeat(64),1),new float[8]);var analysis=session.review().analyses().get(1);assertEquals(List.of(3,4,5),analysis.context());assertEquals(4,analysis.target());float[] scores=analysis.scores();scores[0]=1;assertEquals(0,analysis.scores()[0],0);}
+}
