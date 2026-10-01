@@ -15,6 +15,7 @@ public final class OnnxTextClassifier implements TextClassifier, AutoCloseable {
     private final HuggingFaceTokenizer tokenizer;
     private final String modelId;
     private final List<String> labels;
+    private final boolean multiLabel;
 
     public OnnxTextClassifier(Path directory) throws Exception {
         this(directory, MODEL_ID, "252cf7048af94a1599019fef35961b2bd3d6db13df0b0a4b032b92baeae31939",
@@ -23,8 +24,13 @@ public final class OnnxTextClassifier implements TextClassifier, AutoCloseable {
 
     public OnnxTextClassifier(Path directory, String modelId, String modelHash, String tokenizerHash,
                               List<String> labels, int maxTokens) throws Exception {
+        this(directory, modelId, modelHash, tokenizerHash, labels, maxTokens, false);
+    }
+    public OnnxTextClassifier(Path directory, String modelId, String modelHash, String tokenizerHash,
+                              List<String> labels, int maxTokens, boolean multiLabel) throws Exception {
         this.modelId = Objects.requireNonNull(modelId);
         this.labels = List.copyOf(labels);
+        this.multiLabel = multiLabel;
         if (labels.isEmpty() || new HashSet<>(labels).size() != labels.size() || maxTokens < 4 || maxTokens > 512)
             throw new IllegalArgumentException("Invalid classifier specification");
         verify(directory.resolve("model.onnx"), modelHash);
@@ -62,12 +68,18 @@ public final class OnnxTextClassifier implements TextClassifier, AutoCloseable {
             double sum = 0;
             for (float logit : logits) sum += Math.exp(logit - max);
             Map<String, Double> probabilities = new LinkedHashMap<>();
-            for (int i = 0; i < logits.length; i++) probabilities.put(labels.get(i), Math.exp(logits[i] - max) / sum);
+            for (int i = 0; i < logits.length; i++) probabilities.put(labels.get(i), multiLabel?sigmoid(logits[i]):Math.exp(logits[i] - max) / sum);
             return new ClassificationResult(modelId, "MODEL", probabilities, encoding.getIds().length,
                 (System.nanoTime() - started) / 1_000_000);
         } catch (OrtException error) {
             throw new IllegalStateException("Local classifier inference failed", error);
         }
+    }
+
+    public static double sigmoid(double logit) {
+        if (!Double.isFinite(logit)) throw new IllegalArgumentException("Nonfinite logit");
+        if (logit >= 0) return 1 / (1 + Math.exp(-logit));
+        double exp = Math.exp(logit); return exp / (1 + exp);
     }
 
     private static void verify(Path file, String expected) throws Exception {

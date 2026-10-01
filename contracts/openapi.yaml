@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: TEMPER API
-  version: 0.5.0
-  description: Versioned REST. Optional local RoBERTa sentiment replaces signed and negative sentiment with HYBRID provenance; other signals remain ordinal fixtures. Model-free mode remains MOCK. Foundation diagnostic is isolated. Delivery is independent of analysis.
+  version: 0.6.0
+  description: Versioned REST. Optional local RoBERTa sentiment and dedicated GoEmotions classifier replace their fields with HYBRID provenance. Six required emotion channels include documented semantic proxies; optional surprise/neutral are retained. Other signals/conflict remain fixtures. Model-free mode MOCK. Delivery is independent of analysis.
 servers:
   - url: /api/v1
 paths:

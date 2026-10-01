@@ -1,6 +1,6 @@
-import {emotionLabels,type ConversationAnalysis,type EmotionSignals} from '../../models/analysis';
+import {emotionLabels,type ConversationAnalysis} from '../../models/analysis';
 import {participants} from '../../models/chat';
-type EmotionKey=keyof EmotionSignals;
+type EmotionKey=keyof typeof emotionLabels;
 const average=(values:number[])=>values.length?values.reduce((sum,value)=>sum+value,0)/values.length:null;
 export function speakerSummaries(snapshot:ConversationAnalysis) {
   const totalConflict=snapshot.messages.reduce((sum,row)=>sum+row.conflict,0);

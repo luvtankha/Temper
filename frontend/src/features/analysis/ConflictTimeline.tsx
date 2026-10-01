@@ -18,7 +18,7 @@ export function ConflictTimeline({compact=false,onNavigate}:{compact?:boolean;on
   function activate(messageId:string){focusMessage(messageId);navigate('/chat');onNavigate?.();}
   const markers=snapshot!.events.map(event=>({...event,color:event.kind==='recovery'?'#79c7b0':event.kind==='peak'?'#ff61bb':'#d8a8ee'}));
   return <section className={`conflict-timeline ${compact?'compact':''}`} aria-label="Emotional arc timeline">
-    <div className="timeline-heading"><div><span className="eyebrow">THE SHAPE OF THE CONVERSATION</span><h2>Emotional arc</h2></div><span className="pill">{snapshot?.mode==='MOCK'?'Mock fixtures':'Sentiment model · other fixtures'}</span></div>
+    <div className="timeline-heading"><div><span className="eyebrow">THE SHAPE OF THE CONVERSATION</span><h2>Emotional arc</h2></div><span className="pill">{snapshot?.mode==='MOCK'?'Mock fixtures':'Model + fixture signals'}</span></div>
     <p className="chart-caption">{compact?'Sentiment & conflict by message.':'Sentiment, anger, frustration, sarcasm and conflict by message.'} Select a point to return to its message.</p>
     <div className="timeline-plot" data-testid="timeline-plot"><ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={30}>
       <LineChart data={rows} margin={{top:18,right:12,left:0,bottom:6}} accessibilityLayer>

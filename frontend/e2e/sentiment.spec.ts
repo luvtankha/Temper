@@ -16,5 +16,5 @@ test('genuine backend sentiment reaches existing mobile analytics and inspector 
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
   await page.getByRole('button',{name:'Close message details'}).click();await page.getByRole('button',{name:'Open navigation',exact:true}).click();await page.getByRole('link',{name:'Full analysis',exact:true}).click();
   await expect(page.locator('.dashboard-mode-note')).toContainText('Model + fixture signals');
-  await expect(page.getByText('Sentiment model · other fixtures',{exact:true})).toBeVisible();
+  await expect(page.locator('.timeline-heading')).toContainText('Model + fixture signals');
 });
