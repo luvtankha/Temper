@@ -42,7 +42,7 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
             ProbeChecks.run(getTargetContext());
             WhatsAppAdapterChecks.run(getContext(),getTargetContext());
             OverlayPlacementChecks.run();
-            runOnMainSync(()->{try{CharacterChecks.run(getTargetContext());}catch(Exception failure){throw new RuntimeException(failure);}});
+            runOnMainSync(()->{try{CharacterChecks.run(getTargetContext());AnalyticsChecks.run(getTargetContext());}catch(Exception failure){throw new RuntimeException(failure);}});
             getTargetContext().getSharedPreferences("MainActivity",0).edit().clear().commit();
             Activity first=launch();
             runOnMainSync(()->{

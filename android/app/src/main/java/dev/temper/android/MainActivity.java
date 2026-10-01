@@ -98,6 +98,11 @@ public final class MainActivity extends Activity {
         Spinner chooser=new Spinner(this);String[] labels=java.util.Arrays.stream(Emotion.values()).map(Emotion::label).toArray(String[]::new);
         chooser.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));
         chooser.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){public void onItemSelected(AdapterView<?> parent,android.view.View view,int position,long id){live.setEmotion(Emotion.values()[position],true);}public void onNothingSelected(AdapterView<?> parent){}});content.addView(chooser);
+        button("Preview analytics box",()->{
+            dev.temper.android.analytics.AnalyticsPanel panel=new dev.temper.android.analytics.AnalyticsPanel(this);
+            panel.bind(new dev.temper.android.analytics.OverlaySummary("Fictional concern","Fictional tension rising",new float[]{.1f,.05f,.65f,.1f,.1f,.25f,.05f,.05f},true));
+            PopupWindow popup=new PopupWindow(panel,Math.round(280*density),-2,true);popup.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));popup.setOutsideTouchable(true);popup.setElevation(8*density);popup.showAtLocation(content,android.view.Gravity.CENTER,0,0);
+        });
         for(int row=0;row<4;row++){
             LinearLayout pair=new LinearLayout(this);pair.setGravity(android.view.Gravity.CENTER);content.addView(pair);
             for(int col=0;col<2;col++){
