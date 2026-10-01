@@ -2,6 +2,8 @@ spring:
   application:
     name: temper
 temper:
+  toxicity:
+    model-dir: ${TEMPER_TOXICITY_MODEL_DIR:}
   sarcasm:
     model-dir: ${TEMPER_SARCASM_MODEL_DIR:}
   emotion:

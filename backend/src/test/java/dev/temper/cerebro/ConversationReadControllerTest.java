@@ -10,7 +10,7 @@ import dev.temper.cerebro.common.DemoSeed;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties={"temper.sentiment.model-dir=","temper.foundation.model-dir=","temper.emotion.model-dir=","temper.sarcasm.model-dir="})
+@SpringBootTest(properties={"temper.toxicity.model-dir=","temper.sentiment.model-dir=","temper.foundation.model-dir=","temper.emotion.model-dir=","temper.sarcasm.model-dir="})
 @AutoConfigureMockMvc
 class ConversationReadControllerTest {
     @Autowired MockMvc mvc;

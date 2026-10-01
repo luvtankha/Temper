@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.*;
 @EnabledIfEnvironmentVariable(named="TEMPER_SARCASM_MODEL_DIR",matches=".+")
-@SpringBootTest(properties={"temper.sentiment.model-dir=","temper.emotion.model-dir=","temper.foundation.model-dir="})
+@SpringBootTest(properties={"temper.toxicity.model-dir=","temper.sentiment.model-dir=","temper.emotion.model-dir=","temper.foundation.model-dir="})
 class SarcasmIntegrationTest {
     @Autowired SarcasmModel model;@Autowired AnalysisService analysis;@Autowired ConversationService conversations;
     @Test void actualNativeSarcasmMatchesOriginalReferenceAndLiteralContrast() {

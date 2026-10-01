@@ -3,6 +3,7 @@ package dev.temper.cerebro.analysis.service;
 import dev.temper.cerebro.ai.SentimentModel;
 import dev.temper.cerebro.ai.EmotionModel;
 import dev.temper.cerebro.ai.SarcasmModel;
+import dev.temper.cerebro.ai.ToxicityModel;
 import dev.temper.cerebro.analysis.domain.*;
 import dev.temper.cerebro.chat.domain.Message;
 import dev.temper.cerebro.conversation.context.ContextWindow;
@@ -17,8 +18,9 @@ public class HybridEmotionAnalysisService implements EmotionAnalysisService {
     private final SentimentModel sentiment;
     private final EmotionModel emotion;
     private final SarcasmModel sarcasm;
-    public HybridEmotionAnalysisService(MockEmotionAnalysisService fixtures, SentimentModel sentiment, EmotionModel emotion, SarcasmModel sarcasm) {
-        this.fixtures = fixtures; this.sentiment = sentiment; this.emotion=emotion; this.sarcasm=sarcasm;
+    private final ToxicityModel toxicity;
+    public HybridEmotionAnalysisService(MockEmotionAnalysisService fixtures, SentimentModel sentiment, EmotionModel emotion, SarcasmModel sarcasm, ToxicityModel toxicity) {
+        this.fixtures = fixtures; this.sentiment = sentiment; this.emotion=emotion; this.sarcasm=sarcasm; this.toxicity=toxicity;
     }
     public static String input(ContextWindow context) {
         // Current first preserves its beginning if token truncation occurs. Bound history individually.
@@ -30,7 +32,7 @@ public class HybridEmotionAnalysisService implements EmotionAnalysisService {
     }
     @Override public MessageAnalysis analyze(Message message, ContextWindow context) {
         var baseline = fixtures.analyze(message, context);
-        if (!sentiment.available()&&!emotion.available()&&!sarcasm.available()) return baseline;
+        if (!sentiment.available()&&!emotion.available()&&!sarcasm.available()&&!toxicity.available()) return baseline;
         var signals = new LinkedHashMap<>(baseline.signals());
         var emotions=baseline.emotions(); double signed=baseline.sentiment();
         var evidence=new ArrayList<MessageAnalysis.Evidence>();
@@ -51,8 +53,17 @@ public class HybridEmotionAnalysisService implements EmotionAnalysisService {
             evidence.add(new MessageAnalysis.Evidence(MessageAnalysis.EvidenceSource.MODEL,"Sarcasm classifier",
                 result.modelId()+"; dedicated probabilities "+result.probabilities()+"; "+result.tokenCount()+" tokens. Uses current text and "+context.previous().size()+" preceding speaker-tagged turns, independently of sentiment. Fine-tuning domain is not dialogue-validated; this is an uncertain linguistic estimate."));
         }
+        if(toxicity.available()) {
+            var result=toxicity.classify(input(context));var scores=result.probabilities();
+            signals.put("toxicity",scores.get("toxic"));signals.put("insult",scores.get("insult"));signals.put("threat",scores.get("threat"));
+            signals.put("hostility",Math.max(scores.get("insult"),scores.get("threat")));
+            evidence.add(new MessageAnalysis.Evidence(MessageAnalysis.EvidenceSource.MODEL,"Toxicity classifier",
+                result.modelId()+"; raw independent sigmoid probabilities "+scores+"; "+result.tokenCount()+" tokens. Dedicated toxicity model independent of sentiment and sarcasm; supplied current text and causal history. Pinned Jigsaw Wikipedia-comment checkpoint, not dialogue-validated; quoted insults and identity terms can cause false positives."));
+            evidence.add(new MessageAnalysis.Evidence(MessageAnalysis.EvidenceSource.HEURISTIC,"Hostility proxy",
+                "Estimated hostility = max(insult, threat) from the dedicated model. This explicit engineering proxy is not a separately trained hostility class or a finding about intention."));
+        }
         evidence.add(new MessageAnalysis.Evidence(MessageAnalysis.EvidenceSource.MOCK,"Remaining fixture signals",
-            (sentiment.available()?"":"Signed and negative sentiment, ")+(emotion.available()?"":"Emotions, ")+(sarcasm.available()?"":"Sarcasm, ")+"toxicity, passive aggression, blame, defensiveness, conflict and timeline markers still use ordinal fixtures. See MODEL evidence for the fields replaced by actual inference."));
+            (sentiment.available()?"":"Signed and negative sentiment, ")+(emotion.available()?"":"Emotions, ")+(sarcasm.available()?"":"Sarcasm, ")+(toxicity.available()?"":"Toxicity, ")+"passive aggression, blame, defensiveness, conflict and timeline markers still use ordinal fixtures. See MODEL evidence for the fields replaced by actual inference."));
         return new MessageAnalysis(baseline.messageId(), baseline.speakerId(), baseline.sequence(), AnalysisMode.HYBRID,
             emotions, signals, signed, baseline.conflict(), baseline.contextMessageIds(),
             "Configured local classifiers estimate language signals using current text and causal history. Source evidence identifies model outputs, semantic proxies and remaining fixtures; these estimates do not establish the speaker’s internal feelings.", evidence, baseline.analyzedAt());

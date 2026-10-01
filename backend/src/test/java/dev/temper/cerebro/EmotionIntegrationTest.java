@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.*;
 @EnabledIfEnvironmentVariable(named="TEMPER_EMOTION_MODEL_DIR",matches=".+")
-@SpringBootTest(properties="temper.sarcasm.model-dir=")
+@SpringBootTest(properties={"temper.sarcasm.model-dir=","temper.toxicity.model-dir="})
 class EmotionIntegrationTest {
     @Autowired EmotionModel model;@Autowired AnalysisService analysis;@Autowired ConversationService conversations;
     @Test void realIndependentClassifierRespondsToTextAndRetainsAll28Labels() {

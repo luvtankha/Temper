@@ -14,7 +14,7 @@ import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import dev.temper.cerebro.conversation.service.ConversationService;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,properties={"temper.sentiment.model-dir=","temper.foundation.model-dir=","temper.emotion.model-dir=","temper.sarcasm.model-dir="})
+@SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT,properties={"temper.toxicity.model-dir=","temper.sentiment.model-dir=","temper.foundation.model-dir=","temper.emotion.model-dir=","temper.sarcasm.model-dir="})
 class WebSocketChatTest {
     @LocalServerPort int port;@Autowired ConversationService conversations;@Autowired ObjectMapper json;
     StompSession connect(WebSocketStompClient client,UUID room,String speaker) throws Exception {
