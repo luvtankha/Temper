@@ -1,5 +1,7 @@
 # Phase16 GoEmotions
 
+Overlay-specific Phase40 update: per-turn classifier input is now only the current speaker's normalized message, preventing cross-speaker attribution. The legacy web path retains the history serialization described below. See ../demo/EMOTIONAL-SPECTRUM-CHECK.md for25 actual dummy endpoint checks: simple English/mixed-Hinglish examples work, but Hindi-heavy Roman Hindi and sarcasm are not reliably understood. No model weights or probability calibration changed.
+
 Publisher/ONNX model author: SamLowe; https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx and https://huggingface.co/SamLowe/roberta-base-go_emotions . Pinned export revision90ee0c1c4796d370e68968687b8ba51fc11224f4, MIT declared in upstream card. Download preserves original README/license declaration, attribution and all notices with the cache. No weights redistributed in Git. This author-provided full-precision ONNX matches its documented RoBERTa architecture and input signature; no unlicensed third-party export is used.
 
 ONNX499MB SHA2563bf605adfa0e59ae36723f1136d37865acb0ec4ded7831f7f7f5231eb032d60a matches publisher LFS; tokenizerSHA63735ef382776e869c0ee50f8e999ab19111bb794f8a451559e611077dfe7f25. Seven artifact hashes verified by scripts/download-emotion.ps1. Runtime spec/ordered labels in backend/resources/models/emotion.json. Config verifies problem_type multi_label_classification and28ordered labels, RoBERTa12layers/768hidden/50265byte-BPE vocabulary; matching tokenizer from same onnx directory.

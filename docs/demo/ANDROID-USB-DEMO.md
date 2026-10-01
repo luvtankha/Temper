@@ -72,6 +72,8 @@ Use a dedicated willing test participant. Create exchanges manually in a fiction
 
 No exact label/percentage is promised. Remote spectrum and direction may differ because they summarize different evidence. Scores do not prove feelings; models/lexical indicators are not validated for every language/dialogue style.
 
+Dummy spectrum checks and the Phase40 speaker-attribution fix are documented in docs/demo/EMOTIONAL-SPECTRUM-CHECK.md. English/mixed-Hinglish smoke examples passed; Hindi-heavy Roman Hindi and sarcasm remain unreliable. Run scripts/evaluate-overlay-spectrum.ps1 against the configured local backend to reproduce the generated examples. The Android APK remains0.39.0; this update changes its local backend.
+
 ## Troubleshooting and cleanup
 
 - No character: check inspection consent, Resume, connected service, exact build and Start selected fictional chat. Selection arm expires after one minute.

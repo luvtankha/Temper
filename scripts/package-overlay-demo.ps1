@@ -15,7 +15,7 @@ function Copy-TemperFile([string]$Source,[string]$Relative) {
 Copy-TemperFile $temperApk 'TEMPER.apk'
 Copy-TemperFile $temperJar 'backend\target\cerebro-0.0.1-SNAPSHOT.jar'
 Copy-TemperFile (Join-Path $temperRoot 'docs\demo\ANDROID-USB-DEMO.md') 'README.md'
-foreach ($temperScript in @('start-overlay-backend.ps1','configure-overlay-usb.ps1','download-foundation.ps1','download-sentiment.ps1','download-emotion.ps1','download-sarcasm.ps1','download-toxicity.ps1','export-sentiment.py','export-sarcasm.py','export-toxicity.py','model-export-requirements.txt')) {
+foreach ($temperScript in @('start-overlay-backend.ps1','configure-overlay-usb.ps1','evaluate-overlay-spectrum.ps1','download-foundation.ps1','download-sentiment.ps1','download-emotion.ps1','download-sarcasm.ps1','download-toxicity.ps1','export-sentiment.py','export-sarcasm.py','export-toxicity.py','model-export-requirements.txt')) {
     Copy-TemperFile (Join-Path $PSScriptRoot $temperScript) ('scripts\' + $temperScript)
 }
 foreach ($temperDoc in @('android-privacy.md','live-overlay-pipeline.md','whatsapp-adapter.md','android-character.md','adapter-extension.md')) {
@@ -30,10 +30,12 @@ foreach ($temperSpec in @('sentiment.json','emotion.json','sarcasm.json','toxici
     $temperRelative = 'backend\src\main\resources\models\' + $temperSpec
     Copy-TemperFile (Join-Path $temperRoot $temperRelative) $temperRelative
 }
-foreach ($temperPhase in @(38,39)) {
+foreach ($temperPhase in @(38,39,40)) {
     $temperRelative = 'docs\phases\PHASE-' + $temperPhase + '-HANDOFF.md'
     Copy-TemperFile (Join-Path $temperRoot $temperRelative) $temperRelative
 }
+Copy-TemperFile (Join-Path $temperRoot 'backend\src\test\resources\overlay-chat-styles.json') 'backend\src\test\resources\overlay-chat-styles.json'
+Copy-TemperFile (Join-Path $temperRoot 'docs\demo\EMOTIONAL-SPECTRUM-CHECK.md') 'docs\demo\EMOTIONAL-SPECTRUM-CHECK.md'
 $temperManifest = foreach ($temperFile in Get-ChildItem -LiteralPath $temperStage -File -Recurse) {
     '{0}  {1}' -f (Get-FileHash -LiteralPath $temperFile.FullName -Algorithm SHA256).Hash.ToLowerInvariant(),([IO.Path]::GetRelativePath($temperStage,$temperFile.FullName).Replace('\','/'))
 }

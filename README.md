@@ -14,6 +14,8 @@ The Android USB demo is the primary product. Phases00–19 and working backend/m
 
 The real model graph, scrolling refresh, keyboard movement and popup input usability were confirmed on the test phone. Persistent unsupported layout ends the session; start again after choosing a supported text area. Android service rebind can be needed after APK updates/tests.
 
+Phase40 fixes cross-speaker contamination in the live spectrum. [Dummy English/Hinglish results and model limits](docs/demo/EMOTIONAL-SPECTRUM-CHECK.md) cover25 generated endpoint checks and the reproducible evaluation script. Hindi-heavy Roman Hindi and sarcasm remain unreliable; dummy agreement is not measured live-human accuracy.
+
 ## Run
 
 Install dist/TEMPER-0.39.0.apk after packaging, or android/app/build/outputs/apk/debug/app-debug.apk after a source build. Connect/authorize USB debugging. PowerShell7:

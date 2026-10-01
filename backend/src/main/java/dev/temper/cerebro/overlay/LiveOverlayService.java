@@ -34,7 +34,7 @@ public final class LiveOverlayService {
             long sequence=context.size()+1;UUID id=UUID.randomUUID();String role=visible.role();
             var current=new ContextWindow.Turn(id,new ContextWindow.Speaker(role,role,User.AvatarVariant.MALE),visible.text(),sequence,now);
             var window=new ContextWindow(conversation,current,context.subList(Math.max(0,context.size()-5),context.size()));
-            var analysis=engine.analyze(new Message(id,conversation,role,visible.text(),now,sequence),window);
+            var analysis=engine.analyzeVisibleTurn(new Message(id,conversation,role,visible.text(),now,sequence),window);
             var conflict=conflicts.calculate(analysis,history);
             // Real input must never become fixture-derived presentation.
             if(conflict.fixtureInputs())return unavailable();
