@@ -27,6 +27,7 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
         Bundle result=new Bundle();
         try{
             AdapterContractChecks.run();
+            ProbeChecks.run(getTargetContext());
             getTargetContext().getSharedPreferences("MainActivity",0).edit().clear().commit();
             Activity first=launch();
             runOnMainSync(()->{
@@ -39,7 +40,7 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
                 click(second,"Settings");Switch pause=(Switch)find(second.getWindow().getDecorView(),"Keep TEMPER paused");if(pause==null||pause.isChecked())throw new AssertionError("Pause preference did not persist");
                 click(second,"Reset pause preference");Switch reset=(Switch)find(second.getWindow().getDecorView(),"Keep TEMPER paused");if(reset==null||!reset.isChecked())throw new AssertionError("Reset must restore paused");
                 click(second,"Back");click(second,"Accessibility and consent");
-                CheckBox agreement=(CheckBox)find(second.getWindow().getDecorView(),"I understand and opt in to WhatsApp package detection");
+                CheckBox agreement=(CheckBox)find(second.getWindow().getDecorView(),"I understand and opt in to selected WhatsApp test-chat inspection");
                 View accept=find(second.getWindow().getDecorView(),"Save consent");
                 if(agreement==null||agreement.isChecked()||accept==null||accept.isEnabled())throw new AssertionError("Consent must require unchecked opt-in");
                 agreement.performClick();if(!accept.isEnabled())throw new AssertionError("Opt-in did not enable consent button");
@@ -71,7 +72,7 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
                 String damaged=blob.substring(0,blob.length()-4)+"AAAA";getTargetContext().getSharedPreferences(testStorage,0).edit().putString("encrypted",damaged).commit();
                 try{accounts.session();throw new AssertionError("Modified ciphertext accepted");}catch(java.security.GeneralSecurityException expected){}
             }finally{getTargetContext().getSharedPreferences(testStorage,0).edit().clear().commit();KeyStore keyStore=KeyStore.getInstance("AndroidKeyStore");keyStore.load(null);keyStore.deleteEntry("dev.temper.auth."+testStorage);}
-            result.putString("stream","PASS: adapter contract bounds/roles/immutability/failure/redaction; foundation UI/pause/reset; consent UI opt-in/resume/revoke and package/version gates; Keystore encrypted account, password rejection, sign-in/out, persistent session and tamper rejection\n");finish(Activity.RESULT_OK,result);
+            result.putString("stream","PASS: one-shot probe/composer gate/text-free export/pause cleanup; adapter contract bounds/roles/immutability/failure/redaction; foundation UI/pause/reset; consent UI opt-in/resume/revoke and package/version gates; Keystore encrypted account, password rejection, sign-in/out, persistent session and tamper rejection\n");finish(Activity.RESULT_OK,result);
         }catch(Throwable failure){result.putString("stream","FAIL: "+failure.getClass().getSimpleName()+": "+failure.getMessage());finish(Activity.RESULT_CANCELED,result);}
     }
 }

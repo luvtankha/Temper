@@ -52,3 +52,5 @@ Updated Phase25 device-only account/session support builds, passes lint and pass
 Updated Phase26 consent/accessibility skeleton builds, passes lint and passes actual-device consent/pause/package-policy tests. User confirmed actual system activation and real WhatsApp package detection. Current build detects package metadata only, with no chat extraction or transmission. Setup: docs/architecture/android-accessibility.md.
 
 Updated Phase27 bounded pure adapter contract and isolated fake adapter pass actual-device role/composer/immutability/redaction/failure checks. No real WhatsApp parsing is claimed yet.
+
+Phase28 is in progress: a user-armed text-free WhatsApp layout probe is installed and its one-shot/composer/export/cleanup device tests pass. Actual layout metadata from a fictional test chat is required before defining message/role parsing; no WhatsApp text extraction is implemented yet. Version2 consent requires a fresh opt-in. Calibration instructions: docs/architecture/android-accessibility.md.
