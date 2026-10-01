@@ -22,6 +22,7 @@ public final class TemperAccessibilityService extends AccessibilityService imple
     private OverlayManager overlay;
     private int boundWindow=-1;
     private LivePipeline live;
+    private final LayoutRecovery recovery=new LayoutRecovery();
     private final WhatsAppAdapter liveAdapter=new WhatsAppAdapter(UUID.randomUUID().toString());
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Runnable probe=()->{
@@ -39,7 +40,8 @@ public final class TemperAccessibilityService extends AccessibilityService imple
                     var dedup=new VisibleSnapshotDeduplicator();dedup.accept(snapshot);var second=new WhatsAppTextReader().read(root,liveAdapter);
                     if(second.status()!=VisibleConversation.Status.AVAILABLE||dedup.accept(second))snapshot=VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT);
                 }
-                if(snapshot.status()!=VisibleConversation.Status.AVAILABLE){live.clear();LiveCaptureState.unavailable();unavailable();return;}
+                if(snapshot.status()!=VisibleConversation.Status.AVAILABLE){unreadableLayout();return;}
+                recovery.reset();
                 if(!LiveCaptureState.bind(snapshot.conversationKey(),root.getWindowId())){hideOverlay();return;}
                 live.submit(snapshot,result->{overlay.setEmotion(result.emotion());overlay.setSummary(result.summary());},this::unavailable);
             }else if(ParseProbeState.armed()){
@@ -66,11 +68,22 @@ public final class TemperAccessibilityService extends AccessibilityService imple
                 if(plan.status()==VisibleConversation.Status.AVAILABLE)overlay.show(structure.viewport(),plan.composer(),getResources().getDisplayMetrics().density);else hideOverlay();
             }else hideOverlay();
         }}
-        catch(IllegalArgumentException unavailable){hideOverlay();if(ParseProbeState.armed())ParseProbeState.save(this,VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT),false);else if(ProbeState.armed())ProbeState.fail();}
+        catch(IllegalArgumentException unavailable){if(LiveCaptureState.armed()||LiveCaptureState.active())unreadableLayout();else{hideOverlay();if(ParseProbeState.armed())ParseProbeState.save(this,VisibleConversation.unavailable(VisibleConversation.Status.UNSUPPORTED_LAYOUT),false);else if(ProbeState.armed())ProbeState.fail();}}
         finally{root.recycle();}
     };
     private void unavailable(){overlay.setEmotion(Emotion.NEUTRAL);overlay.setSummary(OverlaySummary.unavailable());}
-    private void hideOverlay(){if(overlay!=null)overlay.hide();if(live!=null)live.clear();LiveCaptureState.leave();boundWindow=-1;ParseProbeState.forgetContent();}
+    private void unreadableLayout(){
+        live.clear();overlay.setEmotion(Emotion.NEUTRAL);
+        if(recovery.retry(SystemClock.elapsedRealtime())){
+            LiveCaptureState.status(LiveCaptureState.generation(),"Waiting for chat layout to settle");
+            overlay.setSummary(new OverlaySummary("Chat layout changing","Waiting for readable text",new float[8],false));
+            handler.removeCallbacks(probe);handler.postDelayed(probe,400);
+        }else{
+            LiveCaptureState.unavailable();recovery.reset();
+            overlay.setSummary(new OverlaySummary("Unsupported chat layout","Restart live analysis in TEMPER",new float[8],false));
+        }
+    }
+    private void hideOverlay(){recovery.reset();if(overlay!=null)overlay.hide();if(live!=null)live.clear();LiveCaptureState.leave();boundWindow=-1;ParseProbeState.forgetContent();}
     private AccessibilityNodeInfo hostRoot(){
         for(AccessibilityWindowInfo window:getWindows()){
             if(window.getType()!=AccessibilityWindowInfo.TYPE_APPLICATION||(!window.isActive()&&!window.isFocused()))continue;
@@ -93,7 +106,7 @@ public final class TemperAccessibilityService extends AccessibilityService imple
             handler.removeCallbacks(probe);handler.postDelayed(probe,150);
         }
         if(name==null||!consent.allows(name.toString())){clear();return;}
-        if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED){lastSupportedEvent=SystemClock.elapsedRealtime();if(ProbeState.armed()||ParseProbeState.armed()||LiveCaptureState.armed()||LiveCaptureState.active()||boundWindow>=0){handler.removeCallbacks(probe);handler.postDelayed(probe,250);}}
+        if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED||type==AccessibilityEvent.TYPE_VIEW_SCROLLED){lastSupportedEvent=SystemClock.elapsedRealtime();if(ProbeState.armed()||ParseProbeState.armed()||LiveCaptureState.armed()||LiveCaptureState.active()||boundWindow>=0){handler.removeCallbacks(probe);handler.postDelayed(probe,type==AccessibilityEvent.TYPE_VIEW_SCROLLED?450:250);}}
     }
     @Override public void onSharedPreferenceChanged(SharedPreferences preferences,String key){if(consent.paused()||!consent.consented()||("liveConsentVersion".equals(key)&&!LiveConsent.allowed(this))){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}if(!consent.consented())disableSelf();}
     @Override public void onInterrupt(){hideOverlay();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}

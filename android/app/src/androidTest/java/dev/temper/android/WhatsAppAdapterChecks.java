@@ -52,6 +52,9 @@ final class WhatsAppAdapterChecks {
         if(adapter.anchor(new ScreenObservation(screen.packageName(),screen.viewport(),changed)).status()!=VisibleConversation.Status.NOT_CONVERSATION)throw new AssertionError("Duplicate composer anchored");
     }
     static void run(Context test,Context target)throws Exception{
+        var recovery=new dev.temper.android.accessibility.LayoutRecovery();
+        if(!recovery.retry(100)||!recovery.retry(1599)||recovery.retry(1600)||recovery.retry(5000))throw new AssertionError("Layout recovery did not expire");
+        recovery.reset();if(!recovery.retry(6000))throw new AssertionError("Settled layout did not reset recovery");
         JSONObject fixture;try(var input=test.getAssets().open("whatsapp-layout-2.26.37.73.json")){fixture=new JSONObject(new String(input.readAllBytes(),StandardCharsets.UTF_8));}
         JSONArray raw=fixture.getJSONArray("nodes");List<ScreenObservation.Node> nodes=new ArrayList<>();
         for(int i=0;i<raw.length();i++){
