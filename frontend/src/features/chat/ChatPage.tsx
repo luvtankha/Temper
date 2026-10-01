@@ -7,7 +7,7 @@ import {useAnalysis} from '../analysis/AnalysisProvider';
 
 export function ChatPage() {
   const {snapshot}=useAnalysis();
-  const analysisLabel=snapshot?.mode==='HYBRID'?'model + fixture analysis':snapshot?.mode==='MODEL'?'model analysis':snapshot?'mock analysis':'analysis pending';
+  const analysisLabel=snapshot?.mode==='HYBRID'?'estimated + fixture analysis':snapshot?.mode==='MODEL'?'model analysis':snapshot?'mock analysis':'analysis pending';
   const {messages,localId,setLocalId,loading,paused,setPaused,remoteTyping,send,reset,previewTyping,selectedMessageId:selectedId,setSelectedMessageId:setSelectedId,focusedMessageId,focusRequest,inspectMessage} = useChat();
   const remote = remoteParticipant(localId);
   const {transport,connection,remoteOnline,setTyping,error:loadError,retry}=useChat();

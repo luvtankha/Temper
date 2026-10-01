@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: TEMPER API
-  version: 0.8.0
-  description: Versioned REST. Optional local sentiment, emotion, independent sarcasm and toxicity models replace their fields with inspectable HYBRID provenance. Emotion includes documented proxies; configured toxicity adds insult/threat and explicit max(insult,threat) hostility proxy to the bounded signals map. Remaining signals/conflict are fixtures. Model-free mode MOCK; delivery independent of analysis.
+  version: 0.9.0
+  description: Versioned REST. Optional local sentiment, emotion, independent sarcasm and toxicity models replace their fields with inspectable HYBRID provenance. Emotion includes documented proxies; configured toxicity adds insult/threat and explicit max(insult,threat) hostility proxy to the bounded signals map. Six documented lexical/context indicators have separate HEURISTIC evidence and optional disagreement/withdrawal/repeatedDisagreement scores. Unconfigured model channels and conflict/markers are fixtures. Model-free mode MOCK; delivery independent of analysis.
 servers:
   - url: /api/v1
 paths:

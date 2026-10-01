@@ -2,7 +2,7 @@ import type {ChatMessage,ParticipantId} from './chat';
 export const emotionLabels={frustration:'Frustration',anger:'Anger',sadness:'Sadness',happiness:'Happiness',confusion:'Confusion',concern:'Concern'} as const;
 export const signalLabels={negativeSentiment:'Negative sentiment',sarcasm:'Sarcasm',toxicity:'Toxicity',passiveAggression:'Passive aggression',defensiveness:'Defensiveness',blame:'Blame'} as const;
 export type EmotionSignals=Record<keyof typeof emotionLabels,number>&{surprise?:number;neutral?:number};
-export type LinguisticSignals=Record<keyof typeof signalLabels,number>&{threat?:number;insult?:number;hostility?:number};
+export type LinguisticSignals=Record<keyof typeof signalLabels,number>&{threat?:number;insult?:number;hostility?:number;disagreement?:number;withdrawal?:number;repeatedDisagreement?:number};
 export interface MessageAnalysis {
   messageId:string;sequence:number;speakerId:ParticipantId;sentAt:string;
   emotions:EmotionSignals;signals:LinguisticSignals;sentiment:number;conflict:number;

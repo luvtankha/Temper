@@ -7,7 +7,7 @@ test('dedicated emotion inference populates the existing responsive meters and m
   expect(Object.keys(result.emotions)).toEqual(expect.arrayContaining(['anger','frustration','sadness','happiness','confusion','concern','surprise','neutral']));
   for(const value of Object.values(result.emotions) as number[]) {expect(value).toBeGreaterThanOrEqual(0);expect(value).toBeLessThanOrEqual(1);}
   await page.setViewportSize({width:390,height:844});await page.goto(`/chat?transport=rest&conversation=${room.id}`);
-  await expect(page.getByText('Backend chat · model + fixture analysis',{exact:true})).toBeVisible();
+  await expect(page.getByText('Backend chat · estimated + fixture analysis',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Message 1 from Nova: I am furious and angry with you!'}).click();
   const dialog=page.getByRole('dialog',{name:'Message details',exact:true});await expect(dialog.getByText('GoEmotions emotion',{exact:true})).toBeVisible();
   await expect(dialog.getByText(/annoyance→frustration proxy/)).toBeVisible();

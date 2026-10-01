@@ -2,7 +2,7 @@
 Conversation intelligence for CEREBRO. Source of truth: AGENT.md; sequential evidence: docs/phases. **Phases00–17 verified.**
 
 ## Development
-Requires Node22+ (tested24), Java21 JDK; Maven wrapper included. No DB or models required for the default fictional demo.
+Requires Node22+ (tested24), Java21 JDK; Maven wrapper included. No DB or models required for the default fictional frontend demo; backend language rules are enabled by default.
 PowerShell terminal1: set JAVA_HOME to a Java21 JDK, enter backend, run .\mvnw.cmd spring-boot:run.
 This machine's JDK: C:\Users\Admin\.codex\cache\temper-tools\jdk-21.0.12.1+1.
 Terminal2: enter frontend, npm ci, npm run dev. Open http://127.0.0.1:5173 . Vite proxies /api, /actuator and native /ws to Java8080.
@@ -10,7 +10,7 @@ On Windows run spring-boot:run or a JAR copied outside backend/target so packagi
 
 ## Verification
 Frontend: npm test; npm run build; npm run test:e2e -- --workers=2 (backend running); npm run check:rigs.
-Backend: Java21 .\mvnw.cmd verify. Base integration tests explicitly use model-free configuration; actual model tests are artifact-gated. With all five verified model directories configured, all33 Java tests pass with zero skips, including actual native STOMP and ONNX. Without artifacts23 pass/ten explicit skips. Frontend22 units/build pass;70 browser behaviors defined. Phase15 UI regressions19/19; configured sentiment phone inspector/dashboard1/1; real two-client typing/presence/reconnect1/1. OpenAPI0.8.0 validates. Detailed phase evidence includes failures and fixes.
+Backend: Java21 .\mvnw.cmd verify. Base integration tests explicitly use model-free configuration; actual model tests are artifact-gated. With all five verified model directories configured, all37 Java tests pass with zero skips, including actual native STOMP and ONNX. Without artifacts27 pass/ten explicit skips. Frontend22 units/build pass;71 browser behaviors defined. Phase15 UI regressions19/19; configured sentiment phone inspector/dashboard1/1; real two-client typing/presence/reconnect1/1. OpenAPI0.9.0 validates. Detailed phase evidence includes failures and fixes.
 
 ## Behavior and configuration
 Responsive dark UI, local/REST/live conversation, multiline composer, emoji, selection, accessible inspector, collapsible analytics, timeline and speaker dashboard. Original Rive male/female characters stay above the composer: Alex sees Nova; Nova sees Alex. Runtime controls provide eight smooth reversible poses, breathing/blinking/gaze/head drift, real typing attention, pause and reduced-motion support.
@@ -32,3 +32,5 @@ Phase16 adds the dedicated MIT GoEmotions classifier. Run scripts/download-emoti
 Phase17 adds genuine dedicated sarcasm independent of sentiment. Run scripts/download-sarcasm.ps1 -Destination CACHE_DIRECTORY -Python EXPORT_PYTHON; set TEMPER_SARCASM_MODEL_DIR. Apache2 checkpoint/base tokenizer, exact BERT architecture/label mapping, own ONNX export/hashes/parity and limits: docs/model-cards/sarcasm.md. Inspector and dedicated sarcasm timeline show actual MODEL evidence; toxicity/additional signals/conflict remain fixtures. Native/backend31/31 and live model/dashboard/STOMP regression9/9 pass. TEMPER_REAL_SARCASM_TEST=1 enables this browser gate.
 
 Phase18 adds independent toxicity, insult and threat signals, with separately inspectable hostility=max(insult,threat) explicitly marked as a proxy. Run scripts/download-toxicity.ps1 -Destination CACHE_DIRECTORY -Python EXPORT_PYTHON; set TEMPER_TOXICITY_MODEL_DIR. Pinned Apache2 checkpoint, tokenizer, export/parity and limits: docs/model-cards/toxicity.md. TEMPER_REAL_TOXICITY_TEST=1 enables its genuine browser gate. Additional linguistic indicators/conflict/arc remain fixtures until their phases.
+
+Phase19 adds six separate estimated English lexical/context indicators. Default TEMPER_INDICATORS_ENABLED=true uses inspectable HEURISTIC cues; set false for the backend fixture demonstration. Rules, scores, supported quote/negation handling and limits: docs/analysis/estimated-indicators.md. Repeated disagreement uses current and prior same-speaker cues only; all six are separately inspectable. Unconfigured model channels/conflict/arc remain fixtures.

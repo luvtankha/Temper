@@ -19,8 +19,9 @@ public class HybridEmotionAnalysisService implements EmotionAnalysisService {
     private final EmotionModel emotion;
     private final SarcasmModel sarcasm;
     private final ToxicityModel toxicity;
-    public HybridEmotionAnalysisService(MockEmotionAnalysisService fixtures, SentimentModel sentiment, EmotionModel emotion, SarcasmModel sarcasm, ToxicityModel toxicity) {
-        this.fixtures = fixtures; this.sentiment = sentiment; this.emotion=emotion; this.sarcasm=sarcasm; this.toxicity=toxicity;
+    private final EstimatedLanguageIndicators indicators;
+    public HybridEmotionAnalysisService(MockEmotionAnalysisService fixtures, SentimentModel sentiment, EmotionModel emotion, SarcasmModel sarcasm, ToxicityModel toxicity, EstimatedLanguageIndicators indicators) {
+        this.fixtures = fixtures; this.sentiment = sentiment; this.emotion=emotion; this.sarcasm=sarcasm; this.toxicity=toxicity; this.indicators=indicators;
     }
     public static String input(ContextWindow context) {
         // Current first preserves its beginning if token truncation occurs. Bound history individually.
@@ -32,7 +33,7 @@ public class HybridEmotionAnalysisService implements EmotionAnalysisService {
     }
     @Override public MessageAnalysis analyze(Message message, ContextWindow context) {
         var baseline = fixtures.analyze(message, context);
-        if (!sentiment.available()&&!emotion.available()&&!sarcasm.available()&&!toxicity.available()) return baseline;
+        if (!sentiment.available()&&!emotion.available()&&!sarcasm.available()&&!toxicity.available()&&!indicators.available()) return baseline;
         var signals = new LinkedHashMap<>(baseline.signals());
         var emotions=baseline.emotions(); double signed=baseline.sentiment();
         var evidence=new ArrayList<MessageAnalysis.Evidence>();
@@ -62,10 +63,11 @@ public class HybridEmotionAnalysisService implements EmotionAnalysisService {
             evidence.add(new MessageAnalysis.Evidence(MessageAnalysis.EvidenceSource.HEURISTIC,"Hostility proxy",
                 "Estimated hostility = max(insult, threat) from the dedicated model. This explicit engineering proxy is not a separately trained hostility class or a finding about intention."));
         }
+        if(indicators.available()){var result=indicators.estimate(context);signals.putAll(result.scores());evidence.addAll(result.evidence());}
         evidence.add(new MessageAnalysis.Evidence(MessageAnalysis.EvidenceSource.MOCK,"Remaining fixture signals",
-            (sentiment.available()?"":"Signed and negative sentiment, ")+(emotion.available()?"":"Emotions, ")+(sarcasm.available()?"":"Sarcasm, ")+(toxicity.available()?"":"Toxicity, ")+"passive aggression, blame, defensiveness, conflict and timeline markers still use ordinal fixtures. See MODEL evidence for the fields replaced by actual inference."));
+            (sentiment.available()?"":"Signed and negative sentiment, ")+(emotion.available()?"":"Emotions, ")+(sarcasm.available()?"":"Sarcasm, ")+(toxicity.available()?"":"Toxicity, ")+(indicators.available()?"":"Passive aggression, blame, defensiveness, ")+"conflict and timeline markers still use ordinal fixtures. See MODEL evidence for the fields replaced by actual inference."));
         return new MessageAnalysis(baseline.messageId(), baseline.speakerId(), baseline.sequence(), AnalysisMode.HYBRID,
             emotions, signals, signed, baseline.conflict(), baseline.contextMessageIds(),
-            "Configured local classifiers estimate language signals using current text and causal history. Source evidence identifies model outputs, semantic proxies and remaining fixtures; these estimates do not establish the speaker’s internal feelings.", evidence, baseline.analyzedAt());
+            "Configured local classifiers and inspectable rules estimate language signals using current text and causal history. Source evidence identifies model outputs, semantic proxies and remaining fixtures; these estimates do not establish the speaker’s internal feelings.", evidence, baseline.analyzedAt());
     }
 }

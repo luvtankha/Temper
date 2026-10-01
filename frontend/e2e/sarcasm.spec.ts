@@ -6,7 +6,7 @@ test('dedicated sarcasm model reaches inspector and its timeline with real prove
   const result=await(await request.post(`/api/v1/messages/${message.id}/analyze`)).json();expect(result.mode).toBe('HYBRID');
   expect(result.evidence.some((e:{source:string;label:string})=>e.source==='MODEL'&&e.label==='Sarcasm classifier')).toBe(true);
   await page.setViewportSize({width:390,height:844});await page.goto(`/chat?transport=rest&conversation=${room.id}`);
-  await expect(page.getByText('Backend chat · model + fixture analysis',{exact:true})).toBeVisible();
+  await expect(page.getByText('Backend chat · estimated + fixture analysis',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Message 1 from Nova: Oh great, another traffic jam. Just what I needed!'}).click();
   const dialog=page.getByRole('dialog',{name:'Message details',exact:true});await expect(dialog.getByText('Sarcasm classifier',{exact:true})).toBeVisible();
   await expect(dialog.getByRole('progressbar',{name:'Sarcasm',exact:true})).toHaveAttribute('aria-valuenow',String(Math.round(result.signals.sarcasm*100)));

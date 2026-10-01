@@ -42,7 +42,7 @@ class SentimentIntegrationTest {
         assertEquals(AnalysisMode.HYBRID,p.mode());assertTrue(p.sentiment()>0);assertTrue(n.sentiment()<0);
         assertEquals(p.emotions(),n.emotions());assertNotEquals(p.signals().get("negativeSentiment"),n.signals().get("negativeSentiment"));
         mvc.perform(post("/api/v1/messages/"+positive.id()+"/analyze")).andExpect(status().isOk()).andExpect(jsonPath("$.mode").value("HYBRID"))
-            .andExpect(jsonPath("$.evidence[0].source").value("MODEL")).andExpect(jsonPath("$.evidence[1].source").value("MOCK"));
+            .andExpect(jsonPath("$.evidence[0].source").value("MODEL")).andExpect(jsonPath("$.evidence[-1].source").value("MOCK"));
         mvc.perform(get("/api/v1/conversations/"+positive.conversationId()+"/analytics")).andExpect(jsonPath("$.mode").value("HYBRID"));
     }
     @Test void historyActuallyInfluencesFineAndFutureIsExcluded() {

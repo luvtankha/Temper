@@ -5,7 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import dev.temper.cerebro.conversation.port.ConversationRepository;
 import dev.temper.cerebro.auth.port.UserRepository;
 import static org.junit.jupiter.api.Assertions.*;
-@SpringBootTest(properties={"temper.toxicity.model-dir=","temper.demo.enabled=false","temper.sentiment.model-dir=","temper.foundation.model-dir=","temper.emotion.model-dir=","temper.sarcasm.model-dir="})
+@SpringBootTest(properties={"temper.indicators.enabled=false","temper.toxicity.model-dir=","temper.demo.enabled=false","temper.sentiment.model-dir=","temper.foundation.model-dir=","temper.emotion.model-dir=","temper.sarcasm.model-dir="})
 class DemoDisabledTest {
     @Autowired ConversationRepository conversations;
     @Autowired UserRepository users;

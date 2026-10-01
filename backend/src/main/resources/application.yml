@@ -2,6 +2,8 @@ spring:
   application:
     name: temper
 temper:
+  indicators:
+    enabled: ${TEMPER_INDICATORS_ENABLED:true}
   toxicity:
     model-dir: ${TEMPER_TOXICITY_MODEL_DIR:}
   sarcasm:

@@ -8,13 +8,13 @@ test('genuine backend sentiment reaches existing mobile analytics and inspector 
   const p=await(await request.post(`/api/v1/messages/${positive.id}/analyze`)).json();const n=await(await request.post(`/api/v1/messages/${negative.id}/analyze`)).json();
   expect(p.mode).toBe('HYBRID');expect(n.sentiment).toBeLessThan(p.sentiment);expect(n.contextMessageIds).toEqual([positive.id]);
   await page.setViewportSize({width:320,height:740});await page.goto(`/chat?transport=rest&conversation=${room.id}`);
-  await expect(page.getByText('Backend chat · model + fixture analysis',{exact:true})).toBeVisible();
+  await expect(page.getByText('Backend chat · estimated + fixture analysis',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Message 2 from Nova: I hate this awful day!'}).click();
-  const dialog=page.getByRole('dialog',{name:'Message details',exact:true});await expect(dialog.getByText('Model + fixture signals',{exact:true})).toBeVisible();
-  await expect(dialog.getByText('RoBERTa sentiment',{exact:true})).toBeVisible();await expect(dialog.getByText('Remaining fixture signals',{exact:true})).toBeVisible();
+  const dialog=page.getByRole('dialog',{name:'Message details',exact:true});await expect(dialog.getByText('Estimates + fixture signals',{exact:true})).toBeVisible();
+  await expect(dialog.getByText('RoBERTa sentiment',{exact:true})).toBeVisible();await dialog.getByText('Remaining fixture signals',{exact:true}).scrollIntoViewIfNeeded();await expect(dialog.getByText('Remaining fixture signals',{exact:true})).toBeVisible();
   await expect(dialog.getByRole('progressbar',{name:'Negative sentiment'})).toHaveAttribute('aria-valuenow',String(Math.round(n.signals.negativeSentiment*100)));
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
   await page.getByRole('button',{name:'Close message details'}).click();await page.getByRole('button',{name:'Open navigation',exact:true}).click();await page.getByRole('link',{name:'Full analysis',exact:true}).click();
-  await expect(page.locator('.dashboard-mode-note')).toContainText('Model + fixture signals');
-  await expect(page.locator('.timeline-heading')).toContainText('Model + fixture signals');
+  await expect(page.locator('.dashboard-mode-note')).toContainText('Estimates + fixture signals');
+  await expect(page.locator('.timeline-heading')).toContainText('Estimates + fixture signals');
 });

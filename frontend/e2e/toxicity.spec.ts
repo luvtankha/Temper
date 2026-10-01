@@ -6,7 +6,7 @@ test('dedicated toxicity model reaches inspector and its timeline with real prov
   const result=await(await request.post(`/api/v1/messages/${message.id}/analyze`)).json();expect(result.mode).toBe('HYBRID');
   expect(result.evidence.some((e:{source:string;label:string})=>e.source==='MODEL'&&e.label==='Toxicity classifier')).toBe(true);
   await page.setViewportSize({width:390,height:844});await page.goto(`/chat?transport=rest&conversation=${room.id}`);
-  await expect(page.getByText('Backend chat · model + fixture analysis',{exact:true})).toBeVisible();
+  await expect(page.getByText('Backend chat · estimated + fixture analysis',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Message 1 from Nova: You are an idiot.'}).click();
   const dialog=page.getByRole('dialog',{name:'Message details',exact:true});await expect(dialog.getByText('Toxicity classifier',{exact:true})).toBeVisible();
   await expect(dialog.getByRole('progressbar',{name:'Toxicity',exact:true})).toHaveAttribute('aria-valuenow',String(Math.round(result.signals.toxicity*100)));
