@@ -74,6 +74,7 @@ public final class MainActivity extends Activity {
             }
         }
         text("Test parser: "+ParseProbeState.status(),16);
+        text("Character: "+dev.temper.android.overlay.OverlayManager.status(),16);
         text("Test probe: "+ProbeState.status(),16);
         ScreenObservation observed=ProbeState.observation();
         if(observed!=null){

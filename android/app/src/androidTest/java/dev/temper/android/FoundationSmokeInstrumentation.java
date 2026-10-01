@@ -23,12 +23,21 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
         return null;
     }
     private void click(Activity activity,String label){View view=find(activity.getWindow().getDecorView(),label);if(!(view instanceof Button))throw new AssertionError("Missing button: "+label);view.performClick();}
+    private void restoreSetup(java.util.Map<String,?> original){
+        var preferences=getTargetContext().getSharedPreferences("MainActivity",0);var edit=preferences.edit().clear();
+        for(var item:original.entrySet()){
+            Object value=item.getValue();if(value instanceof Boolean b)edit.putBoolean(item.getKey(),b);else if(value instanceof Integer n)edit.putInt(item.getKey(),n);else if(value instanceof String s)edit.putString(item.getKey(),s);else if(value instanceof Long n)edit.putLong(item.getKey(),n);else if(value instanceof Float n)edit.putFloat(item.getKey(),n);
+        }
+        if(!edit.commit())throw new AssertionError("Could not restore user's setup preferences");
+    }
     @Override public void onStart(){
         Bundle result=new Bundle();
+        java.util.Map<String,?> originalSetup=new java.util.HashMap<>(getTargetContext().getSharedPreferences("MainActivity",0).getAll());
         try{
             AdapterContractChecks.run();
             ProbeChecks.run(getTargetContext());
             WhatsAppAdapterChecks.run(getContext(),getTargetContext());
+            OverlayPlacementChecks.run();
             getTargetContext().getSharedPreferences("MainActivity",0).edit().clear().commit();
             Activity first=launch();
             runOnMainSync(()->{
@@ -73,7 +82,8 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
                 String damaged=blob.substring(0,blob.length()-4)+"AAAA";getTargetContext().getSharedPreferences(testStorage,0).edit().putString("encrypted",damaged).commit();
                 try{accounts.session();throw new AssertionError("Modified ciphertext accepted");}catch(java.security.GeneralSecurityException expected){}
             }finally{getTargetContext().getSharedPreferences(testStorage,0).edit().clear().commit();KeyStore keyStore=KeyStore.getInstance("AndroidKeyStore");keyStore.load(null);keyStore.deleteEntry("dev.temper.auth."+testStorage);}
-            result.putString("stream","PASS: observed WhatsApp layout fixture/roles/clipping/dedup/uncertainty/privacy; one-shot probe/composer gate/text-free export/pause cleanup; adapter contract bounds/roles/immutability/failure/redaction; foundation UI/pause/reset; consent UI opt-in/resume/revoke and package/version gates; Keystore encrypted account, password rejection, sign-in/out, persistent session and tamper rejection\n");finish(Activity.RESULT_OK,result);
-        }catch(Throwable failure){result.putString("stream","FAIL: "+failure.getClass().getSimpleName()+": "+failure.getMessage());finish(Activity.RESULT_CANCELED,result);}
+            restoreSetup(originalSetup);
+            result.putString("stream","PASS: compact overlay grounding/density/keyboard/failure geometry; observed WhatsApp layout fixture/roles/clipping/dedup/uncertainty/privacy; one-shot probe/composer gate/text-free export/pause cleanup; adapter contract bounds/roles/immutability/failure/redaction; foundation UI/pause/reset; consent UI opt-in/resume/revoke and package/version gates; Keystore encrypted account, password rejection, sign-in/out, persistent session and tamper rejection; original setup preferences restored\n");finish(Activity.RESULT_OK,result);
+        }catch(Throwable failure){restoreSetup(originalSetup);result.putString("stream","FAIL: "+failure.getClass().getSimpleName()+": "+failure.getMessage());finish(Activity.RESULT_CANCELED,result);}
     }
 }

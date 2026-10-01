@@ -1,0 +1,14 @@
+# Compact composer overlay — Phase29
+The service owns a native TYPE_ACCESSIBILITY_OVERLAY with a64×88dp footprint. Its placeholder is a small original2D face/body with a ground shadow; eight animated expressions and popup are later phases. OverlayPlacement uses screen-pixel composer bounds and density to place the feet exactly at composer.top, to the left of the input, clamped within the viewport. Landscape/insufficient room fail closed. The window is nonfocusable, nonmodal and touch-through; host touches are not intercepted in this shell.
+
+After an explicitly armed selected-chat parse succeeds, the overlay binds to that active application window. Subsequent updates read structural observations only to locate the composer; they do not reread messages. Keyboard changes update the position. Unknown layouts, window changes, unsupported foreground apps, pause/revoke/interrupt or service destruction hide the overlay. Raw captured text is released when the chat binding is invalidated; only the existing text-free diagnostic summary remains until cleared.
+
+The service receives window/package metadata from other apps to detect departure and hide. It never traverses unrelated content. Application-window roots are inspected for package identity; only active/focused WhatsApp roots are traversed. View-ID/interactive-window flags support keyboard-aware application-window lookup. No separate draw-over-apps toggle or Internet permission is requested.
+
+Actual-device geometry checks pass for the observed composer,64×88dp dimensions, exact feet grounding, density adaptation, keyboard movement, viewport constraints and fail-closed landscape/room/density cases. Real overlay appearance/input and keyboard usability remain a manual phone gate; geometry checks alone do not establish them.
+
+Demo gate: enable TEMPER's Android service after the test/update, return to its consent page and press Parse next fictional chat once, then open the fictional one-to-one chat within one minute. Stay there; open/close the keyboard manually and check placement/input usability. Leaving WhatsApp or pausing should hide the character. For now reopening a chat after departure requires another explicit parse; live capture is Phase32.
+
+Test runner snapshots/restores existing consent/pause preferences after its UI tests, while Android service activation remains manual. An instrumentation launch wait on this device was resolved by clearing/relaunching only TEMPER's task with adb am start -f0x10008000; tests then passed. It did not require a system permission change. No debugger forwards remain.
+
+Platform references: [Accessibility overlay window](https://developer.android.com/reference/android/view/WindowManager.LayoutParams#TYPE_ACCESSIBILITY_OVERLAY), [service application-window access](https://developer.android.com/reference/android/accessibilityservice/AccessibilityService#getWindows()).

@@ -58,3 +58,5 @@ Phase28 is in progress: a user-armed text-free WhatsApp layout probe is installe
 Phase28 update: actual59-node layout retrieved; conservative bounded text-row adapter and one-shot parser implemented. Build/lint and actual-device tests with the observed layout plus fictional text pass. Actual host text parsing remains pending manual activation/test. Exact supported build and parser limits: docs/architecture/whatsapp-adapter.md. Diagnostic report exports no messages or identities; no server transmission exists.
 
 Phase28 actual gate passed: AVAILABLE/eight complete visible turns (one local/seven remote), composer bounds and repeated-read suppression verified from the selected fictional WhatsApp chat's text-free diagnostic report. Phase28 complete.
+
+Phase29 compact neutral overlay shell builds and passes actual-device geometry/keyboard-anchor checks, with the prior suite also passing. Real visual/input/keyboard acceptance is pending manual service activation. Placement/lifecycle/setup: docs/architecture/android-overlay.md.
