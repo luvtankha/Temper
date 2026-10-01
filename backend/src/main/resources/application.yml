@@ -2,6 +2,8 @@ spring:
   application:
     name: temper
 temper:
+  overlay:
+    token: ${TEMPER_OVERLAY_TOKEN:}
   conflict:
     weights: ${TEMPER_CONFLICT_WEIGHTS:negativeSentiment=0.25,anger=0.20,toxicity=0.20,sarcasm=0.15,blame=0.10,defensiveness=0.10}
     smoothing: ${TEMPER_CONFLICT_SMOOTHING:0.6,0.3,0.1}

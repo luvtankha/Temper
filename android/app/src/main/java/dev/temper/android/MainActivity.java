@@ -27,11 +27,12 @@ public final class MainActivity extends Activity {
     private DeviceAccountStore accountStore;
     private long pageVersion;
     private boolean consentScreen;
-    @Override public void onResume(){super.onResume();if(consentScreen)consent();}
+    private boolean liveScreen;
+    @Override public void onResume(){super.onResume();if(consentScreen)consent();else if(liveScreen)liveAnalysis();}
     @Override public void onCreate(Bundle state){super.onCreate(state);accountStore=new DeviceAccountStore(this);home();}
     @Override public void onDestroy(){accountWorker.shutdown();super.onDestroy();}
     private void page(String title){
-        pageVersion++;consentScreen=false;
+        pageVersion++;consentScreen=false;liveScreen=false;
         ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);int pad=(int)(24*getResources().getDisplayMetrics().density);content.setPadding(pad,pad*2,pad,pad);content.setBackgroundColor(Color.rgb(21,16,25));scroll.addView(content);setContentView(scroll);text(title,28);
     }
     private void text(String value,int size){TextView text=new TextView(this);text.setText(value);text.setTextColor(Color.rgb(242,230,248));text.setTextSize(size);text.setPadding(0,12,0,12);content.addView(text);}
@@ -39,14 +40,14 @@ public final class MainActivity extends Activity {
     private void home(){
         page("TEMPER");text("A small companion for conversations",19);
         text("The Android overlay is in development. It will estimate language and direction in supported visible WhatsApp conversations. Estimates cannot establish another person's feelings.",16);
-        text("This build can inspect one user-selected fictional WhatsApp chat after informed opt-in. Text stays in memory and is never sent to a server in this build.",16);
-        button("Accessibility and consent",this::consent);button("Device account",this::account);button("Settings",this::settings);button("Fictional preview",this::preview);
+        text("Test probes keep selected fictional chat text on this phone. Optional USB live analysis requires a separate opt-in to process the visible window on your connected computer.",16);
+        button("Accessibility and consent",this::consent);button("Live analysis (USB demo)",this::liveAnalysis);button("Device account",this::account);button("Settings",this::settings);button("Fictional preview",this::preview);
     }
     private void settings(){
-        page("Settings");text("The selected-chat character overlay is available for testing. Live analysis is still in development. Pause stops inspection and clears captured test data.",16);
+        page("Settings");text("The selected-chat character overlay supports optional USB live analysis with separate consent. Pause stops inspection and clears the visible context.",16);
         Switch pause=new Switch(this);pause.setText("Keep TEMPER paused");pause.setTextColor(Color.WHITE);pause.setChecked(getPreferences(MODE_PRIVATE).getBoolean("paused",true));
         pause.setOnCheckedChangeListener((view,checked)->new ConsentStore(this).pause(checked));content.addView(pause);
-        text("No chat text is persisted or transmitted. The pause preference is local to this device.",16);button("Reset pause preference",()->{new ConsentStore(this).pause(true);settings();});button("Back",this::home);
+        text("No chat text is persisted. USB live analysis sends only a bounded selected-chat window after its separate opt-in. The pause preference is local to this device.",16);button("Reset pause preference",()->{new ConsentStore(this).pause(true);settings();});button("Back",this::home);
     }
     private boolean serviceEnabled(){
         AccessibilityManager manager=(AccessibilityManager)getSystemService(ACCESSIBILITY_SERVICE);
@@ -112,6 +113,25 @@ public final class MainActivity extends Activity {
             }
         }
         button("Back",this::home);
+    }
+    private void liveAnalysis(){
+        page("Live analysis (USB demo)");liveScreen=true;
+        text("Optional processing on your connected computer",20);
+        text("After you opt in and start a session, TEMPER reads up to eight fully visible plain-text turns (at most 1000 characters each) from one fictional WhatsApp chat you select. It sends only message text and LOCAL/REMOTE roles through the USB connection to this computer's local TEMPER backend for model analysis. No contact names, timestamps, drafts or full history are sent. No raw chat text is saved or logged on the phone or backend. Text is held in memory while the request runs; pause cannot recall a request already sent.",16);
+        text("The session ends when you leave the chat, pause, revoke, or the layout becomes unsupported. Current support requires at least three complete text turns with both roles visible; documents, quoted replies and reactions make analysis unavailable. Estimates do not establish anyone's feelings. The debug connection is limited to 127.0.0.1:8080 over USB.",16);
+        ConsentStore base=new ConsentStore(this);boolean opted=base.preferences().getInt("liveConsentVersion",0)==1;
+        text("USB connection: "+(dev.temper.android.api.LocalAnalysisClient.configured(this)?"Configured":"Not configured"),16);
+        text("Live session: "+dev.temper.android.accessibility.LiveCaptureState.status(),16);
+        if(!opted){
+            CheckBox agree=new CheckBox(this);agree.setText("I opt in to processing the selected fictional chat on this computer");agree.setTextColor(Color.WHITE);content.addView(agree);
+            Button accept=new Button(this);accept.setText("Save live-processing consent");accept.setEnabled(false);agree.setOnCheckedChangeListener((view,checked)->accept.setEnabled(checked));accept.setOnClickListener(view->{dev.temper.android.privacy.LiveConsent.accept(this);liveAnalysis();});content.addView(accept);
+        }else{
+            if(dev.temper.android.privacy.LiveConsent.allowed(this)&&serviceEnabled()&&dev.temper.android.api.LocalAnalysisClient.configured(this))button("Start selected fictional chat",()->{ProbeState.clear();ParseProbeState.clear(this);dev.temper.android.accessibility.LiveCaptureState.arm(this);liveAnalysis();});
+            else text("Resume TEMPER and enable its service under Accessibility and consent, and configure the USB connection before starting.",16);
+            button("Stop and pause TEMPER",()->{base.pause(true);liveAnalysis();});
+            button("Revoke live-processing consent",()->{dev.temper.android.privacy.LiveConsent.revoke(this);liveAnalysis();});
+        }
+        button("Refresh live status",this::liveAnalysis);button("Back",this::home);
     }
     private void account(){
         page("Device account");text("This demo account stays on this phone. It does not create a cloud account or secure the analysis server.",16);

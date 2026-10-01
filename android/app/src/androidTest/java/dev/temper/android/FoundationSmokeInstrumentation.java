@@ -15,7 +15,8 @@ import android.widget.CheckBox;
 
 /** Device smoke check for our own app only; never interacts with a host chat app. */
 public final class FoundationSmokeInstrumentation extends Instrumentation {
-    @Override public void onCreate(Bundle arguments){super.onCreate(arguments);start();}
+    private boolean transportOnly;
+    @Override public void onCreate(Bundle arguments){super.onCreate(arguments);transportOnly=arguments!=null&&"true".equals(arguments.getString("transportOnly"));start();}
     private Activity launch(){return startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));}
     private View find(View root,String label){
         if(root instanceof TextView text&&label.contentEquals(text.getText()))return root;
@@ -38,10 +39,12 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
         Bundle result=new Bundle();
         java.util.Map<String,?> originalSetup=new java.util.HashMap<>(getTargetContext().getSharedPreferences("MainActivity",0).getAll());
         try{
+            if(transportOnly){LiveTransportChecks.run(getTargetContext());restoreSetup(originalSetup);result.putString("stream","PASS: generated-text USB request reached actual model backend; stopped/revoked requests blocked; original consent restored\n");finish(Activity.RESULT_OK,result);return;}
             AdapterContractChecks.run();
             ProbeChecks.run(getTargetContext());
             WhatsAppAdapterChecks.run(getContext(),getTargetContext());
             OverlayPlacementChecks.run();
+            LiveChecks.run(getTargetContext());
             runOnMainSync(()->{try{CharacterChecks.run(getTargetContext());AnalyticsChecks.run(getTargetContext());}catch(Exception failure){throw new RuntimeException(failure);}});
             getTargetContext().getSharedPreferences("MainActivity",0).edit().clear().commit();
             Activity first=launch();
