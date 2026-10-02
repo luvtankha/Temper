@@ -30,6 +30,7 @@ collect(styles)
 texts += ["Can't wait! WE'RE READY 😄", '  Mixed\twhitespace\n\nworks.  ', 'नमस्ते, kaise ho?',
           '<s>real text</s> <mask> <unk> <pad>', "I'M HAPPY but I'm not sure.", 'hello ' + 'very ' * 180,
           'emoji 👨‍👩‍👧‍👦 and café résumé', 'ok', 'I got the job!', 'I am furious with you!']
+texts += ['a' * 1000, 'abcde' * 200, '🤯' * 200, 'न' * 900, 'é' * 1000, ('a <mask> ' * 100), ' ' * 500 + 'x', 'x' + '\t' * 998 + 'y']
 fixtures = [dict(text=text, ids=tokenizer.encode(text).ids) for text in dict.fromkeys(texts)]
 for target in ('android/app/src/test/resources/roberta-reference.json', 'android/app/src/androidTest/assets/roberta-reference.json'):
     output = root / target

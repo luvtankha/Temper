@@ -1,0 +1,450 @@
+[
+  {
+    "id": "audit-v2",
+    "language": "en",
+    "direction": "TENSION_RISING",
+    "maxArmVsDesktopScoreDifference": 0.007241934537887573,
+    "scores": [
+      0.057378057,
+      0.002352333,
+      0.00087825535,
+      0.002822441,
+      0.006634051,
+      0.36375025,
+      0.03873713,
+      0.0019636108
+    ]
+  },
+  {
+    "id": "garden-v2",
+    "language": "en",
+    "direction": "TENSION_RISING",
+    "maxArmVsDesktopScoreDifference": 0.03799590468406677,
+    "scores": [
+      0.10623918,
+      0.0013916005,
+      0.0015478905,
+      0.004889617,
+      0.009084686,
+      0.4062593,
+      0.15999854,
+      0.0017150709
+    ]
+  },
+  {
+    "id": "sponsor-v2",
+    "language": "hi",
+    "direction": "TENSION_RISING",
+    "maxArmVsDesktopScoreDifference": 0.0075119733810424805,
+    "scores": [
+      0.9042823,
+      0.0047251727,
+      0.0007281347,
+      0.0013475014,
+      0.00104966,
+      0.015248486,
+      0.0027225774,
+      0.0009039721
+    ]
+  },
+  {
+    "id": "parking-v2",
+    "language": "hi",
+    "direction": "TENSION_RISING",
+    "maxArmVsDesktopScoreDifference": 0.06296786665916443,
+    "scores": [
+      0.36597285,
+      0.026120085,
+      0.00036029125,
+      0.0023867278,
+      0.001708526,
+      0.016730579,
+      0.0023797408,
+      0.000693091
+    ]
+  },
+  {
+    "id": "donation-v2",
+    "language": "en",
+    "direction": "DEESCALATING",
+    "maxArmVsDesktopScoreDifference": 0.00034155137836933136,
+    "scores": [
+      0.022997793,
+      0.011375558,
+      0.0012811896,
+      0.0026995004,
+      0.0054458003,
+      0.0034680034,
+      0.0008647742,
+      0.0019205249
+    ]
+  },
+  {
+    "id": "meeting-v2",
+    "language": "en",
+    "direction": "DEESCALATING",
+    "maxArmVsDesktopScoreDifference": 0.002963438630104065,
+    "scores": [
+      0.009300237,
+      0.012411324,
+      0.0032120447,
+      0.0044799065,
+      0.059454467,
+      0.01074076,
+      0.002905022,
+      0.0016082703
+    ]
+  },
+  {
+    "id": "bandwidth-v2",
+    "language": "hi",
+    "direction": "DEESCALATING",
+    "maxArmVsDesktopScoreDifference": 0.004065362736582756,
+    "scores": [
+      0.012612817,
+      0.031127432,
+      0.0006043547,
+      0.0061268886,
+      0.0029794814,
+      0.007719633,
+      0.0015783341,
+      0.0010939889
+    ]
+  },
+  {
+    "id": "dance-v2",
+    "language": "hi",
+    "direction": "DEESCALATING",
+    "maxArmVsDesktopScoreDifference": 0.015137851238250732,
+    "scores": [
+      0.2822061,
+      0.03652239,
+      0.0003832558,
+      0.0016097618,
+      0.0019461513,
+      0.011345005,
+      0.0014788489,
+      0.00052801514
+    ]
+  },
+  {
+    "id": "archive-v2",
+    "language": "en",
+    "direction": "WITHDRAWAL",
+    "maxArmVsDesktopScoreDifference": 5.960464477539063e-08,
+    "scores": [
+      0.5880003,
+      0.00096192106,
+      0.0005138169,
+      0.014723107,
+      0.0010336904,
+      0.22201787,
+      0.017534398,
+      0.0008017772
+    ]
+  },
+  {
+    "id": "mentoring-v2",
+    "language": "en",
+    "direction": "WITHDRAWAL",
+    "maxArmVsDesktopScoreDifference": 0.09115725755691528,
+    "scores": [
+      0.5838193,
+      0.0016129023,
+      0.00039212086,
+      0.0024125206,
+      0.0014830056,
+      0.17802754,
+      0.01021317,
+      0.00052119145
+    ]
+  },
+  {
+    "id": "printer-v2",
+    "language": "hi",
+    "direction": "WITHDRAWAL",
+    "maxArmVsDesktopScoreDifference": 0.0007761120796203613,
+    "scores": [
+      0.95550096,
+      0.0020060043,
+      0.0010710964,
+      0.0018436823,
+      0.0014951704,
+      0.0084060505,
+      0.0018191057,
+      0.0007647747
+    ]
+  },
+  {
+    "id": "terrace-v2",
+    "language": "hi",
+    "direction": "WITHDRAWAL",
+    "maxArmVsDesktopScoreDifference": 0.0032576918601989746,
+    "scores": [
+      0.95246196,
+      0.0016184981,
+      0.0008532924,
+      0.0021007154,
+      0.0013049515,
+      0.0057177306,
+      0.001635121,
+      0.0005904841
+    ]
+  },
+  {
+    "id": "subscription-v2",
+    "language": "en",
+    "direction": "UNRESOLVED",
+    "maxArmVsDesktopScoreDifference": 0.007904987782239914,
+    "scores": [
+      0.064100854,
+      0.003747056,
+      0.0006900829,
+      0.015250627,
+      0.0026087612,
+      0.009423622,
+      0.0013617533,
+      0.0016739601
+    ]
+  },
+  {
+    "id": "childcare-v2",
+    "language": "en",
+    "direction": "UNRESOLVED",
+    "maxArmVsDesktopScoreDifference": 0.0037072300910949707,
+    "scores": [
+      0.5500207,
+      0.0017281059,
+      0.0011466924,
+      0.007373374,
+      0.008641048,
+      0.028983139,
+      0.002286826,
+      0.0008159925
+    ]
+  },
+  {
+    "id": "repairshop-v2",
+    "language": "hi",
+    "direction": "UNRESOLVED",
+    "maxArmVsDesktopScoreDifference": 0.008755326271057129,
+    "scores": [
+      0.48913687,
+      0.02527498,
+      0.0003670765,
+      0.0041590277,
+      0.0011316264,
+      0.016756939,
+      0.0022043232,
+      0.00053667015
+    ]
+  },
+  {
+    "id": "coach-v2",
+    "language": "hi",
+    "direction": "UNRESOLVED",
+    "maxArmVsDesktopScoreDifference": 9.832298383116722e-05,
+    "scores": [
+      0.95814306,
+      0.0020714211,
+      0.00096341287,
+      0.0028733243,
+      0.0013410373,
+      0.005708353,
+      0.0016214101,
+      0.0007599816
+    ]
+  },
+  {
+    "id": "weather-v2",
+    "language": "en",
+    "direction": "STABLE",
+    "maxArmVsDesktopScoreDifference": 0.022969454526901245,
+    "scores": [
+      0.02849585,
+      0.46746537,
+      0.057708908,
+      0.007450982,
+      0.016779684,
+      0.012263522,
+      0.0027404584,
+      0.0016259374
+    ]
+  },
+  {
+    "id": "quiet-v2",
+    "language": "en",
+    "direction": "STABLE",
+    "maxArmVsDesktopScoreDifference": 0.0013978378847241402,
+    "scores": [
+      0.005911817,
+      0.011537391,
+      0.0007687591,
+      0.005832734,
+      0.0015812493,
+      0.0027554492,
+      0.0008222876,
+      0.0023974208
+    ]
+  },
+  {
+    "id": "visa-v2",
+    "language": "hi",
+    "direction": "STABLE",
+    "maxArmVsDesktopScoreDifference": 0.0031164027750492096,
+    "scores": [
+      0.020147724,
+      0.0070670666,
+      0.00035303264,
+      0.0028955045,
+      0.0019154223,
+      0.00640033,
+      0.0013332925,
+      0.00096355606
+    ]
+  },
+  {
+    "id": "rest-v2",
+    "language": "hi",
+    "direction": "STABLE",
+    "maxArmVsDesktopScoreDifference": 0.0008404180407524109,
+    "scores": [
+      0.01712903,
+      0.0027387282,
+      0.00043631796,
+      0.0020598744,
+      0.0017531893,
+      0.0053870045,
+      0.0011318916,
+      0.0013686474
+    ]
+  },
+  {
+    "id": "pair-poster-a-v2",
+    "language": "en",
+    "direction": "STABLE",
+    "maxArmVsDesktopScoreDifference": 5.960464477539063e-08,
+    "scores": [
+      0.5251967,
+      0.0006174422,
+      0.0007550598,
+      0.002508498,
+      0.0010784859,
+      0.005376231,
+      0.0009040414,
+      0.000778629
+    ]
+  },
+  {
+    "id": "pair-poster-b-v2",
+    "language": "en",
+    "direction": "WITHDRAWAL",
+    "maxArmVsDesktopScoreDifference": 5.960464477539063e-08,
+    "scores": [
+      0.5251967,
+      0.0006174422,
+      0.0007550598,
+      0.002508498,
+      0.0010784859,
+      0.005376231,
+      0.0009040414,
+      0.000778629
+    ]
+  },
+  {
+    "id": "pair-coffee-a-v2",
+    "language": "hi",
+    "direction": "STABLE",
+    "maxArmVsDesktopScoreDifference": 2.9802322387695312e-08,
+    "scores": [
+      0.41896114,
+      0.003350745,
+      0.00073139917,
+      0.0009095273,
+      0.0013338806,
+      0.008011384,
+      0.0014164419,
+      0.00062910473
+    ]
+  },
+  {
+    "id": "pair-coffee-b-v2",
+    "language": "hi",
+    "direction": "WITHDRAWAL",
+    "maxArmVsDesktopScoreDifference": 2.9802322387695312e-08,
+    "scores": [
+      0.41896114,
+      0.003350745,
+      0.00073139917,
+      0.0009095273,
+      0.0013338806,
+      0.008011384,
+      0.0014164419,
+      0.00062910473
+    ]
+  },
+  {
+    "id": "pair-keynote-a-v2",
+    "language": "en",
+    "direction": "DEESCALATING",
+    "maxArmVsDesktopScoreDifference": 1.4901161193847656e-08,
+    "scores": [
+      0.15011086,
+      0.006108727,
+      0.0039590327,
+      0.032976206,
+      0.0018406056,
+      0.0037651903,
+      0.002118256,
+      0.01450782
+    ]
+  },
+  {
+    "id": "pair-keynote-b-v2",
+    "language": "en",
+    "direction": "UNRESOLVED",
+    "maxArmVsDesktopScoreDifference": 1.4901161193847656e-08,
+    "scores": [
+      0.15011086,
+      0.006108727,
+      0.0039590327,
+      0.032976206,
+      0.0018406056,
+      0.0037651903,
+      0.002118256,
+      0.01450782
+    ]
+  },
+  {
+    "id": "pair-stall-a-v2",
+    "language": "hi",
+    "direction": "DEESCALATING",
+    "maxArmVsDesktopScoreDifference": 6.186962127685547e-05,
+    "scores": [
+      0.96223706,
+      0.0026568195,
+      0.0015491734,
+      0.0025750776,
+      0.0022508265,
+      0.0055636317,
+      0.002082392,
+      0.0013089522
+    ]
+  },
+  {
+    "id": "pair-stall-b-v2",
+    "language": "hi",
+    "direction": "UNRESOLVED",
+    "maxArmVsDesktopScoreDifference": 6.186962127685547e-05,
+    "scores": [
+      0.96223706,
+      0.0026568195,
+      0.0015491734,
+      0.0025750776,
+      0.0022508265,
+      0.0055636317,
+      0.002082392,
+      0.0013089522
+    ]
+  }
+]

@@ -1,0 +1,2 @@
+-r model-export-requirements.txt
+scikit-learn==1.6.1

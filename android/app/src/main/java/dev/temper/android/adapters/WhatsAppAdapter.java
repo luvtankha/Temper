@@ -29,6 +29,8 @@ public final class WhatsAppAdapter implements ChatPlatformAdapter {
     public ReadPlan plan(ScreenObservation screen){
         ReadPlan anchor=anchor(screen);if(anchor.status()!=Status.AVAILABLE)return anchor;
         int list=unique(screen,"android:id/list"),identity=anchor.identity();var listNode=screen.nodes().get(list);
+        int count=screen.nodes().size();int[] first=new int[count],next=new int[count];Arrays.fill(first,-1);Arrays.fill(next,-1);
+        for(int i=count-1;i>=0;i--){int parent=screen.nodes().get(i).parentIndex();if(parent>=0&&parent<i){next[i]=first[parent];first[parent]=i;}}
         List<Row> rows=new ArrayList<>();
         for(int i=0;i<screen.nodes().size();i++){
             var row=screen.nodes().get(i);
@@ -36,14 +38,14 @@ public final class WhatsAppAdapter implements ChatPlatformAdapter {
             // Date separators are list metadata, never message text or sender evidence.
             if(row.resourceId().equals(PREFIX+"conversation_row_date_divider")){
                 if(!row.className().equals("android.widget.TextView")||row.editable()||row.password())return fail(Status.UNSUPPORTED_LAYOUT);
-                for(var child:screen.nodes())if(child.parentIndex()==i)return fail(Status.UNSUPPORTED_LAYOUT);
+                if(first[i]>=0)return fail(Status.UNSUPPORTED_LAYOUT);
                 continue;
             }
             // A row touching either list edge may have clipped sender/timestamp evidence.
             if(!row.visible()||row.bounds().top()<=listNode.bounds().top()+1||row.bounds().bottom()>=listNode.bounds().bottom()-1)continue;
             if(!row.resourceId().equals(PREFIX+"conversation_row_text"))return fail(Status.UNSUPPORTED_LAYOUT);
             int message=-1,date=-1,status=-1;
-            for(int j=i+1;j<screen.nodes().size();j++){
+            for(int j=first[i];j>=0;j=next[j]){
                 var child=screen.nodes().get(j);if(child.parentIndex()!=i)continue;
                 if(!row.bounds().contains(child.bounds())||child.password()||!child.visible())return fail(Status.UNSUPPORTED_LAYOUT);
                 String id=child.resourceId();
@@ -77,5 +79,5 @@ public final class WhatsAppAdapter implements ChatPlatformAdapter {
         }
         return new VisibleConversation(Status.AVAILABLE,conversation,turns,plan.composer());
     }
-    public static String hash(String value){try{byte[] bytes=MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));StringBuilder result=new StringBuilder();for(byte item:bytes)result.append(String.format(Locale.ROOT,"%02x",item&255));return result.toString();}catch(java.security.NoSuchAlgorithmException impossible){throw new IllegalStateException("SHA-256 unavailable",impossible);}}
+    public static String hash(String value){try{byte[] bytes=MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));char[] hex="0123456789abcdef".toCharArray(),result=new char[bytes.length*2];for(int i=0;i<bytes.length;i++){int octet=bytes[i]&255;result[2*i]=hex[octet>>>4];result[2*i+1]=hex[octet&15];}return new String(result);}catch(java.security.NoSuchAlgorithmException impossible){throw new IllegalStateException("SHA-256 unavailable",impossible);}}
 }

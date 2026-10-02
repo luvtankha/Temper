@@ -20,7 +20,7 @@ final class ConsumerChecks {
         }
         try(OutputStream output=new FileOutputStream(new File(context.getFilesDir(),"consumer-avatar-gallery.png"))){gallery.compress(Bitmap.CompressFormat.PNG,100,output);}gallery.recycle();
         AvatarSelection selection=new AvatarSelection(context,avatar->false);Avatar original=selection.selected();try{selection.select(Avatar.NOVA);throw new AssertionError("Unowned avatar selectable");}catch(IllegalStateException expected){}if(selection.selected()!=original)throw new AssertionError("Rejected purchase changed selection");
-        RobertaTokenizer tokenizer;try(InputStream vocab=context.getAssets().open("emotion/vocab.json");InputStream merges=context.getAssets().open("emotion/merges.txt")){tokenizer=new RobertaTokenizer(vocab,merges);}
+        RobertaTokenizer tokenizer;try(InputStream compiled=context.getAssets().open("emotion/tokenizer.bin")){tokenizer=new RobertaTokenizer(compiled);}
         try(InputStream input=assets.getAssets().open("roberta-reference.json")){JSONArray cases=new JSONArray(new String(BoundedIo.read(input,500_000),StandardCharsets.UTF_8));for(int i=0;i<cases.length();i++){JSONObject fixture=cases.getJSONObject(i);JSONArray expected=fixture.getJSONArray("ids");long[] ids=tokenizer.encode(fixture.getString("text"),128);if(ids.length!=expected.length())throw new AssertionError("Android tokenizer fixture length "+i);for(int j=0;j<ids.length;j++)if(ids[j]!=expected.getLong(j))throw new AssertionError("Android tokenizer fixture "+i);}}
     }
     static void modelChecks(Context assets,Context context)throws Exception{

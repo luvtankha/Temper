@@ -15,6 +15,14 @@ import java.time.*;
 import java.util.*;
 
 class LearningTests {
+    @Test void contextPilotDirectionsRemainValidRatedFeedback()throws Exception{
+        for(String direction:List.of("WITHDRAWAL","UNRESOLVED")){
+            var payload=body();((ObjectNode)payload.path("analyses").get(0)).put("trajectory",direction);
+            assertEquals(direction,LearningSubmission.parse(payload).analyses().getFirst().trajectory());
+        }
+        var invalid=body();((ObjectNode)invalid.path("analyses").get(0)).put("trajectory","ARBITRARY");
+        assertThrows(IllegalArgumentException.class,()->LearningSubmission.parse(invalid));
+    }
     @TempDir Path directory;
     private final ObjectMapper mapper=new ObjectMapper();
     private final String token=Base64.getUrlEncoder().withoutPadding().encodeToString(new byte[32]);

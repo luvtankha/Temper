@@ -29,8 +29,10 @@ public final class TemperAccessibilityService extends AccessibilityService imple
     private final LayoutRecovery recovery=new LayoutRecovery();
     private final WhatsAppAdapter liveAdapter=new WhatsAppAdapter(UUID.randomUUID().toString());
     private final AdapterRegistry adapters=AdapterRegistry.whatsApp(liveAdapter);
+    private final ProbeDeadline deadline=new ProbeDeadline();
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Runnable probe=()->{
+        deadline.reset();
         if(consent==null||!consent.allows(ConsentStore.WHATSAPP)){hideOverlay();return;}
         if(LiveCaptureState.automatic()&&!automaticReady()){hideOverlay();return;}
         if(automaticReady())LiveCaptureState.beginAutomatic(this);
@@ -115,12 +117,13 @@ public final class TemperAccessibilityService extends AccessibilityService imple
             LiveCaptureState.unavailable();
             overlay.setSummary(new OverlaySummary("Waiting for readable text","Analysis resumes automatically",new float[8],false));
         }
-        handler.removeCallbacks(probe);
-        if(captureRequested())handler.postDelayed(probe,recovery.delay(now));
+        if(captureRequested())scheduleProbe(recovery.delay(now));
     }
+    private void scheduleProbe(long delay){long wait=deadline.schedule(SystemClock.elapsedRealtime(),delay);handler.removeCallbacks(probe);handler.postDelayed(probe,wait);}
+    private void cancelProbe(){handler.removeCallbacks(probe);deadline.reset();}
     private boolean automaticReady(){return AutomaticCapturePolicy.ready(new PowerStore(this).enabled(),AnalysisConsent.auto(this),ModelFiles.ready(this),FloatingOverlayService.running());}
     private boolean captureRequested(){return LiveCaptureState.armed()||LiveCaptureState.active()||LiveCaptureState.automatic()||automaticReady();}
-    private void hideOverlay(){handler.removeCallbacks(probe);recovery.reset();if(overlay!=null)overlay.hide();if(live!=null)live.clear();LiveCaptureState.leave();boundWindow=-1;ParseProbeState.forgetContent();}
+    private void hideOverlay(){cancelProbe();recovery.reset();if(overlay!=null)overlay.hide();if(live!=null){if(new PowerStore(this).enabled()&&AnalysisConsent.local(this))live.clearContext();else live.clear();}LiveCaptureState.leave();boundWindow=-1;ParseProbeState.forgetContent();}
     private record HostObservation(AccessibilityNodeInfo root,ForegroundSessionPolicy.Decision decision){}
     private HostObservation hostRoot(){
         ForegroundSessionPolicy policy=new ForegroundSessionPolicy();
@@ -147,8 +150,8 @@ public final class TemperAccessibilityService extends AccessibilityService imple
     public static boolean recentlyDetected(){long time=lastSupportedEvent;return time>0&&SystemClock.elapsedRealtime()-time<120_000;}
     private static void clear(){lastSupportedEvent=0;}
     /** Called by the foreground companion after ON/OFF ownership changes; no host controls are touched. */
-    public static void refreshPowerState(){TemperAccessibilityService service=instance;if(service!=null){service.handler.removeCallbacks(service.probe);service.handler.post(service.probe);}}
-    @Override protected void onServiceConnected(){connected=true;consent=new ConsentStore(this);overlay=new OverlayManager(this);live=new LivePipeline(this);consent.preferences().registerOnSharedPreferenceChangeListener(this);instance=this;clear();if(!consent.consented())disableSelf();else handler.post(probe);}
+    public static void refreshPowerState(){TemperAccessibilityService service=instance;if(service!=null){if(service.automaticReady())service.live.warm();service.scheduleProbe(0);}}
+    @Override protected void onServiceConnected(){connected=true;consent=new ConsentStore(this);overlay=new OverlayManager(this);live=new LivePipeline(this);consent.preferences().registerOnSharedPreferenceChangeListener(this);instance=this;clear();if(!consent.consented())disableSelf();else{if(automaticReady())live.warm();handler.post(probe);}}
     @Override public void onAccessibilityEvent(AccessibilityEvent event){
         if(consent==null||event==null)return;
         CharSequence name=event.getPackageName();
@@ -158,19 +161,19 @@ public final class TemperAccessibilityService extends AccessibilityService imple
             // An old inference must not publish while a new host screen is awaiting
             // identity verification. Our own accessibility popup does not change the chat.
             if(LiveCaptureState.active()&&(name==null||!getPackageName().contentEquals(name)))unreadableLayout();
-            handler.removeCallbacks(probe);handler.postDelayed(probe,150);
+            scheduleProbe(150);
         }
         if(name==null||!consent.allows(name.toString())){clear();return;}
-        if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED||type==AccessibilityEvent.TYPE_VIEW_SCROLLED){lastSupportedEvent=SystemClock.elapsedRealtime();if(ProbeState.armed()||ParseProbeState.armed()||captureRequested()||boundWindow>=0){handler.removeCallbacks(probe);handler.postDelayed(probe,type==AccessibilityEvent.TYPE_VIEW_SCROLLED?450:250);}}
+        if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED||type==AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED||type==AccessibilityEvent.TYPE_VIEW_SCROLLED){lastSupportedEvent=SystemClock.elapsedRealtime();if(ProbeState.armed()||ParseProbeState.armed()||captureRequested()||boundWindow>=0){scheduleProbe(type==AccessibilityEvent.TYPE_VIEW_SCROLLED?300:150);}}
     }
     @Override public void onSharedPreferenceChanged(SharedPreferences preferences,String key){
-        if(consent.paused()||!consent.consented()||(("liveConsentVersion".equals(key)||"onDeviceConsentVersion".equals(key)||"analysisMode".equals(key))&&!AnalysisConsent.allowed(this))){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}
+        if(consent.paused()||!consent.consented()||(("liveConsentVersion".equals(key)||"onDeviceConsentVersion".equals(key)||"analysisMode".equals(key))&&!AnalysisConsent.allowed(this))){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);cancelProbe();}
         else if("powerEnabled".equals(key)||"autoConsentVersion".equals(key)){
             if(LiveCaptureState.automatic()&&!automaticReady())hideOverlay();
-            handler.removeCallbacks(probe);handler.post(probe);
+            scheduleProbe(0);
         }
         if(!consent.consented())disableSelf();
     }
-    @Override public void onInterrupt(){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);}
+    @Override public void onInterrupt(){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);cancelProbe();}
     @Override public void onDestroy(){connected=false;instance=null;if(consent!=null)consent.preferences().unregisterOnSharedPreferenceChangeListener(this);hideOverlay();LiveCaptureState.clear();if(live!=null)live.close();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);super.onDestroy();}
 }

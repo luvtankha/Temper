@@ -1,0 +1,302 @@
+{
+  "scope": "Authored fictional scenarios only; NOT real-world accuracy or independent human evaluation.",
+  "evaluationRevision": 2,
+  "priorFailure": "v1 selected C before abstention; settings now selected by deployed validation predictions. Original test excluded; fresh holdout-v2 used once.",
+  "training": 38,
+  "validation": 14,
+  "heldOut": 28,
+  "regularization": 4.0,
+  "validationMacroF1WithAbstention": 1.0,
+  "baseline": {
+    "count": 28,
+    "accuracy": 0.21428571428571427,
+    "macroF1": 0.075,
+    "recall": {
+      "DEESCALATING": 0.0,
+      "STABLE": 1.0,
+      "TENSION_RISING": 0.0,
+      "UNRESOLVED": 0.0,
+      "WITHDRAWAL": 0.0
+    },
+    "abstentions": 2
+  },
+  "candidate": {
+    "count": 28,
+    "accuracy": 1.0,
+    "macroF1": 1.0,
+    "recall": {
+      "DEESCALATING": 1.0,
+      "STABLE": 1.0,
+      "TENSION_RISING": 1.0,
+      "UNRESOLVED": 1.0,
+      "WITHDRAWAL": 1.0
+    },
+    "abstentions": 0
+  },
+  "byLanguage": {
+    "en": {
+      "baseline": {
+        "count": 14,
+        "accuracy": 0.21428571428571427,
+        "macroF1": 0.08,
+        "recall": {
+          "DEESCALATING": 0.0,
+          "STABLE": 1.0,
+          "TENSION_RISING": 0.0,
+          "UNRESOLVED": 0.0,
+          "WITHDRAWAL": 0.0
+        },
+        "abstentions": 2
+      },
+      "candidate": {
+        "count": 14,
+        "accuracy": 1.0,
+        "macroF1": 1.0,
+        "recall": {
+          "DEESCALATING": 1.0,
+          "STABLE": 1.0,
+          "TENSION_RISING": 1.0,
+          "UNRESOLVED": 1.0,
+          "WITHDRAWAL": 1.0
+        },
+        "abstentions": 0
+      }
+    },
+    "hi": {
+      "baseline": {
+        "count": 14,
+        "accuracy": 0.21428571428571427,
+        "macroF1": 0.07058823529411765,
+        "recall": {
+          "DEESCALATING": 0.0,
+          "STABLE": 1.0,
+          "TENSION_RISING": 0.0,
+          "UNRESOLVED": 0.0,
+          "WITHDRAWAL": 0.0
+        },
+        "abstentions": 0
+      },
+      "candidate": {
+        "count": 14,
+        "accuracy": 1.0,
+        "macroF1": 1.0,
+        "recall": {
+          "DEESCALATING": 1.0,
+          "STABLE": 1.0,
+          "TENSION_RISING": 1.0,
+          "UNRESOLVED": 1.0,
+          "WITHDRAWAL": 1.0
+        },
+        "abstentions": 0
+      }
+    }
+  },
+  "approvedPilot": true,
+  "elapsedSeconds": 4.073323900000105,
+  "datasetSha256": "80197cd24c3fbf8a93a0ad97e0d605cbb144a384e19e86da519bf73d44cd4903",
+  "featureSpecSha256": "62807212f862173eda7314871181efb96480572bc2f4f4c2870f5dcfcb13aa60",
+  "limitations": [
+    "Small synthetic sample; shared author/cue vocabulary across scenarios.",
+    "Only bounded visible context; no claims about intentions or hidden history.",
+    "Frozen English GoEmotions base; no new emotion-bar calibration or accuracy claim.",
+    "Hinglish is Roman-script only; novel idioms and indirect sarcasm may be missed."
+  ],
+  "heldOutCases": [
+    {
+      "id": "audit-v2",
+      "language": "en",
+      "direction": "TENSION_RISING",
+      "baseline": "UNCERTAIN",
+      "candidate": "TENSION_RISING"
+    },
+    {
+      "id": "garden-v2",
+      "language": "en",
+      "direction": "TENSION_RISING",
+      "baseline": "UNCERTAIN",
+      "candidate": "TENSION_RISING"
+    },
+    {
+      "id": "sponsor-v2",
+      "language": "hi",
+      "direction": "TENSION_RISING",
+      "baseline": "STABLE",
+      "candidate": "TENSION_RISING"
+    },
+    {
+      "id": "parking-v2",
+      "language": "hi",
+      "direction": "TENSION_RISING",
+      "baseline": "STABLE",
+      "candidate": "TENSION_RISING"
+    },
+    {
+      "id": "donation-v2",
+      "language": "en",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "meeting-v2",
+      "language": "en",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "bandwidth-v2",
+      "language": "hi",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "dance-v2",
+      "language": "hi",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "archive-v2",
+      "language": "en",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "mentoring-v2",
+      "language": "en",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "printer-v2",
+      "language": "hi",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "terrace-v2",
+      "language": "hi",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "subscription-v2",
+      "language": "en",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    },
+    {
+      "id": "childcare-v2",
+      "language": "en",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    },
+    {
+      "id": "repairshop-v2",
+      "language": "hi",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    },
+    {
+      "id": "coach-v2",
+      "language": "hi",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    },
+    {
+      "id": "weather-v2",
+      "language": "en",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "STABLE"
+    },
+    {
+      "id": "quiet-v2",
+      "language": "en",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "STABLE"
+    },
+    {
+      "id": "visa-v2",
+      "language": "hi",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "STABLE"
+    },
+    {
+      "id": "rest-v2",
+      "language": "hi",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "STABLE"
+    },
+    {
+      "id": "pair-poster-a-v2",
+      "language": "en",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "STABLE"
+    },
+    {
+      "id": "pair-poster-b-v2",
+      "language": "en",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "pair-coffee-a-v2",
+      "language": "hi",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "STABLE"
+    },
+    {
+      "id": "pair-coffee-b-v2",
+      "language": "hi",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "pair-keynote-a-v2",
+      "language": "en",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "pair-keynote-b-v2",
+      "language": "en",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    },
+    {
+      "id": "pair-stall-a-v2",
+      "language": "hi",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "pair-stall-b-v2",
+      "language": "hi",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    }
+  ]
+}

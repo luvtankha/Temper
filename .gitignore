@@ -89,6 +89,7 @@ models/cache/
 models/downloads/
 *.onnx
 *.bin
+!android/app/src/main/assets/emotion/tokenizer.bin
 *.safetensors
 *.pt
 *.pth

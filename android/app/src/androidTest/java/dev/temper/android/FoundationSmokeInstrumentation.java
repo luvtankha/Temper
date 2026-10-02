@@ -21,7 +21,10 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
     private boolean overlayOnly;
     private boolean learningOnly;
     private boolean powerOnly;
-    @Override public void onCreate(Bundle arguments){super.onCreate(arguments);powerOnly=arguments!=null&&"true".equals(arguments.getString("powerOnly"));learningOnly=arguments!=null&&"true".equals(arguments.getString("learningOnly"));overlayOnly=arguments!=null&&"true".equals(arguments.getString("overlayOnly"));consumerOnly=arguments!=null&&"true".equals(arguments.getString("consumerOnly"));transportOnly=arguments!=null&&"true".equals(arguments.getString("transportOnly"));adapterOnly=arguments!=null&&"true".equals(arguments.getString("adapterOnly"));start();}
+    private boolean performanceOnly;
+    private boolean performanceBaseline;
+    private boolean complexOnly;
+    @Override public void onCreate(Bundle arguments){super.onCreate(arguments);performanceBaseline=arguments!=null&&"true".equals(arguments.getString("performanceBaseline"));complexOnly=arguments!=null&&"true".equals(arguments.getString("complexOnly"));performanceOnly=arguments!=null&&"true".equals(arguments.getString("performanceOnly"));powerOnly=arguments!=null&&"true".equals(arguments.getString("powerOnly"));learningOnly=arguments!=null&&"true".equals(arguments.getString("learningOnly"));overlayOnly=arguments!=null&&"true".equals(arguments.getString("overlayOnly"));consumerOnly=arguments!=null&&"true".equals(arguments.getString("consumerOnly"));transportOnly=arguments!=null&&"true".equals(arguments.getString("transportOnly"));adapterOnly=arguments!=null&&"true".equals(arguments.getString("adapterOnly"));start();}
     private Activity launch(){return startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));}
     private View find(View root,String label){
         if(root instanceof TextView text&&label.contentEquals(text.getText()))return root;
@@ -45,6 +48,8 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
         Bundle result=new Bundle();
         java.util.Map<String,?> originalSetup=new java.util.HashMap<>(getTargetContext().getSharedPreferences("MainActivity",0).getAll());
         try{
+            if(complexOnly){ComplexContextChecks.run(getContext(),getTargetContext());result.putString("stream","PASS: 28 fictional complex English/Hinglish held-out chats, context-sensitive identical replies, four live repair transitions, first-message spectrum and stopped analysis rejection\n");finish(Activity.RESULT_OK,result);return;}
+            if(performanceOnly){PerformanceChecks.run(getTargetContext(),performanceBaseline);result.putString("stream","PASS: generated conversation timing recorded\n");finish(Activity.RESULT_OK,result);return;}
             if(powerOnly){Activity activity=launch();runOnMainSync(()->{PowerUiChecks.run(activity);activity.finish();});restoreSetup(originalSetup);result.putString("stream","PASS: compact ON/OFF home, consent migration and explicit setup gating, saved power state and one-tap OFF; no host chat read\n");finish(Activity.RESULT_OK,result);return;}
             if(learningOnly){
                 if(!BuildConfig.LEARNING_URL.equals("https://feedback.invalid"))throw new AssertionError("Use the isolated test origin for this UI-only check");

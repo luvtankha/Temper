@@ -1,0 +1,63 @@
+{
+  "before": {
+    "version": "0.46.0",
+    "generated": true,
+    "coldMs": 896.107448,
+    "allMs": [
+      896.107448,
+      51.342136,
+      50.870833,
+      50.854115,
+      51.233959,
+      50.91677,
+      50.933125,
+      50.608854
+    ],
+    "processPssKb": 250912,
+    "freshIncomingMs": [
+      53.978541,
+      49.787188,
+      51.662343,
+      50.754948,
+      49.535521,
+      50.883489,
+      53.932709,
+      49.031042
+    ],
+    "engine": "phase45-frozen",
+    "settledProcessPssKb": 209311,
+    "javaUsedBytes": 11243264,
+    "nativeAllocatedBytes": 159494384
+  },
+  "after": {
+    "version": "0.46.0",
+    "generated": true,
+    "coldMs": 661.464635,
+    "allMs": [
+      661.464635,
+      2.246979,
+      2.266198,
+      2.195729,
+      2.229323,
+      2.261458,
+      2.195417,
+      2.249895
+    ],
+    "processPssKb": 234437,
+    "freshIncomingMs": [
+      28.131198,
+      24.380312,
+      26.423073,
+      25.656771,
+      25.307448,
+      25.574687,
+      26.033541,
+      23.740989
+    ],
+    "engine": "phase46",
+    "settledProcessPssKb": 202065,
+    "javaUsedBytes": 3352992,
+    "nativeAllocatedBytes": 159388128
+  },
+  "method": "Frozen Phase45 and Phase46 engines in separate instrumentation processes; same generated inputs; settled memory after matching GC procedure. Single device, not UI latency."
+}

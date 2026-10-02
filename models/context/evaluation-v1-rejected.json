@@ -1,0 +1,300 @@
+{
+  "scope": "Authored fictional scenarios only; NOT real-world accuracy or independent human evaluation.",
+  "training": 38,
+  "validation": 14,
+  "heldOut": 28,
+  "regularization": 0.25,
+  "validationMacroF1BeforeAbstention": 1.0,
+  "baseline": {
+    "count": 28,
+    "accuracy": 0.21428571428571427,
+    "macroF1": 0.07741935483870968,
+    "recall": {
+      "DEESCALATING": 0.0,
+      "STABLE": 1.0,
+      "TENSION_RISING": 0.0,
+      "UNRESOLVED": 0.0,
+      "WITHDRAWAL": 0.0
+    },
+    "abstentions": 3
+  },
+  "candidate": {
+    "count": 28,
+    "accuracy": 0.7142857142857143,
+    "macroF1": 0.8351515151515152,
+    "recall": {
+      "DEESCALATING": 0.6666666666666666,
+      "STABLE": 0.5,
+      "TENSION_RISING": 1.0,
+      "UNRESOLVED": 0.6666666666666666,
+      "WITHDRAWAL": 0.8333333333333334
+    },
+    "abstentions": 8
+  },
+  "byLanguage": {
+    "en": {
+      "baseline": {
+        "count": 14,
+        "accuracy": 0.21428571428571427,
+        "macroF1": 0.08,
+        "recall": {
+          "DEESCALATING": 0.0,
+          "STABLE": 1.0,
+          "TENSION_RISING": 0.0,
+          "UNRESOLVED": 0.0,
+          "WITHDRAWAL": 0.0
+        },
+        "abstentions": 2
+      },
+      "candidate": {
+        "count": 14,
+        "accuracy": 0.7142857142857143,
+        "macroF1": 0.82,
+        "recall": {
+          "DEESCALATING": 0.6666666666666666,
+          "STABLE": 0.3333333333333333,
+          "TENSION_RISING": 1.0,
+          "UNRESOLVED": 0.6666666666666666,
+          "WITHDRAWAL": 1.0
+        },
+        "abstentions": 4
+      }
+    },
+    "hi": {
+      "baseline": {
+        "count": 14,
+        "accuracy": 0.21428571428571427,
+        "macroF1": 0.075,
+        "recall": {
+          "DEESCALATING": 0.0,
+          "STABLE": 1.0,
+          "TENSION_RISING": 0.0,
+          "UNRESOLVED": 0.0,
+          "WITHDRAWAL": 0.0
+        },
+        "abstentions": 1
+      },
+      "candidate": {
+        "count": 14,
+        "accuracy": 0.7142857142857143,
+        "macroF1": 0.8400000000000001,
+        "recall": {
+          "DEESCALATING": 0.6666666666666666,
+          "STABLE": 0.6666666666666666,
+          "TENSION_RISING": 1.0,
+          "UNRESOLVED": 0.6666666666666666,
+          "WITHDRAWAL": 0.6666666666666666
+        },
+        "abstentions": 4
+      }
+    }
+  },
+  "approvedPilot": false,
+  "elapsedSeconds": 3.1631565999996383,
+  "datasetSha256": "1e50615b40a4d45a8c1b009e0897a2bd4349f2f163750a00a4f60485678c1c9b",
+  "featureSpecSha256": "62807212f862173eda7314871181efb96480572bc2f4f4c2870f5dcfcb13aa60",
+  "limitations": [
+    "Small synthetic sample; shared author/cue vocabulary across scenarios.",
+    "Only bounded visible context; no claims about intentions or hidden history.",
+    "Frozen English GoEmotions base; no new emotion-bar calibration or accuracy claim.",
+    "Hinglish is Roman-script only; novel idioms and indirect sarcasm may be missed."
+  ],
+  "heldOutCases": [
+    {
+      "id": "test-audit",
+      "language": "en",
+      "direction": "TENSION_RISING",
+      "baseline": "UNCERTAIN",
+      "candidate": "TENSION_RISING"
+    },
+    {
+      "id": "test-birthday",
+      "language": "en",
+      "direction": "TENSION_RISING",
+      "baseline": "UNCERTAIN",
+      "candidate": "TENSION_RISING"
+    },
+    {
+      "id": "test-deposit",
+      "language": "hi",
+      "direction": "TENSION_RISING",
+      "baseline": "STABLE",
+      "candidate": "TENSION_RISING"
+    },
+    {
+      "id": "test-gaming",
+      "language": "hi",
+      "direction": "TENSION_RISING",
+      "baseline": "STABLE",
+      "candidate": "TENSION_RISING"
+    },
+    {
+      "id": "test-school",
+      "language": "en",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "test-invitation",
+      "language": "en",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "test-hackathon",
+      "language": "hi",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "test-car",
+      "language": "hi",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "DEESCALATING"
+    },
+    {
+      "id": "test-promotion",
+      "language": "en",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "test-garden",
+      "language": "en",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "test-music",
+      "language": "hi",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "test-sibling",
+      "language": "hi",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "test-refund",
+      "language": "en",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    },
+    {
+      "id": "test-location",
+      "language": "en",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    },
+    {
+      "id": "test-internship",
+      "language": "hi",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    },
+    {
+      "id": "test-vacation",
+      "language": "hi",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNRESOLVED"
+    },
+    {
+      "id": "test-earthquake",
+      "language": "en",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "STABLE"
+    },
+    {
+      "id": "test-running",
+      "language": "en",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "UNCERTAIN"
+    },
+    {
+      "id": "test-results",
+      "language": "hi",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "STABLE"
+    },
+    {
+      "id": "test-festival",
+      "language": "hi",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "STABLE"
+    },
+    {
+      "id": "test-pair-code-a",
+      "language": "en",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "UNCERTAIN"
+    },
+    {
+      "id": "test-pair-code-b",
+      "language": "en",
+      "direction": "WITHDRAWAL",
+      "baseline": "STABLE",
+      "candidate": "WITHDRAWAL"
+    },
+    {
+      "id": "test-pair-seat-a",
+      "language": "hi",
+      "direction": "STABLE",
+      "baseline": "STABLE",
+      "candidate": "UNCERTAIN"
+    },
+    {
+      "id": "test-pair-seat-b",
+      "language": "hi",
+      "direction": "WITHDRAWAL",
+      "baseline": "UNCERTAIN",
+      "candidate": "UNCERTAIN"
+    },
+    {
+      "id": "test-pair-volunteer-a",
+      "language": "en",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "UNCERTAIN"
+    },
+    {
+      "id": "test-pair-volunteer-b",
+      "language": "en",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNCERTAIN"
+    },
+    {
+      "id": "test-pair-rehearsal-a",
+      "language": "hi",
+      "direction": "DEESCALATING",
+      "baseline": "STABLE",
+      "candidate": "UNCERTAIN"
+    },
+    {
+      "id": "test-pair-rehearsal-b",
+      "language": "hi",
+      "direction": "UNRESOLVED",
+      "baseline": "STABLE",
+      "candidate": "UNCERTAIN"
+    }
+  ]
+}

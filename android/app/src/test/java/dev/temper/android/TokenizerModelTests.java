@@ -14,6 +14,11 @@ public class TokenizerModelTests {
     @Test public void bpeMatchesIndependentHuggingFaceReferences()throws Exception{
         RobertaTokenizer tokenizer=tokenizer();try(InputStream input=getClass().getResourceAsStream("/roberta-reference.json")){JSONArray fixtures=new JSONArray(new String(input.readAllBytes(),StandardCharsets.UTF_8));assertTrue(fixtures.length()>=30);for(int i=0;i<fixtures.length();i++){JSONObject fixture=fixtures.getJSONObject(i);JSONArray raw=fixture.getJSONArray("ids");long[] ids=new long[raw.length()];for(int j=0;j<ids.length;j++)ids[j]=raw.getLong(j);assertArrayEquals("Tokenizer fixture "+i,ids,tokenizer.encode(fixture.getString("text"),128));}}
     }
+    @Test public void compiledTablesMatchReferenceAndRejectMalformedInput()throws Exception{
+        RobertaTokenizer compiled;try(var input=new FileInputStream("src/main/assets/emotion/tokenizer.bin")){compiled=new RobertaTokenizer(input);}
+        try(var input=getClass().getResourceAsStream("/roberta-reference.json")){JSONArray fixtures=new JSONArray(new String(input.readAllBytes(),StandardCharsets.UTF_8));for(int i=0;i<fixtures.length();i++){var fixture=fixtures.getJSONObject(i);var raw=fixture.getJSONArray("ids");long[] expected=new long[raw.length()];for(int j=0;j<expected.length;j++)expected[j]=raw.getLong(j);assertArrayEquals("Compiled fixture "+i,expected,compiled.encode(fixture.getString("text"),128));}}
+        assertThrows(IOException.class,()->new RobertaTokenizer(new ByteArrayInputStream(new byte[12])));
+    }
     @Test public void int8ModelProducesRealEmotionScores()throws Exception{
         String path=System.getenv("TEMPER_TEST_MODEL");Assume.assumeTrue(path!=null&&new File(path).isFile());RobertaTokenizer tokenizer=tokenizer();OrtEnvironment environment=OrtEnvironment.getEnvironment();
         try(var options=new OrtSession.SessionOptions();var session=environment.createSession(path,options)){

@@ -36,3 +36,20 @@ The production analysis-overlay manager was exercised over TEMPER's own fictiona
 October 2, 2026, same OnePlus 8T. Twenty-nine JVM tests and final native foundation/consumer/overlay checks passed. The home has one prominent ON/OFF button. Native UI fixtures verify that the new automatic scope requires its own unchecked opt-in, consent saving leaves power OFF, stale OFF cannot restart, pending restart is disabled and bounded, and explicit stop cancels it even when already OFF.
 
 With controlled fixture consent/power, the real foreground companion appeared over TEMPER's own dummy screen. The actual JNI model produced distinct neutral and angry bars for two generated automatic chats. Changing the conversation invalidated the old generation, and automatic analysis created no feedback session. Actual home OFF and the notification STOP route removed the foreground companion and rejected pending model results. Movement/popup checks continued to pass. Instrumentation disconnects Accessibility, so this does not verify the complete consumer ON → live WhatsApp path; a user-driven check of that flow remains a release gate. No host root or private chat was obtained. See [Phase 45 handoff](../phases/PHASE-45-HANDOFF.md).
+
+## 0.46.0 complex context and latency
+
+October 2, 2026. The phone passed 28 complex fictional held-out English/Hinglish
+conversations, four appended conflict-to-repair transitions, first-message bars
+and stopped-analysis rejection. The new summaries use a trained context pilot;
+old and optimized engines produce matching emotion bars on this phone. All 113
+independent tokenizer cases, existing consumer/role-invariance checks, structural
+privacy fixtures, automatic dummy switching, home/notification OFF and overlay
+movement checks passed. These tests read only generated text in TEMPER's own
+process. A real host-app path remains a separate release check, as instrumentation
+can disconnect Accessibility.
+
+Controlled measurements and the rejected first training candidate are documented
+in [Context and performance](CONTEXT-AND-PERFORMANCE.md). The independent emotion
+bars retain the same model and its language limitations. This synthetic pilot is
+not an accuracy measurement for live users.

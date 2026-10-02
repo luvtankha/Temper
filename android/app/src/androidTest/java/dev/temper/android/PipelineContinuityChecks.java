@@ -67,7 +67,7 @@ final class PipelineContinuityChecks {
             quiet.await(1500,TimeUnit.MILLISECONDS);instrumentation.waitForIdleSync();
             if(staleResults.get()!=0||LiveCaptureState.current(generation))throw new AssertionError("Explicit stop accepted a late estimate");
         }finally{
-            instrumentation.runOnMainSync(()->{LiveCaptureState.clear();if(pipeline.get()!=null)pipeline.get().close();});
+            instrumentation.runOnMainSync(()->{LiveCaptureState.clear();if(pipeline.get()!=null){pipeline.get().close();pipeline.get().close();}});
             consent.preferences().edit().clear().commit();
             isolated.getSharedPreferences("temper_learning",0).edit().clear().commit();
         }

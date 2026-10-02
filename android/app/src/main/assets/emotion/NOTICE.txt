@@ -15,7 +15,10 @@ Merges SHA256: 1ce1664773c50f3e0cc8842619a93edc4624525b728b188a9e0be33b7726adc5
 English Reddit-trained model; live dialogue and Hinglish accuracy are not
 validated. Model scores are independent sigmoid outputs, not proof of emotion.
 The Android app maps annoyance to frustration and fear/nervousness to concern.
-Direction is a conservative tension-change proxy across remote turns.
+Direction uses a small fictional-data-trained context pilot in version 0.46.0.
+It is not independently human-validated. Emotion-bar weights are unchanged.
+Compiled tokenizer.bin derives exactly from the pinned public vocabulary/merges.
+Its SHA256: 75cd4a321b71e40d862559cc715075e6a34ce59c290d99966ff52bd76844cdf1
 
 MIT License terms:
 Permission is hereby granted, free of charge, to any person obtaining a copy
