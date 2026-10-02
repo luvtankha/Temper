@@ -52,6 +52,12 @@ foreach ($temperRelative in @('docs\phases\PHASE-42-CONTEXT.md','docs\phases\PHA
 foreach ($temperRelative in @('docs\phases\PHASE-43-CONTEXT.md','docs\phases\PHASE-43-HANDOFF.md','docs\phases\PHASE-44-CONTEXT.md','docs\phases\PHASE-44-HANDOFF.md','docs\phases\PHASE-45-CONTEXT.md','docs\phases\PHASE-45-HANDOFF.md','docs\phases\PHASE-46-CONTEXT.md','docs\phases\PHASE-46-HANDOFF.md')) {
     Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
 }
+foreach ($temperRelative in @('docs\phases\PHASE-47-CONTEXT.md','docs\phases\PHASE-47-HANDOFF.md','scripts\generate-studio-avatars.py','scripts\figma-build-payload.py')) {
+    Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
+}
+foreach ($temperDesignRelative in $temperTracked | Where-Object { $_ -like 'design/phase47/*' }) {
+    Copy-TemperCandidateFile (Join-Path $temperRoot $temperDesignRelative) $temperDesignRelative
+}
 foreach ($temperDeploymentRelative in $temperTracked | Where-Object { $_ -like 'deployment/feedback/*' -and $_ -notin @('deployment/feedback/Dockerfile','deployment/feedback/feedback.env.example') }) {
     Copy-TemperCandidateFile (Join-Path $temperRoot $temperDeploymentRelative) $temperDeploymentRelative
 }
@@ -63,7 +69,8 @@ foreach ($temperEvidence in @(
     @('models\context\evaluation-v1-rejected.json', 'evidence\context-pilot-rejected-v1.json'),
     @('models\context\phone-performance.json', 'evidence\phone-performance.json'),
     @('models\context\phone-context-results.json', 'evidence\phone-context-results.json'),
-    @('temp\phase45-home.png', 'evidence\home-on-off.png'),
+    @('design\phase47\previews\carousel-astra-off.png', 'evidence\home-off.png'),
+    @('design\phase47\previews\carousel-astra-on.png', 'evidence\home-on.png'),
     @('screenshots\test\phase41-floating-dummy.png', 'evidence\floating-dummy.png'),
     @('screenshots\test\phase41-floating-popup.png', 'evidence\floating-popup.png')
 )) {
@@ -77,7 +84,8 @@ The testing APK is installed on the test phone and has no real sale configuratio
 The UNSIGNED-review AAB cannot be uploaded as a signed production release.
 Premium purchases are disabled until real Play products and HTTPS verification exist.
 Automatic analysis currently supports the verified WhatsApp layout only.
-Read the model limits and outstanding checks in CONTEXT-AND-PERFORMANCE.md and Phase 46 handoff.
+Read AVATAR-CAROUSEL.md and the Phase 47 handoff for the new home and Figma prototype.
+Read model limits in CONTEXT-AND-PERFORMANCE.md; model weights are unchanged by Phase 47.
 ANALYSIS-FEEDBACK.md documents optional rated-session sharing and the evaluated model upgrade path.
 No real feedback service is configured and no user data was collected.
 Emotion-bar weights are unchanged; the direction head is a fictional-data-trained pilot.
@@ -89,8 +97,8 @@ cloud deployment recipe; complete the release gates before selling or publishing
 The feedback directory contains a separate persistent-volume HTTPS deployment kit.
 Weights, credentials, test signing keys and private runtime data are excluded.
 Evidence contains only generated fixture results and TEMPER's own fictional screen.
-Avatar/spectrum/floating screenshots were captured in Phase 41 with the unchanged model/assets.
-The ON/OFF home screenshot was captured from the installed Phase 45 app.
+The avatar gallery and generated OFF/ON home renders are from Phase 47.
+The spectrum/floating screenshots are historical Phase 41 fixtures.
 The Phase 42 training smoke is synthetic and cannot be promoted as a customer model.
 '@
 $temperReadme | Set-Content -LiteralPath (Join-Path $temperStage 'README.md') -Encoding utf8

@@ -11,7 +11,7 @@ public final class AnalyticsPanel extends LinearLayout {
     private final SpectrumView spectrum;
     public AnalyticsPanel(Context context){
         super(context);setOrientation(VERTICAL);int pad=Math.round(12*getResources().getDisplayMetrics().density);setPadding(pad,pad,pad,pad);
-        GradientDrawable background=new GradientDrawable();background.setColor(0xff211626);background.setCornerRadius(pad);background.setStroke(Math.max(1,pad/12),0xffb876c4);setBackground(background);
+        GradientDrawable background=new GradientDrawable();background.setColor(dev.temper.android.home.HomeTokens.SURFACE);background.setCornerRadius(pad);background.setStroke(Math.max(1,pad/12),dev.temper.android.home.HomeTokens.BORDER);setBackground(background);
         current=text(context);direction=text(context);spectrum=new SpectrumView(context);addView(spectrum,new LayoutParams(-1,-2));bind(OverlaySummary.unavailable());
     }
     private TextView text(Context context){TextView view=new TextView(context);view.setTextSize(14);view.setTextColor(Color.WHITE);view.setMaxLines(2);view.setEllipsize(android.text.TextUtils.TruncateAt.END);view.setPadding(0,0,0,Math.round(6*getResources().getDisplayMetrics().density));addView(view,new LayoutParams(-1,-2));return view;}

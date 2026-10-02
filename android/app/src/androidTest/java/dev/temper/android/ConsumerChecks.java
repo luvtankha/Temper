@@ -13,7 +13,7 @@ import dev.temper.android.adapters.*;
 /** Own generated fixtures only; this test never obtains an Accessibility root. */
 final class ConsumerChecks {
     static void run(Context assets,Context context)throws Exception{
-        Bitmap gallery=Bitmap.createBitmap(1024,768,Bitmap.Config.ARGB_8888);Canvas galleryCanvas=new Canvas(gallery);galleryCanvas.drawColor(0xff151019);Paint label=new Paint(Paint.ANTI_ALIAS_FLAG);label.setColor(Color.WHITE);label.setTextSize(14);
+        Bitmap gallery=Bitmap.createBitmap(1024,Avatar.values().length*192,Bitmap.Config.ARGB_8888);Canvas galleryCanvas=new Canvas(gallery);galleryCanvas.drawColor(0xff151019);Paint label=new Paint(Paint.ANTI_ALIAS_FLAG);label.setColor(Color.WHITE);label.setTextSize(14);
         Set<Integer> styles=new HashSet<>();for(Avatar avatar:Avatar.values()){
             CharacterView view=new CharacterView(context);view.setAvatar(avatar);view.layout(0,0,64,88);Set<Integer> poses=new HashSet<>();
             for(Emotion emotion:Emotion.values()){view.setEmotion(emotion,false);Bitmap bitmap=Bitmap.createBitmap(64,88,Bitmap.Config.ARGB_8888);view.draw(new Canvas(bitmap));int[] pixels=new int[5632];bitmap.getPixels(pixels,0,64,0,0,64,88);if(!poses.add(Arrays.hashCode(pixels)))throw new AssertionError("Avatar expressions duplicate");if(emotion==Emotion.NEUTRAL&&!styles.add(Arrays.hashCode(pixels)))throw new AssertionError("Avatar styles duplicate");int x=emotion.ordinal()*128,y=avatar.ordinal()*192;galleryCanvas.drawBitmap(bitmap,null,new Rect(x+16,y+12,x+112,y+144),null);galleryCanvas.drawText(avatar.displayName(),x+16,y+164,label);galleryCanvas.drawText(emotion.label(),x+16,y+184,label);bitmap.recycle();}

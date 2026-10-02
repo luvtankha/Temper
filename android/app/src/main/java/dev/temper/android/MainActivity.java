@@ -31,6 +31,7 @@ import dev.temper.android.privacy.PowerStore;
 /** Native onboarding, device account and explicit accessibility consent controls. */
 public final class MainActivity extends androidx.activity.ComponentActivity {
     private LinearLayout content;
+    private dev.temper.android.home.AvatarHome avatarHome;
     private final ExecutorService accountWorker=Executors.newSingleThreadExecutor();
     private final android.os.Handler feedbackUi=new android.os.Handler(android.os.Looper.getMainLooper());
     private final android.os.Handler powerUi=new android.os.Handler(android.os.Looper.getMainLooper());
@@ -55,21 +56,19 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
     @Override public void onDestroy(){activityResumed=false;if(powerPreferences!=null)powerPreferences.unregisterOnSharedPreferenceChangeListener(powerPreferenceListener);cancelPendingPowerOn();powerUi.removeCallbacksAndMessages(null);dev.temper.android.learning.LearningOperations.SHARED.removeListener(feedbackStateListener);feedbackUi.removeCallbacksAndMessages(null);if(content!=null){if(feedbackScreen)clearFeedbackViews(content);content.removeAllViews();}accountWorker.shutdownNow();shop.close();super.onDestroy();}
     private boolean homeScreen;
     private void page(String title){
+        avatarHome=null;
         feedbackUi.removeCallbacksAndMessages(null);if(feedbackScreen&&content!=null)clearFeedbackViews(content);pageVersion++;homeScreen=false;consentScreen=false;liveScreen=false;shopScreen=false;analysisScreen=false;feedbackScreen=false;
         ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);int pad=(int)(24*getResources().getDisplayMetrics().density);content.setPadding(pad,pad*2,pad,pad);content.setBackgroundColor(Color.rgb(21,16,25));scroll.addView(content);setContentView(scroll);text(title,28);
     }
     private void text(String value,int size){TextView text=new TextView(this);text.setText(value);text.setTextColor(Color.rgb(242,230,248));text.setTextSize(size);text.setPadding(0,12,0,12);content.addView(text);}
     private void button(String label,Runnable action){Button button=new Button(this);button.setText(label);button.setOnClickListener(v->action.run());content.addView(button);}
     private void home(){
+        if(homeScreen&&avatarHome!=null){avatarHome.bind(new PowerStore(this).enabled(),powerStartPending);return;}
         page("TEMPER");homeScreen=true;
-        Avatar selected=new AvatarSelection(this,new PurchaseStore(this)::owned).selected();character(selected,Emotion.NEUTRAL);text(selected.displayName()+" is your companion",20);
-        boolean enabled=new PowerStore(this).enabled();text(enabled?"TEMPER is ON":"TEMPER is OFF",24);
-        text(powerStartPending?"Waiting for the previous overlay to stop.":enabled?(setupReady()?"Open a supported chat. Analysis starts automatically.":"ON • check setup to reconnect automatic analysis."):(setupReady()?"Ready. Turn ON and open a chat.":"Set up once, then turn ON whenever you need it."),16);
-        Button power=new Button(this);power.setText(powerStartPending?"Turning ON…":enabled?"OFF":"ON");power.setContentDescription(powerStartPending?"Turning TEMPER on":enabled?"Turn TEMPER off":"Turn TEMPER on");power.setEnabled(!powerStartPending);power.setTextSize(26);power.setTextColor(Color.WHITE);power.setBackgroundTintList(android.content.res.ColorStateList.valueOf(enabled?0xff914655:0xffa336bd));power.setMinHeight(Math.round(80*getResources().getDisplayMetrics().density));power.setOnClickListener(v->{if(enabled){turnOff();home();}else turnOn();});content.addView(power);
-        LinearLayout secondary=new LinearLayout(this);secondary.setOrientation(LinearLayout.HORIZONTAL);content.addView(secondary);
-        Button choose=new Button(this);choose.setText("Choose companion");choose.setTextSize(14);choose.setOnClickListener(v->avatars());secondary.addView(choose,new LinearLayout.LayoutParams(0,-2,1));
-        Button settings=new Button(this);settings.setText("Settings");settings.setTextSize(14);settings.setOnClickListener(v->settings());secondary.addView(settings,new LinearLayout.LayoutParams(0,-2,1));
-        text("Drag the companion to move it. Tap it for estimates.",14);
+        PurchaseStore ownership=new PurchaseStore(this);AvatarSelection selection=new AvatarSelection(this,ownership::owned);Avatar selected=selection.selected();java.util.List<Avatar> catalog=Avatar.homeCatalog(ownership::owned);
+        if(!catalog.contains(selected)){selected=Avatar.ASTRA;selection.select(selected);}
+        avatarHome=new dev.temper.android.home.AvatarHome(this,catalog,selected,avatar->{selection.select(avatar);FloatingOverlayService.changed();},wasOn->{if(wasOn){turnOff();home();}else turnOn();},this::settings);
+        setContentView(avatarHome);avatarHome.bind(new PowerStore(this).enabled(),powerStartPending);
     }
     private boolean setupReady(){return AnalysisConsent.autoAccepted(this)&&ModelFiles.ready(this)&&Settings.canDrawOverlays(this)&&serviceEnabled()&&TemperAccessibilityService.connected();}
     private void turnOn(){

@@ -9,7 +9,7 @@ android {
     namespace 'dev.temper.android'
     compileSdk 36
     defaultConfig {
-        applicationId 'dev.temper.android'; minSdk 26; targetSdk 36; versionCode 46; versionName '0.46.0'
+        applicationId 'dev.temper.android'; minSdk 26; targetSdk 36; versionCode 47; versionName '0.47.0'
         testInstrumentationRunner 'dev.temper.android.FoundationSmokeInstrumentation'
         buildConfigField 'String', 'STORE_URL', '"' + (project.findProperty('temperStoreUrl') ?: '') + '"'
         buildConfigField 'String', 'ENTITLEMENT_KEY', '"' + (project.findProperty('temperEntitlementKey') ?: '') + '"'

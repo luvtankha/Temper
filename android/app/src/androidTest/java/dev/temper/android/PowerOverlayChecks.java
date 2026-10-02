@@ -97,11 +97,11 @@ final class PowerOverlayChecks {
             awaitMain(instrumentation,()->home.get().getWindow().getDecorView().hasWindowFocus(),1000,"Existing TEMPER home did not regain focus");
             instrumentation.runOnMainSync(()->{
                 View off=find(home.get().getWindow().getDecorView(),"OFF");
-                if(!(off instanceof Button)||find(home.get().getWindow().getDecorView(),"TEMPER is ON")==null)throw new AssertionError("Home did not present the actual OFF button");
+                if(!(off instanceof Button)||find(home.get().getWindow().getDecorView(),"Avatar ON")==null)throw new AssertionError("Home did not present the actual OFF button");
                 pipeline.get().submit(snapshot("c","e","Thank you! I feel joyful and delighted today."),result->stoppedResults.incrementAndGet(),summary->{});
                 off.performClick();
                 if(new PowerStore(target).enabled()||!new ConsentStore(target).paused()||LiveCaptureState.current(secondGeneration)||LiveCaptureState.active()||LiveCaptureState.automatic())throw new AssertionError("Home OFF did not synchronously stop automatic capture");
-                if(find(home.get().getWindow().getDecorView(),"TEMPER is OFF")==null)throw new AssertionError("Home did not refresh its OFF state");
+                if(find(home.get().getWindow().getDecorView(),"Avatar OFF")==null)throw new AssertionError("Home did not refresh its OFF state");
             });
             awaitMain(instrumentation,()->!FloatingOverlayService.running()&&!FloatingOverlayService.visible(),1000,"Home OFF left the companion service or character running");
             waitQuiet(instrumentation);

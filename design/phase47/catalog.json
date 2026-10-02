@@ -1,0 +1,37 @@
+[
+  {
+    "id": "studio_nova",
+    "name": "Nova",
+    "subtitle": "Calm and observant",
+    "accent": "#986479",
+    "asset": "avatars/studio_nova.svg"
+  },
+  {
+    "id": "kai",
+    "name": "Kai",
+    "subtitle": "Focused and adaptive",
+    "accent": "#9175eb",
+    "asset": "avatars/kai.svg"
+  },
+  {
+    "id": "astra",
+    "name": "Astra",
+    "subtitle": "Thoughtful and grounded",
+    "accent": "#68bcae",
+    "asset": "avatars/astra.svg"
+  },
+  {
+    "id": "mira",
+    "name": "Mira",
+    "subtitle": "Analytical and intuitive",
+    "accent": "#d97390",
+    "asset": "avatars/mira.svg"
+  },
+  {
+    "id": "volt",
+    "name": "Volt",
+    "subtitle": "Energetic and expressive",
+    "accent": "#71b5ea",
+    "asset": "avatars/volt.svg"
+  }
+]

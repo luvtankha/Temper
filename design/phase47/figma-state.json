@@ -1,0 +1,135 @@
+{
+  "fileKey": "YyV1MhtSXYbI6u6Qjzyyd7",
+  "url": "https://www.figma.com/design/YyV1MhtSXYbI6u6Qjzyyd7?node-id=7-4",
+  "pages": [
+    {
+      "id": "0:1",
+      "name": "01 – Temper UI"
+    },
+    {
+      "id": "3:4",
+      "name": "02 – Components"
+    },
+    {
+      "id": "3:5",
+      "name": "03 – Prototype"
+    }
+  ],
+  "tokensSection": {
+    "id": "10:2464",
+    "name": "04 – Design Tokens",
+    "parentPage": "3:4"
+  },
+  "uiScreens": [
+    {
+      "id": "7:4",
+      "name": "Astra / OFF",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "7:799",
+      "name": "Astra / ON",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "7:1204",
+      "name": "Mira / ON",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "7:1822",
+      "name": "Kai / OFF",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "prototypeScreens": [
+    {
+      "id": "9:2052",
+      "name": "Nova / OFF",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "9:2670",
+      "name": "Nova / ON",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "9:3081",
+      "name": "Kai / OFF",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "9:3492",
+      "name": "Kai / ON",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "9:3903",
+      "name": "Astra / OFF",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "9:4308",
+      "name": "Astra / ON",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "9:4713",
+      "name": "Mira / OFF",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "9:5124",
+      "name": "Mira / ON",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "9:5535",
+      "name": "Volt / OFF",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "id": "9:6153",
+      "name": "Volt / ON",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "variables": 23,
+  "typographyStyles": 4,
+  "verification": {
+    "inspectedHome": "7:799",
+    "fontErrors": 0,
+    "rasterFills": 0,
+    "vectorNodes": 261,
+    "instances": 19,
+    "textNodes": 17,
+    "prototypeCreation": "Success; valid navigation destinations and Smart Animate were accepted",
+    "finalPrototypeAudit": "Blocked by Starter MCP quota"
+  },
+  "limits": [
+    "Starter plan permits three pages; tokens are a labeled Components section.",
+    "Starter MCP quota exhausted after creation; no further canvas edits were attempted."
+  ],
+  "discovery": {
+    "codeConnect": "None in repository",
+    "localComponents": 0,
+    "localVariables": 0,
+    "libraryComponent": "Material 3 Switch: none",
+    "libraryVariable": "Material 3 dark surface: none",
+    "libraryStyle": "Remote Body found but not selected: insufficient font metadata to establish Android match; local Roboto styles created."
+  }
+}

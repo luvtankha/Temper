@@ -1,6 +1,6 @@
-# TEMPER consumer release candidate 0.46.0
+# TEMPER consumer release candidate 0.47.0
 
-The app opens to one prominent ON/OFF button, with companion choice and settings as secondary actions. Alex is free. Nova, Orbit and Luma are non-consumable, one-time cosmetic purchases; all include eight expressions. Analysis and the overlay are free. This is the initial revenue strategy, not a guarantee of maximum revenue. Start with an India base price of ₹199 per premium companion and a US price of $2.99 in Play Console; review actual conversion/refunds before changing prices. The app always displays Play's localized price. No recurring chat-inference server bill is required.
+The app opens to the [avatar carousel and one master switch](AVATAR-CAROUSEL.md). Nova, Kai, Astra, Mira and Volt are free prototype characters, with original 2D artwork and eight expressions. A small settings icon opens permissions and optional feedback. Existing verified legacy purchases remain usable; unowned premium companions are not shown on this home. There are no shop, currency or locked-avatar panels in this UI. Historical purchase-verification infrastructure is retained for a future explicitly requested sales flow. Analysis and the overlay remain free and run on the phone.
 
 0.42.0 adds optional [quality-rated visible conversation feedback](ANALYSIS-FEEDBACK.md). Users only rate the app's analysis; they are not asked to provide emotion labels. A separate opt-in and reviewed-text submission are required. The service is disabled until deployed/configured, and the model has not yet been upgraded. The independently evaluated update workflow and its gates are documented in that guide.
 

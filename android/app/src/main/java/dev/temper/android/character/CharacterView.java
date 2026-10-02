@@ -16,11 +16,15 @@ public final class CharacterView extends View {
     private Avatar avatar=Avatar.ALEX;
     private float[] pose=emotion.pose();
     private ValueAnimator transition;
+    private android.graphics.drawable.Drawable studioArt;
+    private boolean portrait;
     public CharacterView(Context context){super(context);setContentDescription("Neutral companion");}
     public Emotion emotion(){return emotion;}
     public Avatar avatar(){return avatar;}
+    public void setPortrait(boolean portrait){this.portrait=portrait;invalidate();}
     @Override public boolean performClick(){return super.performClick();}
-    public void setAvatar(Avatar value){avatar=Objects.requireNonNull(value);setContentDescription(avatar.displayName()+", "+emotion.label()+" companion");invalidate();}
+    public void setAvatar(Avatar value){if(avatar!=Objects.requireNonNull(value)){avatar=value;studioArt=avatar.studio()?getContext().getDrawable(avatar.artResource()):null;}setContentDescription(avatar.displayName()+", "+emotion.label()+" companion");invalidate();}
+
     public boolean transitioning(){return transition!=null&&transition.isRunning();}
     public void setEmotion(Emotion next,boolean animate){
         Objects.requireNonNull(next);
@@ -36,7 +40,7 @@ public final class CharacterView extends View {
     private void oval(Canvas canvas,int color,float left,float top,float right,float bottom){paint.setStyle(Paint.Style.FILL);paint.setColor(color);canvas.drawOval(left,top,right,bottom,paint);}
     private void line(Canvas canvas,int color,float width,float x1,float y1,float x2,float y2){paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(width);paint.setStrokeCap(Paint.Cap.ROUND);paint.setColor(color);canvas.drawLine(x1,y1,x2,y2,paint);paint.setStyle(Paint.Style.FILL);}
     @Override protected void onDraw(Canvas canvas){
-        super.onDraw(canvas);canvas.save();canvas.scale(getWidth()/64f,getHeight()/88f);
+        super.onDraw(canvas);if(avatar.studio()){drawStudio(canvas);return;}canvas.save();float scale=Math.min(getWidth()/64f,getHeight()/88f);canvas.translate((getWidth()-64*scale)/2,getHeight()-88*scale);canvas.scale(scale,scale);
         oval(canvas,0x55350c44,4,83,60,88);
         paint.setColor(avatar.shoes());canvas.drawRoundRect(18,71,29,86,4,4,paint);canvas.drawRoundRect(35,71,46,86,4,4,paint);
         if(avatar==Avatar.NOVA)oval(canvas,avatar.hair(),9,7,55,68);
@@ -66,6 +70,22 @@ public final class CharacterView extends View {
         if(pose[6]>.15f){float half=6-Math.max(0,pose[6]-4)*.9f;oval(canvas,0xff713947,32-half,40,32+half,40+pose[6]);if(pose[5]>2)oval(canvas,0xfffff5ed,27,40,37,42);}
         paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(1.8f);paint.setColor(0xff8e4a4c);
         if(pose[6]<5){path.reset();path.moveTo(25,42);path.quadTo(32,42+pose[5],39,42);canvas.drawPath(path,paint);}paint.setStyle(Paint.Style.FILL);
+        canvas.restore();canvas.restore();
+    }
+    private void drawStudio(Canvas canvas){
+        canvas.save();float scale;
+        if(portrait){float radius=Math.min(getWidth(),getHeight())/2f-2;oval(canvas,0xff181b26,getWidth()/2f-radius,getHeight()/2f-radius,getWidth()/2f+radius,getHeight()/2f+radius);path.reset();path.addCircle(getWidth()/2f,getHeight()/2f,radius,Path.Direction.CW);canvas.clipPath(path);scale=radius*2/100f;canvas.translate((getWidth()-128*scale)/2,getHeight()/2f-53*scale);}
+        else{scale=Math.min(getWidth()/128f,getHeight()/160f);canvas.translate((getWidth()-128*scale)/2,getHeight()-160*scale);}canvas.scale(scale,scale);
+        studioArt.setBounds(0,0,128,160);studioArt.draw(canvas);
+        canvas.save();canvas.rotate(pose[0]*.25f,64,63);
+        float eye=6*pose[4];
+        for(int x:new int[]{49,78}){
+            if(pose[5]>4){paint.setStyle(Paint.Style.STROKE);paint.setColor(0xff352c3b);paint.setStrokeWidth(2);canvas.drawArc(x-7,51,x+7,60,190,160,false,paint);paint.setStyle(Paint.Style.FILL);}
+            else{oval(canvas,0xfffff8f3,x-7,55-eye,x+7,55+eye);oval(canvas,avatar.shirt(),x-4,55-eye*.92f,x+4,55+eye*.92f);oval(canvas,0xff252434,x-2.4f,55-eye*.8f,x+2.4f,55+eye*.8f);oval(canvas,0xffffffff,x-2.6f,52.2f,x,54.8f);}
+        }
+        float brow=44+pose[1],slope=pose[2]*.55f;line(canvas,0xff433443,1.8f,42,brow+slope,56,brow-slope);line(canvas,0xff433443,1.8f,71,brow-slope,85,brow+slope);
+        if(pose[6]>.15f)oval(canvas,0xff713947,59,70,69,70+pose[6]*1.3f);
+        if(pose[6]<5){paint.setStyle(Paint.Style.STROKE);paint.setColor(0xffa4636d);paint.setStrokeWidth(1.4f);path.reset();path.moveTo(58,72);path.quadTo(64,72+pose[5],70,72);canvas.drawPath(path,paint);paint.setStyle(Paint.Style.FILL);}
         canvas.restore();canvas.restore();
     }
 }

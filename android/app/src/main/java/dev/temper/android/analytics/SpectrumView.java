@@ -18,7 +18,7 @@ public final class SpectrumView extends View {
         paint.setTypeface(Typeface.DEFAULT);paint.setTextSize(12*scale);float labelWidth=paint.measureText("Frustrated")+10*density;float right=getWidth()-paint.measureText("100%")-8*density;
         float[] values=summary.spectrum();for(Emotion emotion:Emotion.values()){
             int index=emotion.ordinal();float top=26*scale+index*22*scale;paint.setColor(0xffe4dbe9);canvas.drawText(emotion.label(),0,top+12*scale,paint);
-            if(right>labelWidth){paint.setColor(0xff49364e);canvas.drawRoundRect(labelWidth,top+3*scale,right,top+12*scale,3*density,3*density,paint);if(summary.available()){paint.setColor(0xffdc75da);canvas.drawRoundRect(labelWidth,top+3*scale,labelWidth+(right-labelWidth)*values[index],top+12*scale,3*density,3*density,paint);}}
+            if(right>labelWidth){paint.setColor(dev.temper.android.home.HomeTokens.ELEVATED);canvas.drawRoundRect(labelWidth,top+3*scale,right,top+12*scale,3*density,3*density,paint);if(summary.available()){paint.setColor(dev.temper.android.home.HomeTokens.ACCENT);canvas.drawRoundRect(labelWidth,top+3*scale,labelWidth+(right-labelWidth)*values[index],top+12*scale,3*density,3*density,paint);}}
             paint.setColor(0xffe4dbe9);canvas.drawText(summary.available()?Math.round(values[index]*100)+"%":"—",right+8*density,top+12*scale,paint);
         }
     }
