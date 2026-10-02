@@ -4,8 +4,11 @@ Source: SamLowe/roberta-base-go_emotions-onnx
 https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx
 Pinned revision: 90ee0c1c4796d370e68968687b8ba51fc11224f4
 The model card declares the MIT license. Tokenizer vocabulary/merges accompany
-that RoBERTa model. Model weights are downloaded only on user request; they are
-not bundled in this APK. This app has no affiliation with the model author.
+that RoBERTa model. Verified public weights are bundled in this APK and prepared
+in private app storage on user request, without internet. Source builds fetch the
+pinned weights if no verified local model path is supplied. A legacy missing-asset
+download fallback shares only a network address, never chat text. This app has no
+affiliation with the model author.
 
 INT8 artifact size: 125397543 bytes
 SHA256: 0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958

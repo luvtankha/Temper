@@ -39,13 +39,18 @@ public final class TemperAccessibilityService extends AccessibilityService imple
         HostObservation host=hostRoot();
         if(host.decision()==ForegroundSessionPolicy.Decision.END_SESSION){hideOverlay();return;}
         AccessibilityNodeInfo root=host.root();
-        if(root==null){if(captureRequested())unreadableLayout();else hideOverlay();return;}
+        if(root==null){overlay.hide();if(captureRequested())unreadableLayout();else hideOverlay();return;}
         try{CharSequence pkg=root.getPackageName();if(pkg!=null&&ConsentStore.WHATSAPP.contentEquals(pkg)){
             if(LiveCaptureState.armed()||LiveCaptureState.active()||LiveCaptureState.automatic()){
                 if(!AnalysisConsent.allowed(this)||!supportedBuild()){LiveCaptureState.clear();hideOverlay();return;}
                 ScreenObservation structure=new WhatsAppStructureProbe().read(root);var anchor=liveAdapter.anchor(structure);
                 if(anchor.status()!=VisibleConversation.Status.AVAILABLE){unreadableLayout();return;}
-                boundWindow=root.getWindowId();overlay.show(structure.viewport(),anchor.composer(),getResources().getDisplayMetrics().density);
+                boundWindow=root.getWindowId();
+                if(!overlay.show(structure.viewport(),anchor.composer(),getResources().getDisplayMetrics().density)){
+                    if(overlay.windowFailure()){FloatingOverlayService.stop(this);LiveCaptureState.clear();hideOverlay();}
+                    else unreadableLayout();
+                    return;
+                }
                 boolean[] changedIdentity={false};
                 boolean[] firstIdentity={true};
                 java.util.function.Predicate<String> identityAllowed=key->{
@@ -130,15 +135,18 @@ public final class TemperAccessibilityService extends AccessibilityService imple
         AccessibilityNodeInfo selected=null;
         for(AccessibilityWindowInfo window:getWindows()){
             try{
+                if(window.getType()==AccessibilityWindowInfo.TYPE_SYSTEM){policy.observeSystem(window.isActive(),window.isFocused());continue;}
                 if(window.getType()!=AccessibilityWindowInfo.TYPE_APPLICATION||(!window.isActive()&&!window.isFocused()))continue;
-                AccessibilityNodeInfo root=window.getRoot();if(root==null)continue;
+                AccessibilityNodeInfo root=window.getRoot();if(root==null){policy.observe(true,window.isActive(),window.isFocused(),null);continue;}
                 CharSequence pkg=root.getPackageName();String name=pkg==null?null:pkg.toString();
                 policy.observe(true,window.isActive(),window.isFocused(),name);
                 if(ConsentStore.WHATSAPP.equals(name)&&selected==null)selected=root;else root.recycle();
             }finally{window.recycle();}
         }
         KeyguardManager keyguard=(KeyguardManager)getSystemService(KEYGUARD_SERVICE);
-        var decision=policy.decision(keyguard!=null&&keyguard.isKeyguardLocked());
+        boolean locked=keyguard!=null&&keyguard.isKeyguardLocked();
+        var decision=policy.decision(locked);
+        FloatingOverlayService.foregroundScreenAllowed(policy.companionAllowed(locked));
         if(decision!=ForegroundSessionPolicy.Decision.READ_HOST&&selected!=null){selected.recycle();selected=null;}
         return new HostObservation(selected,decision);
     }
@@ -156,8 +164,19 @@ public final class TemperAccessibilityService extends AccessibilityService imple
         if(consent==null||event==null)return;
         CharSequence name=event.getPackageName();
         int type=event.getEventType();
+        if(type==AccessibilityEvent.TYPE_WINDOWS_CHANGED){
+            if(consent.paused()||!consent.consented()){hideOverlay();return;}
+            // Window changes include shade/system focus changes and our own overlays.
+            // Inspect only foreground metadata here; message parsing remains debounced.
+            HostObservation host=hostRoot();if(host.root()!=null)host.root().recycle();
+            if(host.decision()==ForegroundSessionPolicy.Decision.END_SESSION){hideOverlay();return;}
+            if(host.decision()==ForegroundSessionPolicy.Decision.WAIT_FOR_HOST){overlay.hide();if(captureRequested())unreadableLayout();else hideOverlay();return;}
+            if(ProbeState.armed()||ParseProbeState.armed()||captureRequested()||boundWindow>=0)scheduleProbe(150);
+            return;
+        }
         if(type==AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED){
             if(consent.paused()||!consent.consented()){hideOverlay();return;}
+            if(name==null||ForegroundSessionPolicy.sensitivePackage(name.toString())){FloatingOverlayService.foregroundScreenAllowed(false);hideOverlay();scheduleProbe(150);return;}
             // An old inference must not publish while a new host screen is awaiting
             // identity verification. Our own accessibility popup does not change the chat.
             if(LiveCaptureState.active()&&(name==null||!getPackageName().contentEquals(name)))unreadableLayout();
@@ -175,5 +194,5 @@ public final class TemperAccessibilityService extends AccessibilityService imple
         if(!consent.consented())disableSelf();
     }
     @Override public void onInterrupt(){hideOverlay();LiveCaptureState.clear();clear();ProbeState.clear();ParseProbeState.clear(this);cancelProbe();}
-    @Override public void onDestroy(){connected=false;instance=null;if(consent!=null)consent.preferences().unregisterOnSharedPreferenceChangeListener(this);hideOverlay();LiveCaptureState.clear();if(live!=null)live.close();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);super.onDestroy();}
+    @Override public void onDestroy(){connected=false;instance=null;FloatingOverlayService.foregroundScreenAllowed(false);FloatingOverlayService.stop(this);if(consent!=null)consent.preferences().unregisterOnSharedPreferenceChangeListener(this);hideOverlay();LiveCaptureState.clear();if(live!=null)live.close();clear();ProbeState.clear();ParseProbeState.clear(this);handler.removeCallbacks(probe);super.onDestroy();}
 }

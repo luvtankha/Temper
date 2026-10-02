@@ -24,6 +24,7 @@ public final class OverlayManager {
     private float preferredX,preferredY;
     private final AnalyticsPanel panel;
     private boolean popupAttached;
+    private boolean windowFailure;
     private long outsideDismissedAt;
     private static volatile String status="Hidden";
     private final Context context;
@@ -54,7 +55,9 @@ public final class OverlayManager {
     public void setEmotion(Emotion emotion){character.setEmotion(emotion,true);}
     public void setSummary(OverlaySummary summary){panel.bind(summary);if(popupAttached)showPopup();}
     public static String status(){return status;}
+    public boolean windowFailure(){return windowFailure;}
     public boolean show(Bounds viewport,Bounds composer,float density){
+        windowFailure=false;
         try{
             this.viewport=safeViewport(viewport,composer);this.composer=composer;this.density=density;
             Bounds target=positioned?DraggablePlacement.place(this.viewport,composer,density,preferredX,preferredY):OverlayPlacement.place(this.viewport,composer,density);
@@ -79,7 +82,8 @@ public final class OverlayManager {
         WindowManager.LayoutParams params=new WindowManager.LayoutParams(target.right()-target.left(),target.bottom()-target.top(),windowType,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL|WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,PixelFormat.TRANSLUCENT);
         params.setTitle("TEMPER character");params.gravity=Gravity.TOP|Gravity.LEFT;params.x=target.left();params.y=target.top();
         if(android.os.Build.VERSION.SDK_INT>=30)params.setFitInsetsTypes(0);
-        if(attached)windows.updateViewLayout(character,params);else{windows.addView(character,params);attached=true;}
+        try{if(attached)windows.updateViewLayout(character,params);else{windows.addView(character,params);attached=true;}}
+        catch(RuntimeException unavailable){windowFailure=true;throw unavailable;}
         placement=target;
     }
     private void moveGesture(MotionEvent event){
@@ -97,7 +101,7 @@ public final class OverlayManager {
         try{
             Bounds chat=DraggablePlacement.chatViewport(viewport,composer);
             int width=Math.min(Math.round(280*density),chat.right()-chat.left());
-            panel.measure(View.MeasureSpec.makeMeasureSpec(width,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(0,View.MeasureSpec.UNSPECIFIED));
+            panel.measure(View.MeasureSpec.makeMeasureSpec(width,View.MeasureSpec.EXACTLY),View.MeasureSpec.makeMeasureSpec(chat.bottom()-chat.top(),View.MeasureSpec.AT_MOST));
             Bounds target=PopupPlacement.place(chat,placement,width,panel.getMeasuredHeight(),Math.round(4*density));
             WindowManager.LayoutParams params=new WindowManager.LayoutParams(target.right()-target.left(),target.bottom()-target.top(),windowType,WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL|WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH|WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,PixelFormat.TRANSLUCENT);
             params.setTitle("TEMPER analytics");params.gravity=Gravity.TOP|Gravity.LEFT;params.x=target.left();params.y=target.top();if(android.os.Build.VERSION.SDK_INT>=30)params.setFitInsetsTypes(0);

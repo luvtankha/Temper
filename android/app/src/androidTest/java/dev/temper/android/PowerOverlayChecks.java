@@ -72,6 +72,7 @@ final class PowerOverlayChecks {
             dummy.set(launch(instrumentation,target,DebugOverlayActivity.class));
             activities.add(dummy.get());
             awaitMain(instrumentation,FloatingOverlayService::visible,1000,"ON did not show the companion over TEMPER's dummy screen");
+            instrumentation.runOnMainSync(()->dev.temper.android.overlay.FloatingInteractionChecks.run(target));
 
             VisibleConversation neutral=snapshot("a","b","The meeting starts at ten.");
             instrumentation.runOnMainSync(()->{
@@ -96,12 +97,10 @@ final class PowerOverlayChecks {
             instrumentation.runOnMainSync(()->dummy.get().finish());
             awaitMain(instrumentation,()->home.get().getWindow().getDecorView().hasWindowFocus(),1000,"Existing TEMPER home did not regain focus");
             instrumentation.runOnMainSync(()->{
-                View off=find(home.get().getWindow().getDecorView(),"OFF");
-                if(!(off instanceof Button)||find(home.get().getWindow().getDecorView(),"Avatar ON")==null)throw new AssertionError("Home did not present the actual OFF button");
+                // Instrumentation intentionally disconnected Accessibility. Returning home must reconcile OFF.
+                if(new PowerStore(target).enabled()||find(home.get().getWindow().getDecorView(),"Avatar OFF")==null)throw new AssertionError("Missing service retained a stale ON home");
                 pipeline.get().submit(snapshot("c","e","Thank you! I feel joyful and delighted today."),result->stoppedResults.incrementAndGet(),summary->{});
-                off.performClick();
-                if(new PowerStore(target).enabled()||!new ConsentStore(target).paused()||LiveCaptureState.current(secondGeneration)||LiveCaptureState.active()||LiveCaptureState.automatic())throw new AssertionError("Home OFF did not synchronously stop automatic capture");
-                if(find(home.get().getWindow().getDecorView(),"Avatar OFF")==null)throw new AssertionError("Home did not refresh its OFF state");
+                if(!new ConsentStore(target).paused()||LiveCaptureState.current(secondGeneration)||LiveCaptureState.active()||LiveCaptureState.automatic())throw new AssertionError("Capability reconciliation did not stop capture");
             });
             awaitMain(instrumentation,()->!FloatingOverlayService.running()&&!FloatingOverlayService.visible(),1000,"Home OFF left the companion service or character running");
             waitQuiet(instrumentation);

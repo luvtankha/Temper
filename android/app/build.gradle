@@ -1,4 +1,8 @@
 plugins { id 'com.android.application' }
+abstract class TemperModelAssets extends DefaultTask {
+    @org.gradle.api.tasks.OutputDirectory
+    abstract org.gradle.api.file.DirectoryProperty getModelAssetsDirectory()
+}
 def temperModel = [url: 'https://huggingface.co/SamLowe/roberta-base-go_emotions-onnx/resolve/90ee0c1c4796d370e68968687b8ba51fc11224f4/onnx/model_quantized.onnx', sha256: '0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958', size: 125397543L]
 if (project.findProperty('temperEmotionModelSpec')) {
     temperModel = new groovy.json.JsonSlurper().parse(file(project.property('temperEmotionModelSpec')))
@@ -9,7 +13,7 @@ android {
     namespace 'dev.temper.android'
     compileSdk 36
     defaultConfig {
-        applicationId 'dev.temper.android'; minSdk 26; targetSdk 36; versionCode 47; versionName '0.47.0'
+        applicationId (project.findProperty('temperQa') == 'true' ? 'dev.temper.android.qa' : 'dev.temper.android'); minSdk 26; targetSdk 36; versionCode 48; versionName '0.48.0'
         testInstrumentationRunner 'dev.temper.android.FoundationSmokeInstrumentation'
         buildConfigField 'String', 'STORE_URL', '"' + (project.findProperty('temperStoreUrl') ?: '') + '"'
         buildConfigField 'String', 'ENTITLEMENT_KEY', '"' + (project.findProperty('temperEntitlementKey') ?: '') + '"'
@@ -43,8 +47,44 @@ dependencies {
     testImplementation 'org.json:json:20250517'
     testImplementation 'com.microsoft.onnxruntime:onnxruntime:1.30.0'
 }
+
+// Ship the pinned public weights: first use must not depend on a phone reaching a model CDN.
+androidComponents.onVariants(androidComponents.selector().all()) { variant ->
+    def bundledEmotionTask = tasks.register('prepare' + variant.name.capitalize() + 'BundledEmotionModel', TemperModelAssets) {
+    inputs.property('modelHash', temperModel.sha256)
+    inputs.property('modelUrl', temperModel.url)
+    doLast {
+        def sourcePath = System.getenv('TEMPER_MODEL_FILE') ?: System.getenv('TEMPER_TEST_MODEL')
+        def cache = rootProject.file('.gradle/temper-model/' + temperModel.sha256 + '.onnx')
+        def candidate = sourcePath ? file(sourcePath) : cache
+        def verify = { File model ->
+            if (!model.isFile() || model.length() != temperModel.size) throw new GradleException('Pinned emotion model is missing or has the wrong size.')
+            def digest = java.security.MessageDigest.getInstance('SHA-256')
+            model.withInputStream { stream -> byte[] buffer = new byte[65536]; int count; while ((count = stream.read(buffer)) != -1) digest.update(buffer, 0, count) }
+            if (digest.digest().encodeHex().toString() != temperModel.sha256) throw new GradleException('Pinned emotion model checksum mismatch.')
+        }
+        if (!sourcePath && !cache.isFile()) {
+            cache.parentFile.mkdirs()
+            def partial = new File(cache.parentFile, cache.name + '.partial')
+            def connection = new URI(temperModel.url).toURL().openConnection()
+            connection.connectTimeout = 15000; connection.readTimeout = 30000
+            try {
+                connection.inputStream.withCloseable { stream -> partial.withOutputStream { output -> output << stream } }
+                verify(partial)
+                java.nio.file.Files.move(partial.toPath(), cache.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            } finally { connection.disconnect(); java.nio.file.Files.deleteIfExists(partial.toPath()) }
+        }
+        verify(candidate)
+        def target = modelAssetsDirectory.get().file('emotion/model-int8.onnx').asFile
+        target.parentFile.mkdirs()
+        java.nio.file.Files.copy(candidate.toPath(), target.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+    }
+    }
+    variant.sources.assets.addGeneratedSourceDirectory(bundledEmotionTask, { task -> task.modelAssetsDirectory })
+}
 tasks.register('verifyStoreConfig') {
     doLast {
+        if (project.findProperty('temperQa') == 'true') throw new GradleException('The isolated QA application must never be published.')
         def url = new URI(project.findProperty('temperStoreUrl') ?: '')
         if (url.scheme != 'https' || !url.host || (url.path && url.path != '/') || url.query || url.fragment || url.userInfo) throw new GradleException('Supply a production HTTPS store origin.')
         def encoded = Base64.decoder.decode(project.findProperty('temperEntitlementKey') ?: '')

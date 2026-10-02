@@ -24,14 +24,16 @@ public final class ConversationContextModel {
     public ConversationContextModel(InputStream input)throws Exception{
         JSONObject json=new JSONObject(new String(BoundedIo.read(input,100_000),StandardCharsets.UTF_8));
         if(json.getInt("schema")!=1||!json.getBoolean("approvedPilot"))throw new IllegalArgumentException("Invalid context model");
-        baseHash=json.getString("baseModelSha256");
+        baseHash=json.getString("baseModelSha256");if(!baseHash.matches("[a-f0-9]{64}"))throw new IllegalArgumentException("Invalid base model identity");
         JSONArray raw=json.getJSONArray("groups");if(raw.length()!=20)throw new IllegalArgumentException("Invalid context features");
         for(int i=0;i<raw.length();i++){List<String> phrases=new ArrayList<>();JSONArray items=raw.getJSONArray(i);for(int j=0;j<items.length();j++)phrases.add(" "+items.getString(j)+" ");groups.add(List.copyOf(phrases));}
         JSONArray names=json.getJSONArray("labels"),coefficients=json.getJSONArray("weights"),intercepts=json.getJSONArray("bias");
         if(names.length()!=5||coefficients.length()!=5||intercepts.length()!=5)throw new IllegalArgumentException("Invalid direction labels");
         labels=new String[5];weights=new double[5][groups.size()*5+16];bias=new double[5];
-        for(int i=0;i<5;i++){labels[i]=names.getString(i);JSONArray row=coefficients.getJSONArray(i);if(row.length()!=weights[i].length)throw new IllegalArgumentException("Invalid weights");for(int j=0;j<row.length();j++){weights[i][j]=row.getDouble(j);if(!Double.isFinite(weights[i][j]))throw new IllegalArgumentException("Invalid coefficient");}bias[i]=intercepts.getDouble(i);}
+        Set<String> expected=new HashSet<>(Set.of("DEESCALATING","STABLE","TENSION_RISING","UNRESOLVED","WITHDRAWAL"));
+        for(int i=0;i<5;i++){labels[i]=names.getString(i);if(!expected.remove(labels[i]))throw new IllegalArgumentException("Invalid direction label");JSONArray row=coefficients.getJSONArray(i);if(row.length()!=weights[i].length)throw new IllegalArgumentException("Invalid weights");for(int j=0;j<row.length();j++){weights[i][j]=row.getDouble(j);if(!Double.isFinite(weights[i][j]))throw new IllegalArgumentException("Invalid coefficient");}bias[i]=intercepts.getDouble(i);if(!Double.isFinite(bias[i]))throw new IllegalArgumentException("Invalid bias");}
         minimum=json.getDouble("minimum");margin=json.getDouble("margin");
+        if(!Double.isFinite(minimum)||minimum<=0||minimum>1||!Double.isFinite(margin)||margin<0||margin>1)throw new IllegalArgumentException("Invalid prediction thresholds");
     }
     private double[] cues(String text){
         text=text.toLowerCase(Locale.ROOT).replace('\u2019','\'').replace('\u201c','"').replace('\u201d','"');
@@ -39,6 +41,7 @@ public final class ConversationContextModel {
         double[] result=new double[groups.size()];for(int i=0;i<groups.size();i++)for(String phrase:groups.get(i))if(text.contains(phrase)){result[i]=1;break;}return result;
     }
     public double[] features(VisibleConversation snapshot,float[] current,float[] previous){
+        validateSpectrum(current);if(previous!=null)validateSpectrum(previous);
         List<Integer> remote=new ArrayList<>();for(int i=0;i<snapshot.turns().size();i++)if(snapshot.turns().get(i).role()==VisibleConversation.Role.REMOTE)remote.add(i);
         if(remote.isEmpty())throw new IllegalArgumentException("No incoming evidence");
         int last=remote.get(remote.size()-1),prior=remote.size()>1?remote.get(remote.size()-2):-1,n=groups.size();
@@ -50,9 +53,14 @@ public final class ConversationContextModel {
     }
     public double[] probabilities(double[] features){
         if(features.length!=weights[0].length)throw new IllegalArgumentException("Invalid features");
+        for(double value:features)if(!Double.isFinite(value))throw new IllegalArgumentException("Invalid feature value");
         double[] scores=bias.clone();double max=Double.NEGATIVE_INFINITY,total=0;
-        for(int i=0;i<scores.length;i++){for(int j=0;j<features.length;j++)scores[i]+=weights[i][j]*features[j];max=Math.max(max,scores[i]);}
+        for(int i=0;i<scores.length;i++){for(int j=0;j<features.length;j++)scores[i]+=weights[i][j]*features[j];if(!Double.isFinite(scores[i]))throw new IllegalArgumentException("Invalid direction output");max=Math.max(max,scores[i]);}
         for(int i=0;i<scores.length;i++){scores[i]=Math.exp(scores[i]-max);total+=scores[i];}for(int i=0;i<scores.length;i++)scores[i]/=total;return scores;
+    }
+    private static void validateSpectrum(float[] values){
+        if(values==null||values.length!=8)throw new IllegalArgumentException("Invalid spectrum");
+        for(float value:values)if(!Float.isFinite(value)||value<0||value>1)throw new IllegalArgumentException("Invalid spectrum");
     }
     public String predict(double[] features){
         double[] scores=probabilities(features);int best=0,second=1;if(scores[second]>scores[best]){best=1;second=0;}

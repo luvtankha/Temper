@@ -1,0 +1,179 @@
+{
+  "version": "0.48.0",
+  "date": "2026-10-02",
+  "device": {
+    "model": "OnePlus 8T KB2001",
+    "androidApi": 34
+  },
+  "acceptance": "FAIL — RELEASE BLOCKERS REMAIN",
+  "build": {
+    "clean": "PASS",
+    "debug": "PASS",
+    "releaseR8AndShrink": "PASS",
+    "aabUnsignedReview": "PASS",
+    "jvm": {
+      "tests": 44,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "lint": {
+      "debug": {
+        "errors": 0,
+        "warnings": 34
+      },
+      "release": {
+        "errors": 0,
+        "warnings": 33
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "file": "app-debug.apk",
+      "bytes": 232105337,
+      "sha256": "6459beffb6f9ed65ed37652c06ce5d5551dde61d329a16d0597e93b388ba8eee",
+      "bundledModelSha256": "0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958"
+    },
+    {
+      "file": "app-release-unsigned.apk",
+      "bytes": 226343981,
+      "sha256": "fac8403b01f5a013fac1f9733a859da9ab9bb2402e36d256a43e66c3d6564c5f",
+      "bundledModelSha256": "0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958"
+    },
+    {
+      "file": "app-release.aab",
+      "bytes": 143995681,
+      "sha256": "57e77a3834490c5ddc470459e81181d717597e09456bfa2e508c0686a44959b9",
+      "bundledModelSha256": "0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958"
+    },
+    {
+      "file": "TEMPER-0.48.0-R8-device-review.apk",
+      "bytes": 226361108,
+      "sha256": "f2d9b4f7b8cb434ab80544a30595f1c58822dde978a87d03cbfe8694d476f7df",
+      "bundledModelSha256": "0c1981c5b479674747911c8e2228f0c4ec90bf47bf66e830f7d4fc62be082958"
+    }
+  ],
+  "modelBundling": "PASS: exact public model SHA/size verified in all artifacts",
+  "firstPhoneNetworkDownload": "FAILED: phone public CDN DNS; primary offline bundled preparation passes",
+  "deviceGeneratedLanes": {
+    "carouselOnly": {
+      "result": "PASS",
+      "scope": "generated own-app/fictional fixtures",
+      "summary": "PASS: continuous own-home gestures, exact snap, forward/reverse selection, persistence, 51-item bounded slots, width/font-scale layouts and OFF/ON rendering; no host chat read"
+    },
+    "powerOnly": {
+      "result": "PASS",
+      "scope": "generated own-app/fictional fixtures",
+      "summary": "PASS: compact ON/OFF home, consent migration and explicit setup gating, saved power state and one-tap OFF; no host chat read"
+    },
+    "consumerOnly": {
+      "result": "PASS",
+      "scope": "generated own-app/fictional fixtures",
+      "summary": "PASS: 9 avatars x 8 expressions, paid selection gate, independent tokenizer references, real INT8 phone model, suspended pipeline recovery and stale-result suppression, remote speaker invariance, carousel home and private-analysis setup"
+    },
+    "complexOnly": {
+      "result": "PASS",
+      "scope": "generated own-app/fictional fixtures",
+      "summary": "PASS: 28 fictional complex English/Hinglish held-out chats, context-sensitive identical replies, four live repair transitions, first-message spectrum and stopped analysis rejection"
+    },
+    "overlayOnly": {
+      "result": "PASS",
+      "scope": "generated own-app/fictional fixtures",
+      "summary": "PASS: automatic generated-chat model switching, home/notification OFF, floating service and active-analysis drag/tap/cancel/popup/keyboard/restore checks on our dummy screen; no host chat read"
+    },
+    "performanceOnly": {
+      "result": "PASS",
+      "scope": "generated own-app/fictional fixtures",
+      "summary": "PASS: generated conversation timing recorded"
+    },
+    "foundation": {
+      "result": "PASS",
+      "scope": "generated own-app/fictional fixtures",
+      "summary": "PASS: compact overlay grounding/density/keyboard/failure geometry; observed WhatsApp layout fixture/roles/clipping/dedup/uncertainty/privacy; one-shot probe/composer gate/text-free export/pause cleanup; adapter contract bounds/roles/immutability/failure/redaction; one-button home/setup/consent migration and persisted OFF; consent UI opt-in/resume/revoke and package/version gates; Keystore encrypted account, password rejection, sign-in/out, persistent session and tamper rejection; original setup preferences restored"
+    },
+    "freshOnly": {
+      "result": "PASS",
+      "scope": "generated own-app/fictional fixtures",
+      "summary": "PASS: isolated fresh install defaults OFF, no consent/model, unchecked explicit opt-in and missing-model setup; no host chat read"
+    },
+    "modelRecoveryOnly": {
+      "result": "PASS",
+      "scope": "generated own-app/fictional fixtures",
+      "summary": "PASS: isolated corrupt same-size model rejected and discarded, missing-model retry state and restored valid real inference; no host chat read"
+    }
+  },
+  "permissionOnly": {
+    "result": "NOT EXECUTED",
+    "reason": "OS shell AppOps permission denied; not a passed recovery lane"
+  },
+  "minifiedReleaseInstalled": "PASS",
+  "minifiedReleaseLiveChat": "PENDING_USER_CHECK",
+  "repeatLiveDemo": "PENDING_USER_CHECK",
+  "nativeElf16Kb": {
+    "count": 8,
+    "result": "PASS"
+  },
+  "apkZip16Kb": "PASS",
+  "modelPerformance": {
+    "version": "0.48.0",
+    "generated": true,
+    "coldMs": 692.572187,
+    "allMs": [
+      692.572187,
+      2.27974,
+      2.182292,
+      2.206667,
+      2.249323,
+      2.21552,
+      2.166875,
+      2.23625
+    ],
+    "processPssKb": 236071,
+    "freshIncomingMs": [
+      28.094218,
+      24.205469,
+      25.711146,
+      25.6875,
+      25.483437,
+      25.757761,
+      26.046667,
+      23.363854
+    ],
+    "engine": "phase46",
+    "settledProcessPssKb": 203731,
+    "javaUsedBytes": 3354536,
+    "nativeAllocatedBytes": 159490560,
+    "freshIncomingMedianMs": 25.699323,
+    "unchangedMedianMs": 2.21552
+  },
+  "manualOwnUi": {
+    "home": "PASS",
+    "settings": "PASS",
+    "privacyTopAndBottom": "PASS",
+    "feedbackUnconfiguredUnchecked": "PASS",
+    "legacyCompanionListAndExpressionPreview": "PASS",
+    "fictionalPanelReadable": "PASS",
+    "selectedAvatarPreview": "PASS: selected Astra shown in final minified preview",
+    "setupAndOn": "PASS: connected, ready and actual ON in final minified build"
+  },
+  "privacy": {
+    "privateChatsUsed": false,
+    "rawLoggingInMainAndroidSource": false,
+    "normalInferenceNetworkCode": false,
+    "optionalProductionFeedbackConfigured": false
+  },
+  "unverified": [
+    "final minified live host extraction/numeric bar update and repeated demo",
+    "complete fresh permission-to-host workflow",
+    "actual overlay and Accessibility revoke/regrant",
+    "packet capture",
+    "full airplane-mode live demo",
+    "device reboot",
+    "API26/API35/API36 hardware and actual 16KB runtime",
+    "long-duration battery/heap/CPU soak",
+    "real-world model accuracy",
+    "production owner signing and Play publishing"
+  ],
+  "isolatedFinalPreviewFoundationRegression": "PASS: includes selected-avatar preview assertion; primary app untouched"
+}

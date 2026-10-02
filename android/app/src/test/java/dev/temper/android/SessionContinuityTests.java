@@ -19,6 +19,8 @@ public class SessionContinuityTests {
         policy.observe(true,true,true,null);
         assertEquals(ForegroundSessionPolicy.Decision.WAIT_FOR_HOST,policy.decision(false));
         policy.observe(true,true,true,"com.whatsapp");
+        assertEquals(ForegroundSessionPolicy.Decision.WAIT_FOR_HOST,policy.decision(false));
+        policy=new ForegroundSessionPolicy();policy.observe(true,true,true,"com.whatsapp");
         assertEquals(ForegroundSessionPolicy.Decision.READ_HOST,policy.decision(false));
         assertEquals(ForegroundSessionPolicy.Decision.END_SESSION,policy.decision(true));
         policy.observe(true,false,true,"com.android.launcher");
@@ -35,5 +37,22 @@ public class SessionContinuityTests {
         recovery.reset();
         assertFalse(recovery.waiting());
         assertEquals(400,recovery.delay(86_400_200));
+    }
+    @Test public void focusedSystemSurfacesSuppressBackgroundHostAndCompanion(){
+        var policy=new ForegroundSessionPolicy();policy.observe(true,true,false,"com.whatsapp");
+        assertTrue(policy.companionAllowed(false));policy.observeSystem(false,true);
+        assertEquals(ForegroundSessionPolicy.Decision.END_SESSION,policy.decision(false));assertFalse(policy.companionAllowed(false));
+        for(String name:new String[]{"com.android.settings","com.android.systemui","com.android.permissioncontroller","com.google.android.packageinstaller"}){
+            var sensitive=new ForegroundSessionPolicy();sensitive.observe(true,true,true,name);
+            assertEquals(ForegroundSessionPolicy.Decision.END_SESSION,sensitive.decision(false));assertFalse(sensitive.companionAllowed(false));
+        }
+    }
+    @Test public void ordinaryAppFallbackUsesOnlyKnownForegroundMetadata(){
+        var ordinary=new ForegroundSessionPolicy();ordinary.observe(true,true,true,"dev.temper.fictionalapp");
+        assertEquals(ForegroundSessionPolicy.Decision.END_SESSION,ordinary.decision(false));assertTrue(ordinary.companionAllowed(false));assertFalse(ordinary.companionAllowed(true));
+        var unknown=new ForegroundSessionPolicy();unknown.observe(true,true,false,"com.whatsapp");unknown.observe(true,false,true,null);
+        assertEquals(ForegroundSessionPolicy.Decision.WAIT_FOR_HOST,unknown.decision(false));assertFalse(unknown.companionAllowed(false));
+        var keyboard=new ForegroundSessionPolicy();keyboard.observe(true,true,false,"com.whatsapp");keyboard.observe(false,true,true,"com.google.android.inputmethod.latin");
+        assertEquals(ForegroundSessionPolicy.Decision.READ_HOST,keyboard.decision(false));assertTrue(keyboard.companionAllowed(false));
     }
 }

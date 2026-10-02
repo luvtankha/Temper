@@ -25,7 +25,10 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
     private boolean performanceBaseline;
     private boolean complexOnly;
     private boolean carouselOnly;
-    @Override public void onCreate(Bundle arguments){super.onCreate(arguments);carouselOnly=arguments!=null&&"true".equals(arguments.getString("carouselOnly"));performanceBaseline=arguments!=null&&"true".equals(arguments.getString("performanceBaseline"));complexOnly=arguments!=null&&"true".equals(arguments.getString("complexOnly"));performanceOnly=arguments!=null&&"true".equals(arguments.getString("performanceOnly"));powerOnly=arguments!=null&&"true".equals(arguments.getString("powerOnly"));learningOnly=arguments!=null&&"true".equals(arguments.getString("learningOnly"));overlayOnly=arguments!=null&&"true".equals(arguments.getString("overlayOnly"));consumerOnly=arguments!=null&&"true".equals(arguments.getString("consumerOnly"));transportOnly=arguments!=null&&"true".equals(arguments.getString("transportOnly"));adapterOnly=arguments!=null&&"true".equals(arguments.getString("adapterOnly"));start();}
+    private boolean freshOnly;
+    private boolean modelRecoveryOnly;
+    private boolean permissionOnly;
+    @Override public void onCreate(Bundle arguments){super.onCreate(arguments);permissionOnly=arguments!=null&&"true".equals(arguments.getString("permissionOnly"));modelRecoveryOnly=arguments!=null&&"true".equals(arguments.getString("modelRecoveryOnly"));freshOnly=arguments!=null&&"true".equals(arguments.getString("freshOnly"));carouselOnly=arguments!=null&&"true".equals(arguments.getString("carouselOnly"));performanceBaseline=arguments!=null&&"true".equals(arguments.getString("performanceBaseline"));complexOnly=arguments!=null&&"true".equals(arguments.getString("complexOnly"));performanceOnly=arguments!=null&&"true".equals(arguments.getString("performanceOnly"));powerOnly=arguments!=null&&"true".equals(arguments.getString("powerOnly"));learningOnly=arguments!=null&&"true".equals(arguments.getString("learningOnly"));overlayOnly=arguments!=null&&"true".equals(arguments.getString("overlayOnly"));consumerOnly=arguments!=null&&"true".equals(arguments.getString("consumerOnly"));transportOnly=arguments!=null&&"true".equals(arguments.getString("transportOnly"));adapterOnly=arguments!=null&&"true".equals(arguments.getString("adapterOnly"));start();}
     private Activity launch(){return startActivitySync(new Intent(getTargetContext(),MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));}
     private View find(View root,String label){
         if(root.getContentDescription()!=null&&label.contentEquals(root.getContentDescription()))return root;
@@ -50,6 +53,9 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
         Bundle result=new Bundle();
         java.util.Map<String,?> originalSetup=new java.util.HashMap<>(getTargetContext().getSharedPreferences("MainActivity",0).getAll());
         try{
+            if(permissionOnly){PermissionRecoveryChecks.run(this);result.putString("stream","PASS: isolated real overlay AppOp revocation stops power/service/windows; no host chat read\n");finish(Activity.RESULT_OK,result);return;}
+            if(modelRecoveryOnly){ModelRecoveryChecks.run(getTargetContext());result.putString("stream","PASS: isolated corrupt same-size model rejected and discarded, missing-model retry state and restored valid real inference; no host chat read\n");finish(Activity.RESULT_OK,result);return;}
+            if(freshOnly){FreshInstallChecks.run(this);result.putString("stream","PASS: isolated fresh install defaults OFF, no consent/model, unchecked explicit opt-in and missing-model setup; no host chat read\n");finish(Activity.RESULT_OK,result);return;}
             if(complexOnly){ComplexContextChecks.run(getContext(),getTargetContext());result.putString("stream","PASS: 28 fictional complex English/Hinglish held-out chats, context-sensitive identical replies, four live repair transitions, first-message spectrum and stopped analysis rejection\n");finish(Activity.RESULT_OK,result);return;}
             if(performanceOnly){PerformanceChecks.run(getTargetContext(),performanceBaseline);result.putString("stream","PASS: generated conversation timing recorded\n");finish(Activity.RESULT_OK,result);return;}
             if(carouselOnly){CarouselUiChecks.run(this);restoreSetup(originalSetup);result.putString("stream","PASS: continuous own-home gestures, exact snap, forward/reverse selection, persistence, 51-item bounded slots, width/font-scale layouts and OFF/ON rendering; no host chat read\n");finish(Activity.RESULT_OK,result);return;}
@@ -97,6 +103,8 @@ public final class FoundationSmokeInstrumentation extends Instrumentation {
             waitForIdleSync();
             runOnMainSync(()->{
                 var c=character(first.getWindow().getDecorView());if(c==null||!c.isAttachedToWindow())throw new AssertionError("Character preview not attached");
+                var previewSelection=new dev.temper.android.character.AvatarSelection(getTargetContext(),new dev.temper.android.store.PurchaseStore(getTargetContext())::owned).selected();
+                if(c.avatar()!=previewSelection)throw new AssertionError("Fictional preview ignored selected avatar");
                 c.setEmotion(dev.temper.android.character.Emotion.HAPPY,true);c.setEmotion(dev.temper.android.character.Emotion.SURPRISED,true);
             });
             android.os.SystemClock.sleep(400);waitForIdleSync();

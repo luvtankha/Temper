@@ -1,11 +1,17 @@
-# TEMPER Android0.39.0
+# TEMPER native Android app
 
-Native Java primary client: small grounded2D character, eight expressions/260ms transitions, one compact analytics graph, exact-build WhatsApp adapter, separate inspection/USB consent, pause/cleanup and encrypted optional device account. Debug transport is fixed127.0.0.1:8080 over ADB USB forwarding to local Java/model backend; release cleartext disabled.
+Current review version: **0.48.0**, package `dev.temper.android`, minimum Android 8/API 26, target/compile SDK 36. Native Java views/services; local ONNX inference; no backend required for normal use.
 
-Verified OnePlus8T KB2001 Android14/API34 with WhatsApp2.26.37.73/version263707322, portrait supported plain text. MinSDK26/compile-target36; other device/API/host versions unverified. [Demo guide](../docs/demo/ANDROID-USB-DEMO.md).
+Read [SETUP-AND-DEMO.md](../docs/release/SETUP-AND-DEMO.md) for exact source-build commands, installation, first-use consent/model/permissions, testing and recovery. Read [FINAL-VERIFICATION.md](../docs/release/FINAL-VERIFICATION.md) for measured results and remaining limitations.
 
-With accepted SDK terms, Java17+, platform36/build-tools35.0.0/platform-tools and JAVA_HOME/ANDROID_HOME, run `./gradlew.bat assembleDebug assembleDebugAndroidTest lint --console=plain`. APK: app/build/outputs/apk/debug/app-debug.apk. Install via adb install -r; launch dev.temper.android/.MainActivity.
+From the repository root, with JDK 21 and Android SDK configured:
 
-Instrumentation runner dev.temper.android.test/dev.temper.android.FoundationSmokeInstrumentation covers consent/account, observed structural fixtures/roles/clipping, bounds/grounding/expressions, popup/chart/status replacement, registry/session identity/privacy cleanup. `-e transportOnly true` tests configured real USB backend with generated text; `-e adapterOnly true` runs parser regressions. Tests preserve original configuration but may require Android service off/on rebind afterward.
+```powershell
+.\android\gradlew.bat -p android :app:clean :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug :app:lintRelease :app:assembleRelease :app:bundleRelease --console=plain
+adb install -r android\app\build\outputs\apk\debug\app-debug.apk
+adb shell am start -n dev.temper.android/dev.temper.android.MainActivity
+```
 
-No host control clicking/sending, raw chat storage, content-description/draft reads or additional supported apps. No continuous idle animation; small expression transitions provide motion. Scores are independent estimates, not required to sum to one.
+Debug is signed for development. Release enables R8 and resource shrinking; without owner-managed signing variables its APK/AAB are unsigned review artifacts. A locally development-signed release APK tests R8 runtime but is not a production upload.
+
+The optional `-PtemperQa=true` build property uses `dev.temper.android.qa` for a fresh-install check without clearing the owner's app. Do not publish that package. The device instrumentation uses only generated fixtures and can disconnect Accessibility during test restarts; afterward switch Use TEMPER OFF and ON in Android Accessibility settings once. Do not use UIAutomator to inspect live Accessibility sessions.

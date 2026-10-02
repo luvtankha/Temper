@@ -23,7 +23,7 @@ public final class CharacterView extends View {
     public Avatar avatar(){return avatar;}
     public void setPortrait(boolean portrait){this.portrait=portrait;invalidate();}
     @Override public boolean performClick(){return super.performClick();}
-    public void setAvatar(Avatar value){if(avatar!=Objects.requireNonNull(value)){avatar=value;studioArt=avatar.studio()?getContext().getDrawable(avatar.artResource()):null;}setContentDescription(avatar.displayName()+", "+emotion.label()+" companion");invalidate();}
+    public void setAvatar(Avatar value){if(avatar!=Objects.requireNonNull(value)){avatar=value;studioArt=null;if(avatar.studio())try{studioArt=getContext().getDrawable(avatar.artResource());}catch(android.content.res.Resources.NotFoundException unavailable){/* Keep the original code-drawn body as a visible fallback. */}}setContentDescription(avatar.displayName()+", "+emotion.label()+" companion");invalidate();}
 
     public boolean transitioning(){return transition!=null&&transition.isRunning();}
     public void setEmotion(Emotion next,boolean animate){
@@ -40,7 +40,7 @@ public final class CharacterView extends View {
     private void oval(Canvas canvas,int color,float left,float top,float right,float bottom){paint.setStyle(Paint.Style.FILL);paint.setColor(color);canvas.drawOval(left,top,right,bottom,paint);}
     private void line(Canvas canvas,int color,float width,float x1,float y1,float x2,float y2){paint.setStyle(Paint.Style.STROKE);paint.setStrokeWidth(width);paint.setStrokeCap(Paint.Cap.ROUND);paint.setColor(color);canvas.drawLine(x1,y1,x2,y2,paint);paint.setStyle(Paint.Style.FILL);}
     @Override protected void onDraw(Canvas canvas){
-        super.onDraw(canvas);if(avatar.studio()){drawStudio(canvas);return;}canvas.save();float scale=Math.min(getWidth()/64f,getHeight()/88f);canvas.translate((getWidth()-64*scale)/2,getHeight()-88*scale);canvas.scale(scale,scale);
+        super.onDraw(canvas);if(avatar.studio()&&studioArt!=null){drawStudio(canvas);return;}canvas.save();float scale=Math.min(getWidth()/64f,getHeight()/88f);canvas.translate((getWidth()-64*scale)/2,getHeight()-88*scale);canvas.scale(scale,scale);
         oval(canvas,0x55350c44,4,83,60,88);
         paint.setColor(avatar.shoes());canvas.drawRoundRect(18,71,29,86,4,4,paint);canvas.drawRoundRect(35,71,46,86,4,4,paint);
         if(avatar==Avatar.NOVA)oval(canvas,avatar.hair(),9,7,55,68);

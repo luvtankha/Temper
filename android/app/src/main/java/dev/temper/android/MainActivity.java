@@ -40,6 +40,7 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
     private final android.content.SharedPreferences.OnSharedPreferenceChangeListener powerPreferenceListener=(preferences,key)->{if(("powerEnabled".equals(key)||"paused".equals(key)||"powerStopSequence".equals(key))&&this.activityResumed&&this.homeScreen&&!isDestroyed()){powerUi.removeCallbacks(powerStatusRefresh);powerUi.post(powerStatusRefresh);}};
     private android.content.SharedPreferences powerPreferences;
     private boolean powerStartPending;
+    private boolean powerStartAwaitingService;
     private long powerStartDeadline;
     private long powerStartStopSequence;
     private boolean activityResumed;
@@ -50,7 +51,7 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
     private boolean liveScreen;
     private boolean shopScreen,analysisScreen,feedbackScreen,downloading;
     private PlayStore shop;
-    @Override public void onResume(){super.onResume();activityResumed=true;FloatingOverlayService.appVisible(true);FloatingOverlayService.checkoutVisible(false);if(shopScreen){shop.restore();avatars();}else if(analysisScreen)privateAnalysis();else if(feedbackScreen)analysisFeedback();else if(consentScreen)consent();else if(liveScreen)liveAnalysis();else if(homeScreen)home();}
+    @Override public void onResume(){super.onResume();activityResumed=true;if(!powerStartPending&&new PowerStore(this).enabled()&&(!setupReady()||!FloatingOverlayService.running()))turnOff();FloatingOverlayService.appVisible(true);FloatingOverlayService.checkoutVisible(false);if(shopScreen){shop.restore();avatars();}else if(analysisScreen)privateAnalysis();else if(feedbackScreen)analysisFeedback();else if(consentScreen)consent();else if(liveScreen)liveAnalysis();else if(homeScreen)home();}
     @Override public void onPause(){activityResumed=false;powerUi.removeCallbacks(powerStatusRefresh);feedbackUi.removeCallbacksAndMessages(null);if(feedbackScreen&&content!=null)clearFeedbackViews(content);FloatingOverlayService.appVisible(false);super.onPause();}
     @Override public void onCreate(Bundle state){super.onCreate(state);getOnBackPressedDispatcher().addCallback(this,new androidx.activity.OnBackPressedCallback(true){@Override public void handleOnBackPressed(){if(homeScreen)finish();else home();}});if(android.os.Build.VERSION.SDK_INT>=31)getWindow().setHideOverlayWindows(true);accountStore=new DeviceAccountStore(this);shop=new PlayStore(this,()->{FloatingOverlayService.changed();if(shopScreen)avatars();});powerPreferences=new ConsentStore(this).preferences();powerPreferences.registerOnSharedPreferenceChangeListener(powerPreferenceListener);dev.temper.android.learning.LearningOperations.SHARED.listen(feedbackStateListener);home();}
     @Override public void onDestroy(){activityResumed=false;if(powerPreferences!=null)powerPreferences.unregisterOnSharedPreferenceChangeListener(powerPreferenceListener);cancelPendingPowerOn();powerUi.removeCallbacksAndMessages(null);dev.temper.android.learning.LearningOperations.SHARED.removeListener(feedbackStateListener);feedbackUi.removeCallbacksAndMessages(null);if(content!=null){if(feedbackScreen)clearFeedbackViews(content);content.removeAllViews();}accountWorker.shutdownNow();shop.close();super.onDestroy();}
@@ -58,25 +59,30 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
     private void page(String title){
         avatarHome=null;
         feedbackUi.removeCallbacksAndMessages(null);if(feedbackScreen&&content!=null)clearFeedbackViews(content);pageVersion++;homeScreen=false;consentScreen=false;liveScreen=false;shopScreen=false;analysisScreen=false;feedbackScreen=false;
-        ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);int pad=(int)(24*getResources().getDisplayMetrics().density);content.setPadding(pad,pad*2,pad,pad);content.setBackgroundColor(Color.rgb(21,16,25));scroll.addView(content);setContentView(scroll);text(title,28);
+        ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);int pad=(int)(24*getResources().getDisplayMetrics().density);content.setPadding(pad,pad*2,pad,pad);content.setBackgroundColor(Color.rgb(21,16,25));scroll.addView(content);showInsetContent(scroll);text(title,28);
     }
     private void text(String value,int size){TextView text=new TextView(this);text.setText(value);text.setTextColor(Color.rgb(242,230,248));text.setTextSize(size);text.setPadding(0,12,0,12);content.addView(text);}
     private void button(String label,Runnable action){Button button=new Button(this);button.setText(label);button.setOnClickListener(v->action.run());content.addView(button);}
     private void home(){
-        if(homeScreen&&avatarHome!=null){avatarHome.bind(new PowerStore(this).enabled(),powerStartPending);return;}
+        if(homeScreen&&avatarHome!=null){avatarHome.bind(homePowerActive(),powerStartPending);return;}
         page("TEMPER");homeScreen=true;
         PurchaseStore ownership=new PurchaseStore(this);AvatarSelection selection=new AvatarSelection(this,ownership::owned);Avatar selected=selection.selected();java.util.List<Avatar> catalog=Avatar.homeCatalog(ownership::owned);
         if(!catalog.contains(selected)){selected=Avatar.ASTRA;selection.select(selected);}
         avatarHome=new dev.temper.android.home.AvatarHome(this,catalog,selected,avatar->{selection.select(avatar);FloatingOverlayService.changed();},wasOn->{if(wasOn){turnOff();home();}else turnOn();},this::settings);
-        setContentView(avatarHome);avatarHome.bind(new PowerStore(this).enabled(),powerStartPending);
+        showInsetContent(avatarHome);avatarHome.bind(homePowerActive(),powerStartPending);
     }
+    private void showInsetContent(android.view.View view){
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(view,(v,insets)->{androidx.core.graphics.Insets safe=insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars()|androidx.core.view.WindowInsetsCompat.Type.displayCutout()|androidx.core.view.WindowInsetsCompat.Type.ime());v.setPadding(safe.left,safe.top,safe.right,safe.bottom);return insets;});
+        setContentView(view);androidx.core.view.ViewCompat.requestApplyInsets(view);
+    }
+    private boolean homePowerActive(){return !powerStartPending&&new PowerStore(this).enabled()&&setupReady()&&FloatingOverlayService.running();}
     private boolean setupReady(){return AnalysisConsent.autoAccepted(this)&&ModelFiles.ready(this)&&Settings.canDrawOverlays(this)&&serviceEnabled()&&TemperAccessibilityService.connected();}
     private void turnOn(){
         if(powerStartPending)return;
-        if(new PowerStore(this).enabled()){home();return;}
+        if(new PowerStore(this).enabled()){if(homePowerActive()){home();return;}turnOff();}
         if(!setupReady()){privateAnalysis();return;}
         if(FloatingOverlayService.running()){
-            powerStartPending=true;powerStartDeadline=android.os.SystemClock.elapsedRealtime()+5000;
+            powerStartPending=true;powerStartAwaitingService=false;powerStartDeadline=android.os.SystemClock.elapsedRealtime()+5000;
             FloatingOverlayService.stop(this);powerStartStopSequence=new PowerStore(this).stopSequence();home();powerUi.post(powerStartPoll);return;
         }
         activatePower();
@@ -85,9 +91,14 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
         if(!powerStartPending)return;
         if(new PowerStore(this).stopSequence()!=powerStartStopSequence){cancelPendingPowerOn();if(!isDestroyed()&&!isFinishing())home();return;}
         if(isDestroyed()||isFinishing()){cancelPendingPowerOn();return;}
-        if(android.os.SystemClock.elapsedRealtime()>=powerStartDeadline){powerStartFailed("The previous overlay did not stop. TEMPER is OFF; retry from setup.");return;}
+        if(android.os.SystemClock.elapsedRealtime()>=powerStartDeadline){powerStartFailed(powerStartAwaitingService?"The overlay did not start. TEMPER is OFF; check setup and retry.":"The previous overlay did not stop. TEMPER is OFF; retry from setup.");return;}
         if(!setupReady()){powerStartFailed("Setup changed while waiting. TEMPER is OFF; check setup and retry.");return;}
-        if(new PowerStore(this).enabled()){powerStartPending=false;powerStartDeadline=0;powerStartStopSequence=0;home();return;}
+        if(powerStartAwaitingService){
+            if(!new PowerStore(this).enabled()){powerStartFailed("Could not turn ON. TEMPER is OFF; check setup and retry.");return;}
+            if(!FloatingOverlayService.running()){powerUi.postDelayed(powerStartPoll,100);return;}
+            powerStartPending=powerStartAwaitingService=false;powerStartDeadline=0;powerStartStopSequence=0;Toast.makeText(this,"TEMPER is ON. Open a supported chat.",Toast.LENGTH_LONG).show();home();return;
+        }
+        if(new PowerStore(this).enabled()){powerStartPending=powerStartAwaitingService=false;powerStartDeadline=0;powerStartStopSequence=0;home();return;}
         if(FloatingOverlayService.running()){powerUi.postDelayed(powerStartPoll,100);return;}
         powerStartPending=false;powerStartDeadline=0;powerStartStopSequence=0;activatePower();
     }
@@ -95,11 +106,11 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
         if(isDestroyed()||isFinishing())return;
         if(new PowerStore(this).enabled()){home();return;}
         if(!setupReady()){powerStartFailed("TEMPER is OFF. Check setup before turning ON.");return;}
-        try{new PowerStore(this).setEnabled(true);FloatingOverlayService.start(this);Toast.makeText(this,"TEMPER is ON. Open a supported chat.",Toast.LENGTH_LONG).show();home();}
+        try{powerStartPending=powerStartAwaitingService=true;powerStartDeadline=android.os.SystemClock.elapsedRealtime()+5000;powerStartStopSequence=new PowerStore(this).stopSequence();new PowerStore(this).setEnabled(true);FloatingOverlayService.start(this);home();powerUi.post(powerStartPoll);}
         catch(RuntimeException unavailable){powerStartFailed("Could not turn ON. TEMPER is OFF; check setup and retry.");}
     }
     private void powerStartFailed(String message){turnOff();if(!isDestroyed()&&!isFinishing()){Toast.makeText(this,message,Toast.LENGTH_LONG).show();privateAnalysis();}}
-    private void cancelPendingPowerOn(){boolean pending=powerStartPending;powerStartPending=false;powerStartDeadline=0;powerStartStopSequence=0;powerUi.removeCallbacks(powerStartPoll);if(pending)new PowerStore(this).setEnabled(false);}
+    private void cancelPendingPowerOn(){boolean pending=powerStartPending;powerStartPending=powerStartAwaitingService=false;powerStartDeadline=0;powerStartStopSequence=0;powerUi.removeCallbacks(powerStartPoll);if(pending)new PowerStore(this).setEnabled(false);}
     private void turnOff(){cancelPendingPowerOn();new PowerStore(this).requestOff();FloatingOverlayService.stop(this);}
     private void character(Avatar avatar,Emotion emotion){CharacterView view=new CharacterView(this);view.setAvatar(avatar);view.setEmotion(emotion,false);float density=getResources().getDisplayMetrics().density;var size=new LinearLayout.LayoutParams(Math.round(64*density),Math.round(88*density));size.gravity=android.view.Gravity.CENTER_HORIZONTAL;content.addView(view,size);}
     private void avatars(){
@@ -125,11 +136,12 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
             CheckBox agree=new CheckBox(this);agree.setText("I allow automatic on-phone analysis of supported visible chats while TEMPER is ON");agree.setTextColor(Color.WHITE);content.addView(agree);
             Button save=new Button(this);save.setText("Allow automatic analysis");save.setEnabled(false);content.addView(save);agree.setOnCheckedChangeListener((v,checked)->save.setEnabled(checked));save.setOnClickListener(v->{turnOff();AnalysisConsent.acceptAuto(this);privateAnalysis();});
         }else if(!modelReady){
-            text("Download the offline model • "+((ModelFiles.SIZE+999_999)/1_000_000)+" MB",17);
-            text("Download public model weights from Hugging Face once. The download shares your network address with the host and sends no messages. Allow about 150 MB of free space and keep this screen open.",14);
-            Button download=new Button(this);download.setText(downloading?"Downloading model…":"Download model for offline analysis");download.setEnabled(!downloading);content.addView(download);
+            boolean bundled=ModelFiles.bundled(this);
+            text((bundled?"Prepare the bundled offline model • ":"Download the offline model • ")+((ModelFiles.SIZE+999_999)/1_000_000)+" MB",17);
+            text(bundled?"The verified public model is included in this app. Prepare it once without internet; no messages are accessed. Allow about 150 MB of free space and keep this screen open.":"Download public model weights from Hugging Face once. The download shares your network address with the host and sends no messages. Allow about 150 MB of free space and keep this screen open.",14);
+            Button download=new Button(this);download.setText(downloading?"Preparing model…":bundled?"Prepare offline model":"Download model for offline analysis");download.setEnabled(!downloading);content.addView(download);
             TextView progress=new TextView(this);progress.setTextColor(Color.WHITE);content.addView(progress);long version=pageVersion;
-            download.setOnClickListener(v->{downloading=true;download.setEnabled(false);accountWorker.execute(()->{String failure=null;try{ModelFiles.download(this,percent->runOnUiThread(()->{if(!isDestroyed()&&version==pageVersion)progress.setText("Downloading: "+percent+"%");}),this::isDestroyed);}catch(Exception error){failure=error.getMessage();}String message=failure;runOnUiThread(()->{downloading=false;if(isDestroyed())return;if(message!=null)Toast.makeText(this,message,Toast.LENGTH_LONG).show();if(analysisScreen)privateAnalysis();});});});
+            download.setOnClickListener(v->{downloading=true;download.setEnabled(false);accountWorker.execute(()->{String failure=null;try{ModelFiles.download(this,percent->runOnUiThread(()->{if(!isDestroyed()&&version==pageVersion)progress.setText("Preparing model: "+percent+"%" );}),this::isDestroyed);}catch(Exception error){failure=error.getMessage();}String message=failure;runOnUiThread(()->{downloading=false;if(isDestroyed())return;if(message!=null)Toast.makeText(this,message,Toast.LENGTH_LONG).show();if(analysisScreen)privateAnalysis();});});});
         }else if(!overlayAllowed){
             text("Allow the small movable companion to appear over chat apps. Only the character and its compact analytics panel receive touches.",16);
             button("Allow display over other apps",()->startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,android.net.Uri.parse("package:"+getPackageName()))));
@@ -148,12 +160,12 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
     }
     private void settings(){
         page("Settings");text(new PowerStore(this).enabled()?"TEMPER is ON":"TEMPER is OFF",18);button("Set up and permissions",this::privateAnalysis);
-        text("Normal analysis saves no chat text and works offline after the model download. Optional rated conversation feedback can send reviewed text and estimates to the separate feedback service. Paid avatars use Google Play; only purchase verification data goes to the store server.",16);
+        text("Normal analysis saves no chat text and works offline after one-time model preparation. Optional rated conversation feedback can send reviewed text and estimates to the separate feedback service. Paid avatars use Google Play; only purchase verification data goes to the store server.",16);
         button("Rate analysis and manage feedback",this::analysisFeedback);
         button("Turn TEMPER OFF",()->{turnOff();settings();});
         button("Choose companion",this::avatars);
         button("Fictional preview",this::preview);
-        button("Privacy and model information",()->{page("Privacy and model information");text("Normal chat analysis stays in memory on this phone. It is never saved or uploaded. Optional quality feedback requires separate permission and a Send rating action to share selected reviewed conversation segments and estimates with Luv Tankha's feedback service. No background uploads occur. Feedback can be retained encrypted for up to 90 days and used privately to evaluate and improve analysis. Submitted records can be deleted in the feedback page; a previously trained model cannot be promised to forget its influence. Device uninstall does not delete submitted feedback or Google purchases.",16);text("Google Play handles payment information. TEMPER sends signed purchase receipts to its HTTPS verification server and Google to validate purchases and restore ownership. A short-lived, signed ownership claim is cached locally. No chat data enters the store server. Model weights download from the configured model host, whose servers receive ordinary connection metadata including your network address.",16);text("This build uses a SHA-256 verified RoBERTa INT8 model based on English GoEmotions. The original model is distributed by SamLowe under the MIT license. Model updates require publisher evaluation and a new app release. Hinglish, sarcasm and conversation direction are not validated for accuracy. Scores estimate language and cannot establish anyone's feelings. Support: luvtankha06@gmail.com.",16);button("Back",this::settings);});
+        button("Privacy and model information",()->{page("Privacy and model information");text("Normal chat analysis stays in memory on this phone. It is never saved or uploaded. Optional quality feedback requires separate permission and a Send rating action to share selected reviewed conversation segments and estimates with Luv Tankha's feedback service. No background uploads occur. Feedback can be retained encrypted for up to 90 days and used privately to evaluate and improve analysis. Submitted records can be deleted in the feedback page; a previously trained model cannot be promised to forget its influence. Device uninstall does not delete submitted feedback or Google purchases.",16);text("Google Play handles payment information. TEMPER sends signed purchase receipts to its HTTPS verification server and Google to validate purchases and restore ownership. A short-lived, signed ownership claim is cached locally. No chat data enters the store server. Verified public model weights are bundled in this app and prepared offline. A legacy build missing that asset can download public weights; that model host receives ordinary connection metadata including your network address, never chat text.",16);text("This build uses a SHA-256 verified RoBERTa INT8 model based on English GoEmotions. The original model is distributed by SamLowe under the MIT license. Model updates require publisher evaluation and a new app release. Hinglish, sarcasm and conversation direction are not validated for accuracy. Scores estimate language and cannot establish anyone's feelings. Support: luvtankha06@gmail.com.",16);button("Back",this::settings);});
         button("Remove offline model and turn OFF",()->{turnOff();accountWorker.execute(()->{try{java.nio.file.Files.deleteIfExists(ModelFiles.file(this).toPath());}catch(Exception ignored){}runOnUiThread(()->{if(!isDestroyed())settings();});});});
         button("Clear inspection data and turn OFF",()->{turnOff();dev.temper.android.privacy.PrivacyControls.clearInspection(this);settings();});
         if(BuildConfig.DEBUG)button("Remove USB connection and pause",()->{try{dev.temper.android.privacy.PrivacyControls.removeConnection(this);settings();}catch(IllegalStateException failure){Toast.makeText(this,failure.getMessage(),Toast.LENGTH_LONG).show();}});
@@ -260,7 +272,8 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
     }
     private void preview(){
         page("Fictional preview");text("Eight compact expressions",22);text("Fictional states for appearance testing. Select an expression to see the transition.",16);
-        float density=getResources().getDisplayMetrics().density;CharacterView live=new CharacterView(this);
+        Avatar selected=new AvatarSelection(this,shop::owned).selected();
+        float density=getResources().getDisplayMetrics().density;CharacterView live=new CharacterView(this);live.setAvatar(selected);
         LinearLayout.LayoutParams size=new LinearLayout.LayoutParams(Math.round(64*density),Math.round(88*density));size.gravity=android.view.Gravity.CENTER_HORIZONTAL;content.addView(live,size);
         Spinner chooser=new Spinner(this);String[] labels=java.util.Arrays.stream(Emotion.values()).map(Emotion::label).toArray(String[]::new);
         chooser.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));
@@ -274,7 +287,7 @@ public final class MainActivity extends androidx.activity.ComponentActivity {
             LinearLayout pair=new LinearLayout(this);pair.setGravity(android.view.Gravity.CENTER);content.addView(pair);
             for(int col=0;col<2;col++){
                 Emotion emotion=Emotion.values()[row*2+col];LinearLayout cell=new LinearLayout(this);cell.setOrientation(LinearLayout.VERTICAL);cell.setGravity(android.view.Gravity.CENTER);pair.addView(cell,new LinearLayout.LayoutParams(0,-2,1));
-                CharacterView sample=new CharacterView(this);sample.setEmotion(emotion,false);cell.addView(sample,new LinearLayout.LayoutParams(Math.round(64*density),Math.round(88*density)));
+                CharacterView sample=new CharacterView(this);sample.setAvatar(selected);sample.setEmotion(emotion,false);cell.addView(sample,new LinearLayout.LayoutParams(Math.round(64*density),Math.round(88*density)));
                 TextView label=new TextView(this);label.setText(emotion.label());label.setTextColor(Color.WHITE);label.setTextSize(14);label.setPadding(0,0,0,16);cell.addView(label);
             }
         }

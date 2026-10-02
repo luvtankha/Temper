@@ -4,6 +4,7 @@ import dev.temper.android.adapters.ScreenObservation.Bounds;
 import dev.temper.android.overlay.DragGesture;
 import dev.temper.android.overlay.DraggablePlacement;
 import dev.temper.android.overlay.PopupPlacement;
+import dev.temper.android.overlay.FloatingPlacement;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -51,5 +52,25 @@ public class OverlayMovementTests {
         Bounds side=PopupPlacement.place(chat,leftCharacter,300,830,12);assertEquals(224,side.left());assertTrue(chat.contains(side));
         Bounds fallback=PopupPlacement.place(chat,new Bounds(400,450,592,714),840,830,12);assertTrue(chat.contains(fallback));assertEquals(830,fallback.bottom()-fallback.top());
         assertThrows(IllegalArgumentException.class,()->PopupPlacement.place(chat,leftCharacter,840,1001,12));
+    }
+    @Test public void floatingCharacterRespectsInsetsOriginsAndRotation(){
+        for(Bounds bounds:new Bounds[]{new Bounds(24,103,1080,2300),new Bounds(103,24,2300,1000)}){
+            for(float x:new float[]{-10,0,.5f,1,10})for(float y:new float[]{-10,0,.5f,1,10}){
+                var position=FloatingPlacement.place(x,y,bounds,192,264);
+                assertTrue(bounds.contains(new Bounds(position.x(),position.y(),position.x()+192,position.y()+264)));
+            }
+        }
+        var point=FloatingPlacement.move(-10000,10000,new Bounds(24,103,1080,1400),192,264);
+        assertEquals(24,point.x());assertEquals(1136,point.y());
+    }
+    @Test public void floatingKeyboardClampPreservesTheSavedPreference(){
+        Bounds closed=new Bounds(24,103,1080,2300),open=new Bounds(24,103,1080,1400);
+        var preferred=FloatingPlacement.place(.8f,.9f,closed,192,264);
+        var clamped=FloatingPlacement.move(preferred.x(),preferred.y(),open,192,264);
+        assertEquals(preferred.x(),clamped.x());assertEquals(open.bottom(),clamped.y()+264);
+        assertEquals(preferred,FloatingPlacement.place(.8f,.9f,closed,192,264));
+        assertThrows(IllegalArgumentException.class,()->FloatingPlacement.place(Float.NaN,0,closed,192,264));
+        assertThrows(IllegalArgumentException.class,()->FloatingPlacement.place(0,0,new Bounds(0,0,100,100),192,264));
+        assertThrows(IllegalArgumentException.class,()->FloatingPlacement.place(0,0,100,100,64,88,32,32));
     }
 }

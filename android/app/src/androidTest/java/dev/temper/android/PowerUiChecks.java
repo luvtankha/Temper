@@ -30,10 +30,13 @@ final class PowerUiChecks {
             click(activity,"ON");((CheckBox)find(activity,consentLabel)).performClick();if(!find(activity,"Allow automatic analysis").isEnabled())throw new AssertionError("Explicit opt-in did not enable consent action");
             click(activity,"Allow automatic analysis");if(!AnalysisConsent.autoAccepted(activity)||new PowerStore(activity).enabled())throw new AssertionError("Consent saving must leave power OFF");
             click(activity,"Back");checkHome(activity,"ON","Avatar OFF");
-            // Controlled power fixture only; the foreground service is never started by this check.
-            new PowerStore(activity).setEnabled(true);home(activity);checkHome(activity,"OFF","Avatar ON");View staleOff=find(activity,"OFF");new PowerStore(activity).setEnabled(false);staleOff.performClick();
+            // A preference cannot advertise ON without the actual required service.
+            new PowerStore(activity).setEnabled(true);home(activity);checkHome(activity,"ON","Avatar OFF");
+            // Exercise an already-bound stale OFF control without bypassing production capability checks.
+            var stale=new dev.temper.android.home.AvatarHome(activity,dev.temper.android.character.Avatar.ASTRA,a->{},wasOn->{if(!wasOn)throw new AssertionError("Stale OFF attempted ON");invoke(activity,"turnOff");},()->{});
+            stale.bind(true,false);View staleOff=find(stale,"OFF");new PowerStore(activity).setEnabled(false);staleOff.performClick();
             if(new PowerStore(activity).enabled()||find(activity,"Set up TEMPER")!=null)throw new AssertionError("A stale OFF label attempted to restart analysis");
-            new PowerStore(activity).setEnabled(true);home(activity);click(activity,"OFF");
+            new PowerStore(activity).setEnabled(true);staleOff.performClick();home(activity);
             if(new PowerStore(activity).enabled()||!new ConsentStore(activity).paused())throw new AssertionError("OFF did not pause and persist");checkHome(activity,"ON","Avatar OFF");
             field(activity,"powerStartPending",true);field(activity,"powerStartDeadline",android.os.SystemClock.elapsedRealtime()+5000);field(activity,"powerStartStopSequence",new PowerStore(activity).stopSequence());home(activity);
             View pending=find(activity,"Turning ON…");if(!(pending instanceof Button)||pending.isEnabled()||find(activity,"Avatar OFF")==null)throw new AssertionError("Pending control: "+pending+", enabled="+(pending!=null&&pending.isEnabled())+", OFF pill="+find(activity,"Avatar OFF")+", labels="+labels(activity));

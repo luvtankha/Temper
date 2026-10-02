@@ -26,7 +26,7 @@ public final class OnDeviceAnalysis implements AutoCloseable {
     public void prepare(Context context)throws Exception{
         if(session!=null)return;
         try(InputStream input=context.getAssets().open("emotion/context-model.json")){contextModel=new ConversationContextModel(input);}
-        ModelFiles.verify(ModelFiles.file(context));environment=OrtEnvironment.getEnvironment();
+        ModelFiles.verifyInstalled(context);environment=OrtEnvironment.getEnvironment();
         try(InputStream compiled=context.getAssets().open("emotion/tokenizer.bin")){tokenizer=new RobertaTokenizer(compiled);}
         try(var options=new OrtSession.SessionOptions()){options.setIntraOpNumThreads(2);options.setInterOpNumThreads(1);session=environment.createSession(ModelFiles.file(context).getAbsolutePath(),options);}
     }
@@ -39,8 +39,16 @@ public final class OnDeviceAnalysis implements AutoCloseable {
         float[] current=classify(remote.get(remote.size()-1).text(),active);float[] previous=remote.size()<2?null:classify(remote.get(remote.size()-2).text(),active);if(!active.getAsBoolean())throw new IllegalStateException("Session stopped");return contextModel.compatible(dev.temper.android.BuildConfig.EMOTION_HASH)?contextModel.summarize(snapshot,current,previous):EmotionEstimate.summarize(current,previous);
     }
     private float[] classify(String text,BooleanSupplier active)throws Exception{
-        if(!active.getAsBoolean())throw new IllegalStateException("Session stopped");String normalized=MENTION.matcher(URL.matcher(text).replaceAll("http")).replaceAll("@user");String key=WhatsAppAdapter.hash(normalized);long epoch=contextEpoch;synchronized(scores){float[] cached=scores.get(key);if(cached!=null)return cached;}long[] tokens=tokenizer.encode(normalized,128),mask=new long[tokens.length];Arrays.fill(mask,1);
+        if(!active.getAsBoolean())throw new IllegalStateException("Session stopped");String normalized=normalizedInput(text);String key=WhatsAppAdapter.hash(normalized);long epoch=contextEpoch;synchronized(scores){float[] cached=scores.get(key);if(cached!=null)return cached;}long[] tokens=tokenizer.encode(normalized,128),mask=new long[tokens.length];Arrays.fill(mask,1);
         try(var input=OnnxTensor.createTensor(environment,new long[][]{tokens});var attention=OnnxTensor.createTensor(environment,new long[][]{mask});var result=session.run(Map.of("input_ids",input,"attention_mask",attention))){float[] value=EmotionEstimate.spectrum(((float[][])result.get(0).getValue())[0]);if(!active.getAsBoolean())throw new IllegalStateException("Session stopped");synchronized(scores){if(epoch==contextEpoch){scores.put(key,value);if(scores.size()>8)scores.remove(scores.keySet().iterator().next());}}return value;}
+    }
+    static String normalizedInput(String text){
+        String normalized=MENTION.matcher(URL.matcher(text).replaceAll("http")).replaceAll("@user");
+        // A short handle can grow during normalization. Preserve the tokenizer's
+        // existing input bound and avoid cutting a UTF-16 surrogate pair.
+        int end=Math.min(normalized.length(),1000);
+        if(end<normalized.length()&&Character.isHighSurrogate(normalized.charAt(end-1))&&Character.isLowSurrogate(normalized.charAt(end)))end--;
+        return normalized.substring(0,end);
     }
     @Override public void close(){forgetConversation();conversation=null;contextModel=null;loadedEpoch=-1;if(session!=null){try{session.close();}catch(OrtException ignored){}session=null;tokenizer=null;}}
 }

@@ -4,7 +4,7 @@ TEMPER produces the emotional spectrum and direction itself. Users are asked onl
 
 ## User flow and exact data
 
-Home → Rate analysis presents a separate prominent disclosure and unchecked feedback opt-in. A per-session confirmation covers age 18+ and permission from everyone whose messages are included. This is necessary because a user's chat contains other people's messages. No learning terminology or emotion-labeling exercise is required from the user.
+Home → Settings → Rate analysis and manage feedback presents a separate prominent disclosure and unchecked feedback opt-in. A per-session confirmation covers age 18+ and permission from everyone whose messages are included. This is necessary because a user's chat contains other people's messages. No learning terminology or emotion-labeling exercise is required from the user.
 
 After permission, Start a conversation to rate selects the next supported WhatsApp conversation using the existing fail-closed adapter. Normal model inference stays on-device. The separate feedback buffer accumulates **visible conversation segments**, not unseen full history: at most 64 unique turns (1000 characters each) and 32 actual estimates within ten minutes. Each estimate records the actual ordered visible window, remote target, eight scores, state, direction and trajectory. A phone-generated conversation identity remains local and is never submitted. No drafts, contact names, timestamps, composer positions, contact identifiers or unrelated app content are sent.
 
