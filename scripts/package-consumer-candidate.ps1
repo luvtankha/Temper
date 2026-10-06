@@ -43,22 +43,16 @@ Copy-TemperCandidateFile $temperApk ('TEMPER-' + $temperVersion + '-testing.apk'
 Copy-TemperCandidateFile $temperAab ('TEMPER-' + $temperVersion + '-UNSIGNED-review.aab')
 Copy-TemperCandidateFile $temperR8Review ('TEMPER-' + $temperVersion + '-R8-device-review.apk')
 Copy-TemperCandidateFile $temperJar 'backend\cerebro-0.0.1-SNAPSHOT.jar'
-foreach ($temperDoc in Get-ChildItem -LiteralPath (Join-Path $temperRoot 'docs\release') -File -Recurse) {
-    Copy-TemperCandidateFile $temperDoc.FullName ([IO.Path]::GetRelativePath($temperRoot, $temperDoc.FullName))
-}
-foreach ($temperRelative in @('docs\phases\PHASE-41-CONTEXT.md', 'docs\phases\PHASE-41-HANDOFF.md', 'deployment\store\Dockerfile', 'deployment\store\store.env.example', '.dockerignore', 'scripts\build-consumer-release.ps1', 'scripts\check-android-native-alignment.py', 'android\app\src\main\assets\emotion\NOTICE.txt')) {
-    Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
-}
-foreach ($temperRelative in @('docs\phases\PHASE-42-CONTEXT.md','docs\phases\PHASE-42-HANDOFF.md','deployment\feedback\Dockerfile','deployment\feedback\feedback.env.example','scripts\train-feedback-model.py','scripts\approve-feedback-model.py','scripts\test-feedback-training.py','scripts\model-export-requirements.txt')) {
-    Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
-}
-foreach ($temperRelative in @('docs\phases\PHASE-43-CONTEXT.md','docs\phases\PHASE-43-HANDOFF.md','docs\phases\PHASE-44-CONTEXT.md','docs\phases\PHASE-44-HANDOFF.md','docs\phases\PHASE-45-CONTEXT.md','docs\phases\PHASE-45-HANDOFF.md','docs\phases\PHASE-46-CONTEXT.md','docs\phases\PHASE-46-HANDOFF.md')) {
-    Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
-}
-foreach ($temperRelative in @('docs\phases\PHASE-47-CONTEXT.md','docs\phases\PHASE-47-HANDOFF.md','scripts\generate-studio-avatars.py','scripts\figma-build-payload.py')) {
-    Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
-}
-foreach ($temperRelative in @('docs\phases\PHASE-48-CONTEXT.md','docs\phases\PHASE-48-HANDOFF.md')) {
+foreach ($temperRelative in @(
+    'README.md', 'docs\release\evidence\phase48.json',
+    'deployment\store\Dockerfile', 'deployment\store\store.env.example', '.dockerignore',
+    'scripts\build-consumer-release.ps1', 'scripts\check-android-native-alignment.py',
+    'android\app\src\main\assets\emotion\NOTICE.txt', 'models\sentiment\ATTRIBUTION.md',
+    'deployment\feedback\Dockerfile', 'deployment\feedback\feedback.env.example',
+    'scripts\train-feedback-model.py', 'scripts\approve-feedback-model.py',
+    'scripts\test-feedback-training.py', 'scripts\model-export-requirements.txt',
+    'scripts\generate-studio-avatars.py', 'scripts\figma-build-payload.py'
+)) {
     Copy-TemperCandidateFile (Join-Path $temperRoot $temperRelative) $temperRelative
 }
 foreach ($temperDesignRelative in $temperTracked | Where-Object { $_ -like 'design/phase47/*' }) {
@@ -94,38 +88,6 @@ foreach ($temperEvidence in @(
 )) {
     Copy-TemperCandidateFile (Join-Path $temperRoot $temperEvidence[0]) $temperEvidence[1]
 }
-$temperReadme = @'
-# TEMPER consumer candidate
-
-Start with docs/release/FINAL-VERIFICATION.md and SETUP-AND-DEMO.md.
-The installed R8-device-review APK is minified, non-debuggable and development-signed.
-The testing APK is a separate debuggable developer artifact. Neither is for publishing.
-Read the report's actual acceptance result; packaging does not mark pending gates passed.
-The UNSIGNED-review AAB cannot be uploaded as a signed production release.
-Premium purchases are disabled until real Play products and HTTPS verification exist.
-Automatic analysis currently supports the verified WhatsApp layout only.
-Read the Phase 48 handoff for final QA fixes and test boundaries.
-Read AVATAR-CAROUSEL.md for the approved home and Phase 47 Figma prototype.
-Verified public weights are bundled in both APKs/AAB for offline first-use preparation.
-Source builds fetch pinned weights or use TEMPER_MODEL_FILE; weights are not in source ZIP.
-Read model limits in CONTEXT-AND-PERFORMANCE.md; classifier weights were not retrained in QA.
-ANALYSIS-FEEDBACK.md documents optional rated-session sharing and the evaluated model upgrade path.
-No real feedback service is configured and no user data was collected.
-Emotion-bar weights are unchanged; the direction head is a fictional-data-trained pilot.
-Its synthetic agreement is not a real-world accuracy score.
-
-The source ZIP contains the committed repository. Extract it before building or
-deploying deployment/store/Dockerfile from its repository root. This is an untested
-cloud deployment recipe; complete the release gates before selling or publishing.
-The feedback directory contains a separate persistent-volume HTTPS deployment kit.
-Weights are included only inside installable artifacts. Credentials, signing keys and private runtime data are excluded.
-Evidence contains only generated fixture results and TEMPER's own fictional screen.
-Phase 48 screenshots show only TEMPER's own UI. They do not prove live host-message updates.
-The older avatar gallery and generated home renders are from Phase 47.
-The spectrum/floating screenshots are historical Phase 41 fixtures.
-The Phase 42 training smoke is synthetic and cannot be promoted as a customer model.
-'@
-$temperReadme | Set-Content -LiteralPath (Join-Path $temperStage 'README.md') -Encoding utf8
 $temperRevision | Set-Content -LiteralPath (Join-Path $temperStage 'SOURCE-REVISION.txt') -Encoding ascii
 $temperSource = Join-Path $temperStage ('TEMPER-source-' + $temperVersion + '.zip')
 Push-Location $temperRoot

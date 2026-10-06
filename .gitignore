@@ -98,7 +98,6 @@ huggingface/
 transformers-cache/
 
 # Keep model metadata
-!models/**/README.md
 !models/**/config.json
 !models/**/tokenizer.json
 !models/**/tokenizer_config.json

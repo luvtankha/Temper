@@ -1,7 +1,0 @@
-# Phase30 — COMPLETE
-1. Changed: eight original compact vector expressions, 260ms face/posture transitions, interrupted-transition continuity, disabled-animation support and detach cleanup. Grounding/footprint unchanged. Fictional preview exposes a selector and all eight production-rendered states. Settings description now reflects the working selected-chat overlay.
-2. Files: character/Emotion.java, character/CharacterView.java, OverlayManager.java, MainActivity.java; CharacterChecks.java and FoundationSmokeInstrumentation.java; phase context/handoff and android-character architecture note.
-3. Verification: app/test APK build and lint SUCCESS, final 71 tasks; APKs installed on OnePlus8T/API34. Device-rendered gallery visually reviewed and happy eyes/surprised mouth refined.
-4. Tests: eight unique rendered states, transparent margins, fixed grounding, detached animation suppression, interrupted transition settlement and detach cancellation PASS on device. Previous adapter, overlay placement, consent/privacy, account and foundation suite PASS. Setup preferences restored.
-5. Limits: host stays neutral until live analysis32. Preview states are fictional. This is an original small 2D rendering, not the large 3D reference artwork. No continuous idle animation is used to avoid unnecessary background work.
-6. Next: Phase31 compact tap popup with two short text fields and one spectrum graph, dismissal and host usability; actual accessibility service may need rebind after instrumentation.

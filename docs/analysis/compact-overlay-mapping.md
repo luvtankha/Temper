@@ -1,6 +1,0 @@
-# Compact overlay mapping v1
-CompactOverlayMapper is rendering-independent. Output: available, one of eight character states, short Current state and Direction strings, eight ordered spectrum values, and remoteMessageId. No raw text, large dashboard or extra charts. Spectrum: happiness, concern, confusion, sadness, frustration, anger, surprise, neutral; independent model estimates, not normalized population percentages.
-
-Select latest remote speaker, not latest local turn. This two-party transform requires known local identity, exactly two roles, remote turn within four positions, actual GoEmotions evidence and all eight bounded channels. Unknown/stale/fixture/missing emotions or UNCERTAIN trajectory → neutral unavailable, no invented bars. Android adapters must fail closed before invoking it when role/screen parsing is uncertain.
-
-Dominant remote emotion above.25 selects baseline expression; ties follow fixed spectrum order. Trajectory rising → concerned, escalation → stronger anger/frustration, withdrawal → sad/low energy, de-escalating/repair → relax to neutral. Numeric bars always stay the remote participant's estimates, not altered to justify direction-selected expression. Two short texts use language/appears/may/possible wording. Original image references guide compact grounded face readability; Android rendering is a separate later phase.
