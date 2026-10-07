@@ -4,6 +4,8 @@ import { participants, remoteParticipant } from '../../models/chat';
 import { useChat } from './ChatProvider';
 import { RemoteAvatar } from '../avatar/RemoteAvatar';
 import {useAnalysis} from '../analysis/AnalysisProvider';
+import {publicDemo} from '../../app/publicMode';
+import {fictionalDemoTurns, publicDemoTurnLimit} from '../../mocks/chatApi';
 
 export function ChatPage() {
   const {snapshot}=useAnalysis();
@@ -17,7 +19,7 @@ export function ChatPage() {
   const typingStopTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
   function updateDraft(value:string){setDraft(value);if(!live)return;const now=Date.now();if(now-typingSentAt.current>500){setTyping(!!value.trim());typingSentAt.current=now;}clearTimeout(typingStopTimer.current);typingStopTimer.current=setTimeout(()=>setTyping(false),2000);}
   useEffect(()=>()=>clearTimeout(typingStopTimer.current),[]);
-  const [draft,setDraft] = useState('');
+  const [draft,setDraft] = useState<string>(publicDemo ? fictionalDemoTurns[0] : '');
   const [sending,setSending] = useState(false);
   const [error,setError] = useState('');
   const [optionsOpen,setOptionsOpen] = useState(false);
@@ -30,7 +32,7 @@ export function ChatPage() {
   const selected = messages.find(m => m.id === selectedId);
   useEffect(() => {endRef.current?.scrollIntoView({behavior:'instant',block:'end'});},[loading]);
   useEffect(() => {if (!awayFromBottom) endRef.current?.scrollIntoView({behavior:'smooth',block:'end'});},[messages,remoteTyping,awayFromBottom]);
-  useEffect(() => {setDraft(''); setError('');},[localId]);
+  useEffect(() => {setDraft(publicDemo ? fictionalDemoTurns[0] : ''); setError('');},[localId]);
   useEffect(()=> {
     if(!focusedMessageId||loading)return;
     setAwayFromBottom(true);const target=messageRefs.current.get(focusedMessageId);
@@ -39,7 +41,7 @@ export function ChatPage() {
   async function submit(event?:FormEvent) {
     event?.preventDefault(); if (!draft.trim() || sending || paused || loading || disconnected) return;
     setSending(true); setError('');
-    try {await send(draft); setDraft(''); setEmojiOpen(false); setAwayFromBottom(false); composerRef.current?.focus();}
+    try {await send(draft); if(!publicDemo)setDraft(''); setEmojiOpen(false); setAwayFromBottom(false); composerRef.current?.focus();}
     catch (cause) {setError(cause instanceof Error ? cause.message : 'Could not send message.');}
     finally {setSending(false);}
   }
@@ -50,7 +52,7 @@ export function ChatPage() {
     <header className="chat-header"><div className="participant-heading"><span className={`contact-avatar ${remote.variant}`}>{remote.name.slice(0,1)}<i /></span><div><h1>{remote.name}<span>your conversation partner</span></h1><p><span className={paused ? 'paused-dot' : 'online-dot'} />{paused ? 'Demo paused' : remoteTyping ? (live?'Typing…':'Typing in demo…') : live?(remoteOnline?'Online now':'Not connected'):transport==='backend'?'Backend REST session':'Available in local demo'}</p></div></div><div className="chat-header-right"><span className="private-label"><Sparkles size={13} /> More than words</span><button className="icon-button" aria-label="Conversation options" aria-expanded={optionsOpen} onClick={() => setOptionsOpen(!optionsOpen)}><MoreHorizontal size={20} /></button></div>
       {optionsOpen && <div className="conversation-menu"><label>Viewing as<select aria-label="Viewing as" value={localId} onChange={e => setLocalId(e.target.value as typeof localId)}>{participants.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label><button onClick={() => {setPaused(!paused);setOptionsOpen(false);}}>{paused ? 'Resume local demo' : 'Pause local demo'}</button><button disabled={paused||live} onClick={() => {previewTyping();setOptionsOpen(false);}}>Preview remote typing</button><button onClick={() => {void reset(false);setSelectedId(null);setOptionsOpen(false);}}>New demo conversation</button><button onClick={() => {void reset(true);setSelectedId(null);setOptionsOpen(false);}}>Load sample conversation</button></div>}
     </header>
-    <div className="conversation-banner"><span className="banner-icon"><ActivityMark /></span><p>A little context. A better connection.</p><span>{live?`Live chat · ${analysisLabel}`:transport==='backend'?`Backend chat · ${analysisLabel}`:'Local demo'}</span></div>
+    <div className="conversation-banner"><span className="banner-icon"><ActivityMark /></span><p>{publicDemo ? 'Explore sample turns and illustrative scores.' : 'A little context. A better connection.'}</p><span>{publicDemo ? 'Fictional UI demo' : live?`Live chat · ${analysisLabel}`:transport==='backend'?`Backend chat · ${analysisLabel}`:'Local demo'}</span></div>
     {live&&<p className="live-connection-status" role="status" data-connection-state={connection}>{connection==='connected'?'Live connection ready':connection==='reconnecting'?'Reconnecting… messages will catch up':connection==='error'?'Live connection unavailable':'Connecting to live chat…'}</p>}
     {loadError&&<p role="alert" className="composer-error">{loadError} <button onClick={retry}>Retry conversation</button></p>}
     <div ref={listRef} className="message-list" aria-label="Messages" aria-live="polite" aria-busy={loading} onScroll={() => {const el=listRef.current; if(el) setAwayFromBottom(el.scrollHeight-el.scrollTop-el.clientHeight>90);}}>
@@ -70,12 +72,12 @@ export function ChatPage() {
     {selected && <div className="message-selection" role="region" aria-label="Selected message"><div><strong>Message {messages.findIndex(m=>m.id===selected.id)+1}</strong><span>{participants.find(p=>p.id===selected.speakerId)?.name} · Signal details are available in the inspector.</span></div><button className="inspect-selected-button" onClick={()=>inspectMessage(selected.id)}>Inspect signals</button><button className="icon-button" aria-label="Close selected message" onClick={() => setSelectedId(null)}><X size={15} /></button></div>}
     <div className="composer-wrapper">
       <RemoteAvatar localId={localId} typing={remoteTyping} paused={paused} />
-      <div className="composer-topline"><span><span className="small-spark">✦</span> A space to say what you mean.</span><span>CHATTING AS {participants.find(p=>p.id===localId)?.name.toUpperCase()}</span></div>
-      <form className="composer" onSubmit={submit}>
+      <div className="composer-topline"><span><span className="small-spark">✦</span> {publicDemo ? 'Try a fictional sample turn.' : 'A space to say what you mean.'}</span><span>{publicDemo ? 'DEMO ROLE' : 'CHATTING AS'} {participants.find(p=>p.id===localId)?.name.toUpperCase()}</span></div>
+      {publicDemo ? <><form className="public-sample-composer" onSubmit={submit}><label>Fictional sample turn<select aria-label="Fictional sample turn" value={draft} onChange={event=>setDraft(event.target.value)} disabled={paused || loading || sending}>{fictionalDemoTurns.map(text=><option key={text} value={text}>{text}</option>)}</select></label><button type="submit" className="send-button" disabled={sending || paused || loading || messages.length >= publicDemoTurnLimit}><span>Add sample turn</span><ArrowUpRight size={15} /></button></form><p className="public-sample-note">{messages.length}/{publicDemoTurnLimit} sample turns · Scores are assigned by turn position, not by meaning. Use conversation options to reload the sample. No private text is accepted or sent.</p></> : <><form className="composer" onSubmit={submit}>
         <textarea ref={composerRef} aria-label={`Message ${remote.name}`} placeholder={`Message ${remote.name}…`} value={draft} onChange={e=>updateDraft(e.target.value)} onBlur={()=>setTyping(false)} onKeyDown={handleKey} maxLength={2000} rows={2} disabled={paused || loading || disconnected} />
         <div className="composer-tools"><div className="composer-left-tools"><button type="button" className="icon-button" aria-label="Add emoji" aria-expanded={emojiOpen} onClick={()=>setEmojiOpen(!emojiOpen)} disabled={paused}><Smile size={18} /></button><span className="composer-hint">Enter to send <span>·</span> Shift + Enter for a new line</span></div><div className="composer-right-tools">{draft.length>1800 && <span className="character-count">{draft.length}/2000</span>}<button type="submit" className="send-button" aria-label="Send message" disabled={!draft.trim() || sending || paused || loading || disconnected}><span>Send</span><Send size={15} /></button></div></div>
         {emojiOpen && <div className="emoji-picker" aria-label="Emoji picker">{['✨','😊','💜','🤔','🙌','👍'].map(emoji=><button type="button" key={emoji} aria-label={`Insert ${emoji}`} onClick={()=>{setDraft(prev=>(prev+emoji).slice(0,2000)); setEmojiOpen(false); composerRef.current?.focus();}}>{emoji}</button>)}</div>}
-      </form><div className="composer-footnote"><span>{live?`Live delivery · in-memory backend · ${analysisLabel}`:transport==='backend'?`REST delivery · in-memory backend · ${analysisLabel}`:'Local demo. Messages stay in memory for this session.'}</span><span>{draft.length>0 ? `${draft.length} characters` : 'Thoughtful conversations start here.'}</span></div>{error && <p className="send-error" role="alert">{error}</p>}
+      </form><div className="composer-footnote"><span>{live?`Live delivery · in-memory backend · ${analysisLabel}`:transport==='backend'?`REST delivery · in-memory backend · ${analysisLabel}`:'Local demo. Messages stay in memory for this session.'}</span><span>{draft.length>0 ? `${draft.length} characters` : 'Thoughtful conversations start here.'}</span></div></>}{error && <p className="send-error" role="alert">{error}</p>}
     </div>
   </section>;
 }

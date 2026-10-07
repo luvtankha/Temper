@@ -8,13 +8,19 @@ import { AvatarLab } from '../features/avatar/AvatarLab';
 import {AnalysisProvider} from '../features/analysis/AnalysisProvider';
 import {MessageInspector} from '../features/analysis/MessageInspector';
 import {createBackendAdapters} from '../api/backendAdapters';
+import {backendTransport, publicDemo} from './publicMode';
+import {LandingPage} from './LandingPage';
 const AnalysisDashboard=lazy(()=>import('../features/analysis/AnalysisDashboard').then(m=>({default:m.AnalysisDashboard})));
 
 export function App() {
+  if (publicDemo) return <Routes><Route path="/" element={<LandingPage />} /><Route path="*" element={<DemoWorkspace />} /></Routes>;
+  return <DemoWorkspace />;
+}
+
+function DemoWorkspace() {
   const adapters=useMemo(()=>{
-    const query=new URLSearchParams(window.location.search);
-    const transport=query.get('transport')??import.meta.env.VITE_CHAT_TRANSPORT;
-    return transport==='backend'||transport==='rest'?createBackendAdapters(query.get('conversation')??undefined,transport==='backend'):null;
+    const transport=backendTransport(window.location.search,import.meta.env.VITE_CHAT_TRANSPORT);
+    return transport?createBackendAdapters(transport.conversation,transport.realtime):null;
   },[]);
   return <ChatProvider api={adapters?.chat} transport={adapters?'backend':'local'}><AnalysisProvider api={adapters?.analysis}><Shell><Routes>
     <Route path="/" element={<Navigate to="/chat" replace />} />

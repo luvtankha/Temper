@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from 'react';
 import type { ChatApi, ChatMessage, ParticipantId,ConnectionState } from '../../models/chat';
 import { createMockChatApi } from '../../mocks/chatApi';
+import { publicDemo } from '../../app/publicMode';
 
 interface ChatState {
   transport:'local'|'backend';error:string|null;retry:()=>void;
@@ -14,7 +15,7 @@ interface ChatState {
 }
 const ChatContext = createContext<ChatState | null>(null);
 export function ChatProvider({children, api: suppliedApi,transport='local'}: {children:ReactNode; api?:ChatApi;transport?:'local'|'backend'}) {
-  const api = useMemo(() => suppliedApi ?? createMockChatApi(), [suppliedApi]);
+  const api = useMemo(() => suppliedApi ?? createMockChatApi({fictionalOnly:publicDemo}), [suppliedApi]);
   const [messages,setMessages] = useState<ChatMessage[]>([]);
   const [localId,setLocalId] = useState<ParticipantId>('alex');
   const [connection,setConnection]=useState<ConnectionState>(transport==='local'?'local':api.connect?'connecting':'rest');

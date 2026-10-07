@@ -6,6 +6,22 @@ An Android app that places a movable 2D avatar over chat apps and estimates the 
 
 Normal analysis runs on the phone using ONNX Runtime. A computer, backend, and TEMPER account are not required.
 
+## Project website
+
+The informational website and fictional interface demo are published at **https://luvtankha.github.io/Temper/** through GitHub Pages. The demo uses predefined messages and fixture scores; it does not analyze visitor text or connect to a backend. Live chat overlays require installing the Android app. No APK release download is currently published by this site.
+
+The workflow in `.github/workflows/pages.yml` builds only `frontend/` and publishes `frontend/dist` when its source changes on `main`. It uses `VITE_PUBLIC_DEMO=true` and the repository base path `/Temper/`; hash routing keeps direct demo links and reloads working. To preview the same build locally, run from `frontend/`:
+
+```powershell
+$env:VITE_PUBLIC_DEMO='true'
+$env:VITE_BASE_PATH='/Temper/'
+npm ci
+npm run build
+npm run preview -- --port 4173
+```
+
+Open `http://127.0.0.1:4173/Temper/`. These environment variables are only for the static public demo build; unset them before ordinary backend-connected development. The GitHub Pages site is a project presentation, with no commerce, feedback submission, or live inference service.
+
 ## Features
 
 - Swipeable avatar carousel with saved selection and five free home avatars.

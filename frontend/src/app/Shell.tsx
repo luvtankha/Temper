@@ -5,6 +5,7 @@ import { getHealth } from '../api/client';
 import { useChat } from '../features/chat/ChatProvider';
 import { participants, remoteParticipant } from '../models/chat';
 import {AnalyticsPanel} from '../features/analysis/AnalyticsPanel';
+import {publicDemo} from './publicMode';
 
 const navigation = [
   {to:'/chat', title:'Conversation', Icon:MessageCircle},
@@ -19,7 +20,7 @@ export function Shell({children}: {children: ReactNode}) {
   const remote=remoteParticipant(localId);
   const [analyticsOpen, setAnalyticsOpen] = useState(() => window.innerWidth >= 1024);
   const [navOpen, setNavOpen] = useState(false);
-  const [backend, setBackend] = useState('Checking backend…');
+  const [backend, setBackend] = useState(publicDemo ? 'Static demo · no server connection' : 'Checking backend…');
   const analyticsToggle = useRef<HTMLButtonElement>(null);
   const navToggle = useRef<HTMLButtonElement>(null);
   const analyticsClose = useRef<HTMLButtonElement>(null);
@@ -33,7 +34,7 @@ export function Shell({children}: {children: ReactNode}) {
     query.addEventListener('change',update);
     return ()=>query.removeEventListener('change',update);
   },[]);
-  useEffect(() => { let active = true; getHealth().then(h => active && setBackend(`Backend ${h.status}`)).catch(() => active && setBackend('Backend offline')); return () => {active = false;}; }, []);
+  useEffect(() => { if(publicDemo)return; let active = true; getHealth().then(h => active && setBackend(`Backend ${h.status}`)).catch(() => active && setBackend('Backend offline')); return () => {active = false;}; }, []);
   useEffect(() => {
     if (navOpen) navClose.current?.focus();
     else if (analyticsOpen && mobile) analyticsClose.current?.focus();
@@ -54,12 +55,12 @@ export function Shell({children}: {children: ReactNode}) {
   }, [analyticsOpen, navOpen, mobile]);
   function closeAnalytics() {setAnalyticsOpen(false); analyticsToggle.current?.focus();}
   function closeNav() {setNavOpen(false); navToggle.current?.focus();}
-  return <div className={`app-shell ${analyticsOpen ? 'analytics-open' : ''}`}>
-    <a href="#main-content" className="skip-link">Skip to conversation</a>
+  return <div className={`app-shell ${analyticsOpen ? 'analytics-open' : ''} ${publicDemo ? 'public-demo' : ''}`}>
+    <a href={publicDemo ? '#/chat' : '#main-content'} className="skip-link" onClick={publicDemo ? event=>{event.preventDefault();document.getElementById('main-content')?.focus();} : undefined}>Skip to conversation</a>
     {(navOpen || analyticsOpen) && <button tabIndex={-1} aria-label="Dismiss overlay" className={`overlay-backdrop ${navOpen ? 'nav-backdrop' : ''}`} onClick={() => {closeNav(); closeAnalytics();}} />}
     <aside ref={navRef} className={`sidebar ${navOpen ? 'nav-open' : ''}`} aria-label="Main navigation" role={navOpen ? 'dialog' : undefined} aria-modal={navOpen ? true : undefined}>
       <div className="brand"><span className="brand-symbol"><Activity size={22} /></span><strong>TEMPER<span>®</span></strong><button ref={navClose} className="icon-button mobile-close" aria-label="Close navigation" onClick={closeNav}><X size={18} /></button></div>
-      <p className="brand-subtitle">Legacy debug / test harness.</p>
+      <p className="brand-subtitle">{publicDemo ? 'Explore a fictional conversation.' : 'Legacy debug / test harness.'}</p>
       <div className="workspace-label">WORKSPACE <span className="workspace-dot" /></div>
       <nav>{navigation.map(({to,title,Icon}) => <NavLink key={to} to={to} onClick={() => setNavOpen(false)} className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}><Icon size={18} /><span>{title}</span>{to === '/chat' && <span className="nav-count">1</span>}</NavLink>)}</nav>
       <div className="sidebar-divider" /><div className="workspace-label">CURRENT CONVERSATION</div>
@@ -67,10 +68,11 @@ export function Shell({children}: {children: ReactNode}) {
       <div className="sidebar-bottom"><div className="privacy-note"><ShieldCheck size={19} /><div><strong>A space to be human</strong><p>Signals invite understanding.<br />They don’t define a person.</p></div></div><div className="profile" aria-label={`Current participant: ${local.name}`}><span className="profile-avatar">{local.name[0]}</span><div><strong>{local.name}</strong><small>Demo workspace</small></div><ChevronDown size={15} /></div></div>
     </aside>
     <div className="workspace">
-      <header className="topbar"><div className="breadcrumb"><button ref={navToggle} className="icon-button nav-toggle" onClick={() => setNavOpen(true)} aria-label="Open navigation"><Menu size={20} /></button><span>Workspace</span><span className="breadcrumb-slash">/</span><strong>The launch plan</strong></div><div className="topbar-actions"><span className="pill demo-pill"><span />Legacy debug UI</span><button ref={analyticsToggle} className={`analytics-toggle ${analyticsOpen ? 'selected' : ''}`} aria-expanded={analyticsOpen} aria-controls="analytics-panel" onClick={() => setAnalyticsOpen(!analyticsOpen)}>{analyticsOpen ? <PanelRightClose size={17} /> : <PanelRightOpen size={17} />}<span>Insights</span></button></div></header>
-      <div className="workspace-body"><main id="main-content" className="main-content">{children}</main>
+      {publicDemo && <div className="public-demo-banner"><NavLink to="/">← TEMPER home</NavLink><strong>Fictional demo · no AI inference</strong><span>Sample scores · no chat uploads</span></div>}
+      <header className="topbar"><div className="breadcrumb"><button ref={navToggle} className="icon-button nav-toggle" onClick={() => setNavOpen(true)} aria-label="Open navigation"><Menu size={20} /></button><span>{publicDemo ? 'Demo' : 'Workspace'}</span><span className="breadcrumb-slash">/</span><strong>The launch plan</strong></div><div className="topbar-actions"><span className="pill demo-pill"><span />{publicDemo ? 'Fictional UI demo' : 'Legacy debug UI'}</span><button ref={analyticsToggle} className={`analytics-toggle ${analyticsOpen ? 'selected' : ''}`} aria-expanded={analyticsOpen} aria-controls="analytics-panel" onClick={() => setAnalyticsOpen(!analyticsOpen)}>{analyticsOpen ? <PanelRightClose size={17} /> : <PanelRightOpen size={17} />}<span>Insights</span></button></div></header>
+      <div className="workspace-body"><main id="main-content" className="main-content" tabIndex={-1}>{children}</main>
         {analyticsOpen && <aside ref={analyticsRef} id="analytics-panel" aria-label="Conversation insights" role={mobile ? 'dialog' : undefined} aria-modal={mobile ? true : undefined} className="analytics-panel"><div className="panel-heading"><div><span className="eyebrow">A CLOSER LOOK</span><h2>Conversation insights</h2></div><button ref={analyticsClose} className="icon-button" aria-label="Close insights" onClick={closeAnalytics}><X size={18} /></button></div><AnalyticsPanel onNavigate={mobile ? closeAnalytics : undefined} /></aside>}
-      </div><footer className="system-footer"><span><span className="status-dot" /> <span role="status">{backend}</span></span><span>Conversation intelligence <span className="footer-star">✦</span> Made for human connection</span></footer>
+      </div><footer className="system-footer"><span><span className="status-dot" /> <span role="status">{backend}</span></span><span>{publicDemo ? 'Hand-authored interface preview' : 'Conversation intelligence'} <span className="footer-star">✦</span> Made for human connection</span></footer>
     </div>
   </div>;
 }
